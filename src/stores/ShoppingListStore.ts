@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { v4 as uuidv4 } from 'uuid'
+import { randomUUID } from 'expo-crypto'
 import type { ShoppingItem } from '../types/shopping'
 
 const STORAGE_KEY = '@shopping_list'
@@ -44,7 +44,7 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
 
     const items = get().items
     const newItem: ShoppingItem = {
-      id: uuidv4(),
+      id: randomUUID(),
       name: trimmed,
       quantity: 1,
       isChecked: false,
