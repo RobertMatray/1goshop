@@ -121,19 +121,51 @@ interface ShoppingItem {
 ### Bundle IDs
 - **iOS**: `com.robertmatray.onegoshop`
 - **Android**: `com.robertmatray.onegoshop`
+- **Apple Bundle ID resource ID**: `L6PPTCB3X6` (registered in Apple Developer Portal)
 
-### Apple Credentials
+### Apple Developer Account
 - **Apple Team ID**: `U5Q2UN4QKJ`
-- **Apple ID**: `robert.matray@gmail.com`
-- **Apple API Key ID**: `79PJWGG49Z`
-- **Apple API Key Issuer ID**: `69a6de87-7e92-47e3-e053-5b8c7c11a4d1`
-- **Apple API Key**: Copy from `c:\Users\robert.matray\superapp-ai-poc\internals\appstore-api\AuthKey_79PJWGG49Z.p8`
+- **Apple Team Name**: Robert Matray (Individual)
+- **Apple ID (email)**: `robert.matray@gmail.com`
+- **App Store Connect URL**: https://appstoreconnect.apple.com
 
-### EAS Build
+### Apple API Key (for CI/CD - Developer access)
+- **Key ID**: `79PJWGG49Z`
+- **Issuer ID**: `69a6de87-7e92-47e3-e053-5b8c7c11a4d1`
+- **Key file**: `internals/appstore-api/AuthKey_79PJWGG49Z.p8` (also at `c:\Users\robert.matray\superapp-ai-poc\internals\appstore-api\AuthKey_79PJWGG49Z.p8`)
+- **Access level**: Developer (can build/submit, CANNOT create new App Store Connect apps)
+- **Shared with**: moja4ka-zdravie (superapp) project
+
+### EAS (Expo Application Services)
+- **EAS Project ID**: `f6744446-31a1-40f5-abe9-77e7dc41a501`
+- **EAS Project URL**: https://expo.dev/accounts/robertmatray/projects/1goshop
+- **EAS Account**: `robertmatray`
+- **EAS Account ID**: `d88a266e-6bcb-4970-b3a3-240e4e4f34f0`
+
+### iOS Credentials (stored on EAS remote)
+- **Distribution Certificate**: `28T88DA5Q5` (serial: `43E703D3C1F55FEACFD80AAD6F944C7E`, expires 2026-12-12)
+- **Expo Cert ID**: `3a394a0e-5e5d-4266-b5d1-815519db3815`
+- **Provisioning Profile UUID**: `f649b342-4c71-4d84-98c3-cc22a77085ba` (ACTIVE, expires 2026-12-12)
+- **Expo Profile ID**: `d230f602-a8cd-4c3e-9137-06a2671095d5`
+- **iOS App Credentials ID**: `02e0fe9b-fb61-4c67-aee5-d3d970dbf1e4`
+- **iOS App Build Credentials ID**: `5eabc535-70fc-49d5-8e8f-ad41d140375a`
+
+### Expo Session (for GraphQL API scripts)
+- **Session stored at**: `~/.expo/state.json`
+- **Session ID**: `928c128d-7ef3-4ab2-9d90-86c376de041d`
+- **User ID**: `27694f9e-e581-413e-9e25-63eb234b0e16`
+
+### GitHub
+- **Repo URL**: https://github.com/RobertMatray/1goshop
+- **Branch**: `master`
+- **GitHub username**: `RobertMatray`
+- **Auth**: Git Credential Manager (stored in Windows credential store)
+- **To get GitHub token programmatically**: `printf "protocol=https\nhost=github.com\n\n" | git credential fill`
+
+### EAS Build Commands
 
 ```bash
-# EAS project needs to be initialized first:
-# npx eas-cli init (sets projectId in app.config.ts)
+# EAS project already initialized (projectId in app.config.ts)
 
 # Build iOS for TestFlight
 npx eas-cli build --platform ios --profile production --non-interactive
