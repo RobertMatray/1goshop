@@ -162,26 +162,35 @@ interface ShoppingItem {
 - **Auth**: Git Credential Manager (stored in Windows credential store)
 - **To get GitHub token programmatically**: `printf "protocol=https\nhost=github.com\n\n" | git credential fill`
 
-### EAS Build Commands
+### Full Build + Deploy Workflow (PROVEN WORKING)
 
 ```bash
-# EAS project already initialized (projectId in app.config.ts)
-
-# Build iOS for TestFlight
+# 1. Build iOS IPA (non-interactive, uses remote credentials)
+EXPO_ASC_API_KEY_PATH="./internals/appstore-api/AuthKey_79PJWGG49Z.p8" \
+EXPO_ASC_KEY_ID="79PJWGG49Z" \
+EXPO_ASC_ISSUER_ID="69a6de87-7e92-47e3-e053-5b8c7c11a4d1" \
+EXPO_APPLE_TEAM_ID="U5Q2UN4QKJ" \
+EXPO_APPLE_TEAM_TYPE="INDIVIDUAL" \
 npx eas-cli build --platform ios --profile production --non-interactive
 
-# Submit to TestFlight
-npx eas-cli submit --platform ios --latest --non-interactive
+# 2. Submit to TestFlight via Expo GraphQL API
+node scripts/submit-via-api.mjs
 
-# Build Android APK for preview
+# 3. Check submission status
+node scripts/check-submission.mjs
+
+# 4. Build Android APK for preview (no credentials needed)
 npx eas-cli build --platform android --profile preview
 ```
+
+**IMPORTANT**: `npx eas-cli submit --non-interactive` does NOT work for this project because EAS CLI cannot configure API keys non-interactively. Use `scripts/submit-via-api.mjs` instead - it calls Expo's GraphQL API directly with the API key embedded.
 
 ### EAS Configuration (eas.json)
 - `appVersionSource: "remote"` - versions managed by EAS
 - `autoIncrement: true` - build number auto-increments
 - `cache.disabled: true` for production builds
 - `credentialsSource: "remote"` for iOS
+- `ascAppId: "6759269751"` - App Store Connect app ID
 
 ### Environment Variables for CI/CD
 ```bash
@@ -192,15 +201,15 @@ EXPO_APPLE_TEAM_ID="U5Q2UN4QKJ"
 EXPO_APPLE_TEAM_TYPE="INDIVIDUAL"
 ```
 
-### First-time Deploy Steps
+### First-time Deploy Steps (already completed)
 
 1. Copy Apple API key to `internals/appstore-api/AuthKey_79PJWGG49Z.p8`
-2. Run `npx eas-cli init` (creates new project ID, updates app.config.ts)
-3. First build must be INTERACTIVE to create provisioning profile:
-   `npx eas-cli build --platform ios --profile production`
-4. EAS will auto-create bundle ID in Apple Developer Portal
-5. EAS will auto-create app in App Store Connect on first submit
-6. Submit: `npx eas-cli submit --platform ios --latest`
+2. Run `npx eas-cli init --non-interactive --force`
+3. Register bundle ID via Apple API (`scripts/generate-provisioning-profile.mjs`)
+4. Setup EAS credentials via Expo GraphQL API (`scripts/setup-credentials-api.mjs`)
+5. Build: `npx eas-cli build --platform ios --profile production --non-interactive`
+6. Create app in App Store Connect **MANUALLY** (API key has Developer access, cannot create apps via API)
+7. Submit via `scripts/submit-via-api.mjs` (ascAppId: `6759269751`)
 
 ## Git & GitHub
 
@@ -237,8 +246,9 @@ curl -s -X POST https://api.github.com/user/repos \
 - Settings screen (language + theme toggle)
 - Haptic feedback on gestures
 - TypeScript strict mode passes
+- Successfully deployed to TestFlight and running on iPhone
 
-### Build Status (February 16, 2026)
+### Build & Deploy Status (February 16, 2026)
 
 **EAS Project**: `f6744446-31a1-40f5-abe9-77e7dc41a501`
 **Bundle ID registered**: `com.robertmatray.onegoshop` (Apple Developer Portal ID: L6PPTCB3X6)
@@ -253,11 +263,13 @@ curl -s -X POST https://api.github.com/user/repos \
 **App Store Connect**:
 - **ascAppId**: `6759269751`
 - **TestFlight URL**: https://appstoreconnect.apple.com/apps/6759269751/testflight/ios
+- **App Store Connect login**: `matray@realise.sk` (Account Holder + Admin role)
 
 **TestFlight submission**: FINISHED (February 16, 2026)
 - Submission ID: `9bd1b5d4-1901-482c-9c7f-6fafbf8e63f0`
 - Submitted via Expo GraphQL API (`scripts/submit-via-api.mjs`)
 - IPA uploaded to App Store Connect successfully
+- App installed and running on iPhone via TestFlight
 
 ### Scripts (for CI/CD automation)
 
