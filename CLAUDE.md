@@ -250,20 +250,24 @@ curl -s -X POST https://api.github.com/user/repos \
 - IPA: https://expo.dev/artifacts/eas/vaPLf6iKFg3ZPHfKDu2Xi1.ipa
 - Build logs: https://expo.dev/accounts/robertmatray/projects/1goshop/builds/ec382662-ec35-4661-ad17-7ea6b376d15e
 
-**TestFlight submission**: PENDING - requires App Store Connect app creation
-- API key 79PJWGG49Z has Developer access (cannot create apps via API)
-- App must be created manually in App Store Connect or via Admin API key
-- Once created, add `ascAppId` to eas.json submit.production.ios section
-- Then run: `npx eas-cli submit --platform ios --latest --non-interactive`
+**App Store Connect**:
+- **ascAppId**: `6759269751`
+- **TestFlight URL**: https://appstoreconnect.apple.com/apps/6759269751/testflight/ios
+
+**TestFlight submission**: FINISHED (February 16, 2026)
+- Submission ID: `9bd1b5d4-1901-482c-9c7f-6fafbf8e63f0`
+- Submitted via Expo GraphQL API (`scripts/submit-via-api.mjs`)
+- IPA uploaded to App Store Connect successfully
 
 ### Scripts (for CI/CD automation)
 
 - `scripts/generate-provisioning-profile.mjs` - Generate iOS provisioning profile via Apple API
 - `scripts/setup-credentials-api.mjs` - Setup EAS credentials via Expo GraphQL API
 - `scripts/create-app-store-app.mjs` - Create app in App Store Connect (requires Admin API key)
+- `scripts/submit-via-api.mjs` - Submit IPA to TestFlight via Expo GraphQL API (bypasses EAS CLI interactive mode)
+- `scripts/check-submission.mjs` - Check submission status via Expo GraphQL API
 
 ### Not Yet Done
-- App Store Connect app not created yet (needed for TestFlight)
 - No custom app icon (uses Expo default)
 - No drag-to-reorder (long press) - only swipe gestures implemented
 - No splash screen customization
@@ -271,4 +275,4 @@ curl -s -X POST https://api.github.com/user/repos \
 ### Known Issues
 - Long press + drag reorder is not implemented yet (only swipe right/left and tap)
 - App icon is default Expo icon
-- Apple API key has Developer access - need Admin key for creating App Store Connect apps
+- Apple API key has Developer access - cannot create App Store Connect apps via API (need Admin key or manual creation)

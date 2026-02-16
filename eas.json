@@ -29,7 +29,8 @@
     "production": {
       "ios": {
         "appleId": "robert.matray@gmail.com",
-        "appleTeamId": "U5Q2UN4QKJ"
+        "appleTeamId": "U5Q2UN4QKJ",
+        "ascAppId": "6759269751"
       }
     }
   }
