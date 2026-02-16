@@ -206,14 +206,37 @@ curl -s -X POST https://api.github.com/user/repos \
 - Haptic feedback on gestures
 - TypeScript strict mode passes
 
+### Build Status (February 16, 2026)
+
+**EAS Project**: `f6744446-31a1-40f5-abe9-77e7dc41a501`
+**Bundle ID registered**: `com.robertmatray.onegoshop` (Apple Developer Portal ID: L6PPTCB3X6)
+**Provisioning Profile**: f649b342-4c71-4d84-98c3-cc22a77085ba (ACTIVE, expires 2026-12-12)
+**Distribution Certificate**: 28T88DA5Q5 (shared with moja4ka-zdravie)
+
+**Latest successful build**: Build #8
+- EAS Build ID: `ec382662-ec35-4661-ad17-7ea6b376d15e`
+- IPA: https://expo.dev/artifacts/eas/vaPLf6iKFg3ZPHfKDu2Xi1.ipa
+- Build logs: https://expo.dev/accounts/robertmatray/projects/1goshop/builds/ec382662-ec35-4661-ad17-7ea6b376d15e
+
+**TestFlight submission**: PENDING - requires App Store Connect app creation
+- API key 79PJWGG49Z has Developer access (cannot create apps via API)
+- App must be created manually in App Store Connect or via Admin API key
+- Once created, add `ascAppId` to eas.json submit.production.ios section
+- Then run: `npx eas-cli submit --platform ios --latest --non-interactive`
+
+### Scripts (for CI/CD automation)
+
+- `scripts/generate-provisioning-profile.mjs` - Generate iOS provisioning profile via Apple API
+- `scripts/setup-credentials-api.mjs` - Setup EAS credentials via Expo GraphQL API
+- `scripts/create-app-store-app.mjs` - Create app in App Store Connect (requires Admin API key)
+
 ### Not Yet Done
-- EAS project not initialized (no projectId yet)
-- Apple API key not copied to project
-- No TestFlight build yet
-- No app icon (uses Expo default)
+- App Store Connect app not created yet (needed for TestFlight)
+- No custom app icon (uses Expo default)
 - No drag-to-reorder (long press) - only swipe gestures implemented
 - No splash screen customization
 
 ### Known Issues
 - Long press + drag reorder is not implemented yet (only swipe right/left and tap)
 - App icon is default Expo icon
+- Apple API key has Developer access - need Admin key for creating App Store Connect apps
