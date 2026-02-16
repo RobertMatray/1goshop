@@ -1,0 +1,118 @@
+import { create } from 'zustand'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import { v4 as uuidv4 } from 'uuid'
+import type { ShoppingItem } from '../types/shopping'
+
+const STORAGE_KEY = '@shopping_list'
+
+export interface ShoppingListStoreState {
+  items: ShoppingItem[]
+  isLoaded: boolean
+
+  load: () => Promise<void>
+  addItem: (name: string) => void
+  removeItem: (id: string) => void
+  toggleChecked: (id: string) => void
+  incrementQuantity: (id: string) => void
+  decrementQuantity: (id: string) => void
+  reorderItems: (fromIndex: number, toIndex: number) => void
+  clearChecked: () => void
+  clearAll: () => void
+}
+
+export const useShoppingListStore = create<ShoppingListStoreState>((set, get) => ({
+  items: [],
+  isLoaded: false,
+
+  load: async () => {
+    try {
+      const saved = await AsyncStorage.getItem(STORAGE_KEY)
+      if (saved) {
+        const items = JSON.parse(saved) as ShoppingItem[]
+        set({ items, isLoaded: true })
+      } else {
+        set({ isLoaded: true })
+      }
+    } catch {
+      set({ isLoaded: true })
+    }
+  },
+
+  addItem: (name: string) => {
+    const trimmed = name.trim()
+    if (!trimmed) return
+
+    const items = get().items
+    const newItem: ShoppingItem = {
+      id: uuidv4(),
+      name: trimmed,
+      quantity: 1,
+      isChecked: false,
+      order: items.length,
+      createdAt: new Date().toISOString(),
+    }
+    const updated = [...items, newItem]
+    set({ items: updated })
+    persist(updated)
+  },
+
+  removeItem: (id: string) => {
+    const updated = get()
+      .items.filter((item) => item.id !== id)
+      .map((item, i) => ({ ...item, order: i }))
+    set({ items: updated })
+    persist(updated)
+  },
+
+  toggleChecked: (id: string) => {
+    const updated = get().items.map((item) =>
+      item.id === id ? { ...item, isChecked: !item.isChecked } : item,
+    )
+    set({ items: updated })
+    persist(updated)
+  },
+
+  incrementQuantity: (id: string) => {
+    const updated = get().items.map((item) =>
+      item.id === id ? { ...item, quantity: item.quantity + 1 } : item,
+    )
+    set({ items: updated })
+    persist(updated)
+  },
+
+  decrementQuantity: (id: string) => {
+    const updated = get().items.map((item) =>
+      item.id === id && item.quantity > 1 ? { ...item, quantity: item.quantity - 1 } : item,
+    )
+    set({ items: updated })
+    persist(updated)
+  },
+
+  reorderItems: (fromIndex: number, toIndex: number) => {
+    const items = [...get().items]
+    const moved = items[fromIndex]
+    if (!moved) return
+    items.splice(fromIndex, 1)
+    items.splice(toIndex, 0, moved)
+    const updated = items.map((item, i) => ({ ...item, order: i }))
+    set({ items: updated })
+    persist(updated)
+  },
+
+  clearChecked: () => {
+    const updated = get()
+      .items.filter((item) => !item.isChecked)
+      .map((item, i) => ({ ...item, order: i }))
+    set({ items: updated })
+    persist(updated)
+  },
+
+  clearAll: () => {
+    set({ items: [] })
+    persist([])
+  },
+}))
+
+function persist(items: ShoppingItem[]): void {
+  AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(items)).catch(() => {})
+}

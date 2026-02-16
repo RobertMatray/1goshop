@@ -1,0 +1,28 @@
+{
+  "appName": "1GoShop",
+  "ShoppingList": {
+    "title": "Shopping List",
+    "addPlaceholder": "Add item...",
+    "addButton": "Add",
+    "empty": "Your shopping list is empty",
+    "emptyHint": "Add items using the field above",
+    "clearChecked": "Clear checked",
+    "clearAll": "Clear all",
+    "swipeRightHint": "Swipe right = +1",
+    "swipeLeftHint": "Swipe left = delete",
+    "longPressHint": "Long press to reorder",
+    "itemCount_one": "{{count}} item",
+    "itemCount_other": "{{count}} items",
+    "checkedCount": "{{count}} checked"
+  },
+  "Settings": {
+    "title": "Settings",
+    "language": "Language",
+    "theme": "Theme",
+    "themeAuto": "Automatic",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "about": "About",
+    "version": "Version"
+  }
+}

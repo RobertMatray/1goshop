@@ -1,0 +1,37 @@
+{
+  "cli": {
+    "version": ">= 16.3.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "preview": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk",
+        "withoutCredentials": true
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "cache": {
+        "disabled": true
+      },
+      "ios": {
+        "credentialsSource": "remote"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleId": "robert.matray@gmail.com",
+        "appleTeamId": "U5Q2UN4QKJ",
+        "ascAppId": ""
+      }
+    }
+  }
+}

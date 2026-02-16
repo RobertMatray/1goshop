@@ -1,0 +1,29 @@
+{
+  "appName": "1GoShop",
+  "ShoppingList": {
+    "title": "Nakupny zoznam",
+    "addPlaceholder": "Pridat polozku...",
+    "addButton": "Pridat",
+    "empty": "Vas nakupny zoznam je prazdny",
+    "emptyHint": "Pridajte polozky pomocou pola vyssie",
+    "clearChecked": "Odstranit kupene",
+    "clearAll": "Vymazat vsetko",
+    "swipeRightHint": "Potiahni doprava = +1",
+    "swipeLeftHint": "Potiahni dolava = vymazat",
+    "longPressHint": "Podrzte pre zmenu poradia",
+    "itemCount_one": "{{count}} polozka",
+    "itemCount_few": "{{count}} polozky",
+    "itemCount_other": "{{count}} poloziek",
+    "checkedCount": "{{count}} kupenych"
+  },
+  "Settings": {
+    "title": "Nastavenia",
+    "language": "Jazyk",
+    "theme": "Tema",
+    "themeAuto": "Automaticka",
+    "themeLight": "Svetla",
+    "themeDark": "Tmava",
+    "about": "O aplikacii",
+    "version": "Verzia"
+  }
+}
