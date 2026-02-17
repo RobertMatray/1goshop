@@ -23,29 +23,30 @@ export function SettingsScreen(): React.ReactElement {
     { label: t('Settings.themeDark'), value: 'dark' },
   ]
 
-  const languageOptions: { label: string; value: SupportedLanguage }[] = [
-    { label: 'SK', value: 'sk' },
-    { label: 'EN', value: 'en' },
-    { label: 'DE', value: 'de' },
-    { label: 'HU', value: 'hu' },
-    { label: 'UK', value: 'uk' },
-    { label: 'CS', value: 'cs' },
-    { label: 'ZH', value: 'zh' },
+  const languageOptions: { flag: string; label: string; value: SupportedLanguage }[] = [
+    { flag: '🇸🇰', label: 'Slovensky', value: 'sk' },
+    { flag: '🇬🇧', label: 'English', value: 'en' },
+    { flag: '🇩🇪', label: 'Deutsch', value: 'de' },
+    { flag: '🇭🇺', label: 'Magyar', value: 'hu' },
+    { flag: '🇺🇦', label: 'Ukrainska', value: 'uk' },
+    { flag: '🇨🇿', label: 'Cesky', value: 'cs' },
+    { flag: '🇨🇳', label: 'Zhongwen', value: 'zh' },
   ]
 
   return (
     <View style={styles.container}>
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>{t('Settings.language')}</Text>
-        <View style={styles.optionsRow}>
+        <View style={styles.langGrid}>
           {languageOptions.map((option) => (
             <Pressable
               key={option.value}
-              style={[styles.optionButton, currentLang === option.value && styles.optionButtonActive]}
+              style={[styles.langButton, currentLang === option.value && styles.langButtonActive]}
               onPress={() => handleChangeLanguage(option.value)}
             >
+              <Text style={styles.langFlag}>{option.flag}</Text>
               <Text
-                style={[styles.optionText, currentLang === option.value && styles.optionTextActive]}
+                style={[styles.langLabel, currentLang === option.value && styles.langLabelActive]}
               >
                 {option.label}
               </Text>
@@ -140,6 +141,37 @@ const styles = StyleSheet.create((theme) => ({
     fontWeight: '600',
   },
   optionTextActive: {
+    color: theme.colors.textOnTint,
+  },
+  langGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  langButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: theme.sizes.radiusSm,
+    backgroundColor: theme.colors.background,
+    borderWidth: 1,
+    borderColor: theme.colors.surfaceBorder,
+    gap: 6,
+  },
+  langButtonActive: {
+    backgroundColor: theme.colors.tint,
+    borderColor: theme.colors.tint,
+  },
+  langFlag: {
+    fontSize: 18,
+  },
+  langLabel: {
+    fontSize: theme.typography.fontSizeS,
+    color: theme.colors.text,
+    fontWeight: '600',
+  },
+  langLabelActive: {
     color: theme.colors.textOnTint,
   },
   historyRow: {

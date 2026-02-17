@@ -927,6 +927,7 @@ const styles = StyleSheet.create((theme) => ({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 24,
+    overflow: 'visible',
   },
   stepTitle: {
     fontSize: 22,
@@ -993,6 +994,7 @@ const animStyles = StyleSheet.create((theme) => ({
     width: '100%',
     alignItems: 'center',
     gap: 8,
+    overflow: 'visible',
   },
   sceneLabel: {
     fontSize: 12,
@@ -1160,10 +1162,12 @@ const animStyles = StyleSheet.create((theme) => ({
     width: '85%',
     alignItems: 'center',
     gap: 8,
+    overflow: 'visible',
   },
   itemWrapper: {
     width: '100%',
     position: 'relative',
+    overflow: 'visible',
   },
   deleteBg: {
     position: 'absolute',
@@ -1277,23 +1281,26 @@ const animStyles = StyleSheet.create((theme) => ({
   },
   fingerEmoji: {
     position: 'absolute',
-    fontSize: 28,
+    fontSize: 32,
+    zIndex: 100,
   },
   fingerOnItem: {
-    bottom: -8,
+    top: 6,
     left: '50%',
-    marginLeft: -14,
+    marginLeft: -16,
   },
   fingerCenter: {
     top: '50%',
     left: '50%',
-    marginLeft: -14,
-    marginTop: -14,
+    marginLeft: -16,
+    marginTop: -16,
+    zIndex: 100,
   },
   fingerCenterBelow: {
-    bottom: -40,
+    bottom: -44,
     left: '50%',
-    marginLeft: -14,
+    marginLeft: -16,
+    zIndex: 100,
   },
   fingerIcon: {
     marginTop: 8,
