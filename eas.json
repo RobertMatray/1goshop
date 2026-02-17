@@ -28,7 +28,7 @@
   "submit": {
     "production": {
       "ios": {
-        "appleId": "robert.matray@gmail.com",
+        "appleId": "matray@realise.sk",
         "appleTeamId": "U5Q2UN4QKJ",
         "ascAppId": "6759269751",
         "ascApiKeyPath": "../superapp-ai-poc/internals/appstore-api/AuthKey_79PJWGG49Z.p8",
