@@ -4,7 +4,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: '1GoShop',
   slug: '1goshop',
-  version: '1.0.0',
+  version: '1.0.1',
   orientation: 'portrait',
   icon: './assets/icon.png',
   scheme: ['onegoshop'],
@@ -21,6 +21,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   android: {
     package: 'com.robertmatray.onegoshop',
     versionCode: 1,
+    allowBackup: true,
     adaptiveIcon: {
       foregroundImage: './assets/adaptive-icon.png',
       backgroundColor: '#4CAF50',
