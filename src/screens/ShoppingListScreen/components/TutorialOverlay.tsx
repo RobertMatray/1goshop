@@ -150,6 +150,54 @@ function StepAnimation({ step, screenWidth, t }: { step: number; screenWidth: nu
 }
 
 // ============================================================
+// Finger pointer - pure View, no emoji/Unicode (invisible on iOS)
+// ============================================================
+function FingerPointer(): React.ReactElement {
+  return (
+    <View style={fingerPointerStyles.container}>
+      {/* Finger tip circle */}
+      <View style={fingerPointerStyles.tip} />
+      {/* Finger stem */}
+      <View style={fingerPointerStyles.stem} />
+    </View>
+  )
+}
+
+const fingerPointerStyles = StyleSheet.create(() => ({
+  container: {
+    alignItems: 'center',
+    width: 28,
+    height: 44,
+  },
+  tip: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: '#ffffff',
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.6)',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 4,
+    elevation: 6,
+  },
+  stem: {
+    width: 10,
+    height: 22,
+    backgroundColor: '#ffffff',
+    borderBottomLeftRadius: 5,
+    borderBottomRightRadius: 5,
+    marginTop: -2,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 4,
+  },
+}))
+
+// ============================================================
 // Step 1: Add item animation (no finger)
 // ============================================================
 function AddItemAnimation({ t }: { t: (key: string) => string }): React.ReactElement {
@@ -301,7 +349,7 @@ function DeleteItemAnimation({ t }: { t: (key: string) => string }): React.React
       </View>
       {/* Finger in normal flow, positioned with transform */}
       <Animated.View style={fingerStyle}>
-        <Text style={animStyles.finger}>{'\u261D'}</Text>
+        <FingerPointer />
       </Animated.View>
     </View>
   )
@@ -433,7 +481,7 @@ function IncrementAnimation({ t }: { t: (key: string) => string }): React.ReactE
       </View>
       {/* Finger in normal flow */}
       <Animated.View style={fingerStyle}>
-        <Text style={animStyles.finger}>{'\u261D'}</Text>
+        <FingerPointer />
       </Animated.View>
     </View>
   )
@@ -565,7 +613,7 @@ function DecrementAnimation({ t }: { t: (key: string) => string }): React.ReactE
       </View>
       {/* Finger in normal flow */}
       <Animated.View style={fingerStyle}>
-        <Text style={animStyles.finger}>{'\u261D'}</Text>
+        <FingerPointer />
       </Animated.View>
     </View>
   )
@@ -699,7 +747,7 @@ function StartShoppingAnimation({ t }: { t: (key: string) => string }): React.Re
       </Animated.View>
       {/* Finger in normal flow */}
       <Animated.View style={fingerStyle}>
-        <Text style={animStyles.finger}>{'\u261D'}</Text>
+        <FingerPointer />
       </Animated.View>
     </View>
   )
@@ -792,7 +840,7 @@ function MarkBoughtAnimation({ t }: { t: (key: string) => string }): React.React
       </Animated.View>
       {/* Finger in normal flow */}
       <Animated.View style={fingerStyle}>
-        <Text style={animStyles.finger}>{'\u261D'}</Text>
+        <FingerPointer />
       </Animated.View>
     </View>
   )
@@ -888,7 +936,7 @@ function FinishShoppingAnimation({ t }: { t: (key: string) => string }): React.R
       </Animated.View>
       {/* Finger in normal flow */}
       <Animated.View style={fingerStyle}>
-        <Text style={animStyles.finger}>{'\u261D'}</Text>
+        <FingerPointer />
       </Animated.View>
     </View>
   )
@@ -1245,13 +1293,7 @@ const animStyles = StyleSheet.create((theme) => ({
     borderTopRightRadius: 8,
     borderBottomRightRadius: 8,
   },
-  // Finger emoji - in normal document flow (NOT absolute positioned)
-  // Moved visually with transform translateX/translateY
-  finger: {
-    fontSize: 36,
-    textAlign: 'center',
-    marginTop: 4,
-  },
+  // Finger pointer container (no styles needed - FingerPointer component handles its own styles)
   shoppingItem: {
     flexDirection: 'row',
     alignItems: 'center',
