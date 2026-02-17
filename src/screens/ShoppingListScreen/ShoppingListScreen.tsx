@@ -1,5 +1,6 @@
 import React, { useMemo, useCallback } from 'react'
 import { View, Text, Pressable } from 'react-native'
+import { Ionicons } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import DraggableFlatList, { type RenderItemParams } from 'react-native-draggable-flatlist'
 import { StyleSheet } from 'react-native-unistyles'
@@ -50,7 +51,7 @@ export function ShoppingListScreen(): React.ReactElement {
     navigation.setOptions({
       headerRight: () => (
         <Pressable onPress={() => navigation.navigate('SettingsScreen')} hitSlop={8}>
-          <Text style={styles.settingsIcon}>{'\u2699'}</Text>
+          <Ionicons name="settings-sharp" size={24} color="#ffffff" />
         </Pressable>
       ),
     })
@@ -162,9 +163,5 @@ const styles = StyleSheet.create((theme) => ({
     color: theme.colors.textSecondary,
     opacity: 0.4,
     marginHorizontal: 6,
-  },
-  settingsIcon: {
-    fontSize: 24,
-    color: '#ffffff',
   },
 }))

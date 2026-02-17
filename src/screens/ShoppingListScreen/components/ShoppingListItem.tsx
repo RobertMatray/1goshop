@@ -48,24 +48,25 @@ export function ShoppingListItem({ item, drag, isActive }: Props): React.ReactEl
       const isLeftHalf = startX.value < itemWidth.value / 2
 
       if (isLeftHalf) {
-        translateX.value = event.translationX
-      } else {
-        // Right half: only allow swipe left
+        // Left half: only allow swipe left (delete)
         translateX.value = Math.min(0, event.translationX)
+      } else {
+        // Right half: both directions (+1/-1)
+        translateX.value = event.translationX
       }
     })
     .onEnd((event) => {
       const isLeftHalf = startX.value < itemWidth.value / 2
 
       if (isLeftHalf) {
+        if (event.translationX < -SWIPE_THRESHOLD) {
+          runOnJS(onConfirmDelete)()
+        }
+      } else {
         if (event.translationX > SWIPE_THRESHOLD) {
           runOnJS(onIncrementQuantity)()
         } else if (event.translationX < -SWIPE_THRESHOLD) {
           runOnJS(onDecrementQuantity)()
-        }
-      } else {
-        if (event.translationX < -SWIPE_THRESHOLD) {
-          runOnJS(onConfirmDelete)()
         }
       }
 
@@ -82,27 +83,27 @@ export function ShoppingListItem({ item, drag, isActive }: Props): React.ReactEl
     transform: [{ translateX: translateX.value }],
   }))
 
-  const leftBgStyle = useAnimatedStyle(() => {
-    const isLeftHalf = startX.value < itemWidth.value / 2
-    const show = isLeftHalf && translateX.value > 0
+  const plusBgStyle = useAnimatedStyle(() => {
+    const isRightHalf = startX.value >= itemWidth.value / 2
+    const show = isRightHalf && translateX.value > 0
     const opacity = show
       ? interpolate(translateX.value, [0, SWIPE_THRESHOLD], [0, 1], Extrapolation.CLAMP)
       : 0
     return { opacity }
   })
 
-  const leftMinusBgStyle = useAnimatedStyle(() => {
-    const isLeftHalf = startX.value < itemWidth.value / 2
-    const show = isLeftHalf && translateX.value < 0
+  const minusBgStyle = useAnimatedStyle(() => {
+    const isRightHalf = startX.value >= itemWidth.value / 2
+    const show = isRightHalf && translateX.value < 0
     const opacity = show
       ? interpolate(translateX.value, [0, -SWIPE_THRESHOLD], [0, 1], Extrapolation.CLAMP)
       : 0
     return { opacity }
   })
 
-  const rightBgStyle = useAnimatedStyle(() => {
+  const deleteBgStyle = useAnimatedStyle(() => {
     const isLeftHalf = startX.value < itemWidth.value / 2
-    const show = !isLeftHalf && translateX.value < 0
+    const show = isLeftHalf && translateX.value < 0
     const opacity = show
       ? interpolate(translateX.value, [0, -SWIPE_THRESHOLD], [0, 1], Extrapolation.CLAMP)
       : 0
@@ -112,19 +113,19 @@ export function ShoppingListItem({ item, drag, isActive }: Props): React.ReactEl
   return (
     <View style={[styles.outerContainer, isActive && styles.activeItem]} onLayout={onLayout}>
       <View style={styles.swipeContainer}>
-        {/* +1 background (left half, swipe right) */}
-        <Animated.View style={[styles.bgAction, styles.bgPlus, leftBgStyle]}>
+        {/* Delete background (left half, swipe left) */}
+        <Animated.View style={[styles.bgAction, styles.bgDelete, deleteBgStyle]}>
+          <Text style={styles.actionText}>🗑</Text>
+        </Animated.View>
+
+        {/* +1 background (right half, swipe right) */}
+        <Animated.View style={[styles.bgAction, styles.bgPlus, plusBgStyle]}>
           <Text style={styles.actionText}>+1</Text>
         </Animated.View>
 
-        {/* -1 background (left half, swipe left) */}
-        <Animated.View style={[styles.bgAction, styles.bgMinus, leftMinusBgStyle]}>
+        {/* -1 background (right half, swipe left) */}
+        <Animated.View style={[styles.bgAction, styles.bgMinus, minusBgStyle]}>
           <Text style={styles.actionText}>-1</Text>
-        </Animated.View>
-
-        {/* Delete background (right half, swipe left) */}
-        <Animated.View style={[styles.bgAction, styles.bgDelete, rightBgStyle]}>
-          <Text style={styles.actionText}>🗑</Text>
         </Animated.View>
 
         <GestureDetector gesture={composedGesture}>
