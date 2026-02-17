@@ -20,6 +20,19 @@
     "itemCount_other": "{{count}} poloziek",
     "checkedCount": "{{count}} kupenych"
   },
+  "ActiveShopping": {
+    "title": "Nakup",
+    "startShopping": "Zacat nakup",
+    "finishShopping": "Ukoncit nakup",
+    "hideBought": "Skryt kupene",
+    "showBought": "Zobrazit kupene",
+    "boughtCount": "{{bought}} z {{total}} kupenych",
+    "allBought": "Vsetko kupene!",
+    "finishTitle": "Ukoncit nakup?",
+    "finishMessage": "Nakup bude ulozeny.",
+    "finish": "Ukoncit",
+    "cancel": "Zrusit"
+  },
   "Settings": {
     "title": "Nastavenia",
     "language": "Jazyk",

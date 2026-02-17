@@ -3,10 +3,12 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { useTranslation } from 'react-i18next'
 import { ShoppingListScreen } from '../screens/ShoppingListScreen/ShoppingListScreen'
 import { SettingsScreen } from '../screens/SettingsScreen/SettingsScreen'
+import { ActiveShoppingScreen } from '../screens/ActiveShoppingScreen/ActiveShoppingScreen'
 
 export type RootStackParamList = {
   ShoppingListScreen: undefined
   SettingsScreen: undefined
+  ActiveShoppingScreen: undefined
 }
 
 const Stack = createNativeStackNavigator<RootStackParamList>()
@@ -35,6 +37,13 @@ export function AppNavigator(): React.ReactElement {
         component={SettingsScreen}
         options={{
           title: t('Settings.title'),
+        }}
+      />
+      <Stack.Screen
+        name="ActiveShoppingScreen"
+        component={ActiveShoppingScreen}
+        options={{
+          title: t('ActiveShopping.title'),
         }}
       />
     </Stack.Navigator>

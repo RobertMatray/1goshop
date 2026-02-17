@@ -19,6 +19,19 @@
     "itemCount_other": "{{count}} items",
     "checkedCount": "{{count}} checked"
   },
+  "ActiveShopping": {
+    "title": "Shopping",
+    "startShopping": "Start Shopping",
+    "finishShopping": "Finish Shopping",
+    "hideBought": "Hide bought",
+    "showBought": "Show bought",
+    "boughtCount": "{{bought}} of {{total}} bought",
+    "allBought": "All items bought!",
+    "finishTitle": "Finish shopping?",
+    "finishMessage": "Shopping session will be saved.",
+    "finish": "Finish",
+    "cancel": "Cancel"
+  },
   "Settings": {
     "title": "Settings",
     "language": "Language",

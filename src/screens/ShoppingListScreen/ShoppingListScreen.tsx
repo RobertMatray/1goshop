@@ -8,6 +8,7 @@ import { useNavigation } from '@react-navigation/native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import type { RootStackParamList } from '../../navigation/AppNavigator'
 import { useShoppingListStore } from '../../stores/ShoppingListStore'
+import { useActiveShoppingStore } from '../../stores/ActiveShoppingStore'
 import { ShoppingListItem } from './components/ShoppingListItem'
 import { AddItemInput } from './components/AddItemInput'
 import { EmptyListPlaceholder } from './components/EmptyListPlaceholder'
@@ -21,6 +22,8 @@ export function ShoppingListScreen(): React.ReactElement {
   const insets = useSafeAreaInsets()
   const items = useShoppingListStore((s) => s.items)
   const clearChecked = useShoppingListStore((s) => s.clearChecked)
+  const activeSession = useActiveShoppingStore((s) => s.session)
+  const startShopping = useActiveShoppingStore((s) => s.startShopping)
 
   const sortedItems = useMemo(() => {
     return [...items].sort((a, b) => a.order - b.order)
@@ -53,6 +56,13 @@ export function ShoppingListScreen(): React.ReactElement {
       ),
     })
   }, [navigation])
+
+  // Resume active shopping session if app was closed mid-shopping
+  React.useEffect(() => {
+    if (activeSession) {
+      navigation.navigate('ActiveShoppingScreen')
+    }
+  }, [activeSession, navigation])
 
   return (
     <View style={styles.container}>
@@ -87,6 +97,11 @@ export function ShoppingListScreen(): React.ReactElement {
             )}
           </View>
         )}
+        {checkedCount > 0 && (
+          <Pressable style={styles.startShoppingButton} onPress={handleStartShopping}>
+            <Text style={styles.startShoppingText}>{t('ActiveShopping.startShopping')}</Text>
+          </Pressable>
+        )}
         <View style={styles.hintsRow}>
           <Text style={styles.hintText}>{t('ShoppingList.swipeRightHint')}</Text>
           <Text style={styles.hintSeparator}>•</Text>
@@ -97,6 +112,11 @@ export function ShoppingListScreen(): React.ReactElement {
       </View>
     </View>
   )
+
+  function handleStartShopping(): void {
+    startShopping(items)
+    navigation.navigate('ActiveShoppingScreen')
+  }
 }
 
 const styles = StyleSheet.create((theme) => ({
@@ -136,6 +156,18 @@ const styles = StyleSheet.create((theme) => ({
   clearButtonText: {
     color: '#ffffff',
     fontSize: theme.typography.fontSizeS,
+    fontWeight: 'bold',
+  },
+  startShoppingButton: {
+    backgroundColor: theme.colors.tint,
+    borderRadius: theme.sizes.radiusSm,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  startShoppingText: {
+    color: '#ffffff',
+    fontSize: theme.typography.fontSizeM,
     fontWeight: 'bold',
   },
   hintsRow: {

@@ -8,6 +8,7 @@ import { SystemBars } from 'react-native-edge-to-edge'
 import i18n, { initI18n } from './i18n/i18n'
 import { AppNavigator } from './navigation/AppNavigator'
 import { useShoppingListStore } from './stores/ShoppingListStore'
+import { useActiveShoppingStore } from './stores/ActiveShoppingStore'
 import { useThemeStore } from './stores/ThemeStore'
 
 export function App(): React.ReactElement {
@@ -43,6 +44,7 @@ export function App(): React.ReactElement {
       await Promise.all([
         initI18n(),
         useShoppingListStore.getState().load(),
+        useActiveShoppingStore.getState().load(),
         useThemeStore.getState().load(),
       ])
     } catch {
