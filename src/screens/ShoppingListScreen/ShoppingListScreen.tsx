@@ -67,21 +67,32 @@ export function ShoppingListScreen(): React.ReactElement {
           onDragEnd={handleDragEnd}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
+          autoscrollThreshold={80}
+          autoscrollSpeed={200}
         />
       )}
-      {items.length > 0 && (
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            {t('ShoppingList.itemCount', { count: items.length })}
-            {checkedCount > 0 && ` · ${t('ShoppingList.checkedCount', { count: checkedCount })}`}
-          </Text>
-          {checkedCount > 0 && (
-            <Pressable onPress={clearChecked} style={styles.clearButton}>
-              <Text style={styles.clearButtonText}>{t('ShoppingList.clearChecked')}</Text>
-            </Pressable>
-          )}
+      <View style={styles.footer}>
+        {items.length > 0 && (
+          <View style={styles.footerTop}>
+            <Text style={styles.footerText}>
+              {t('ShoppingList.itemCount', { count: items.length })}
+              {checkedCount > 0 && ` · ${t('ShoppingList.checkedCount', { count: checkedCount })}`}
+            </Text>
+            {checkedCount > 0 && (
+              <Pressable onPress={clearChecked} style={styles.clearButton}>
+                <Text style={styles.clearButtonText}>{t('ShoppingList.clearChecked')}</Text>
+              </Pressable>
+            )}
+          </View>
+        )}
+        <View style={styles.hintsRow}>
+          <Text style={styles.hintText}>{t('ShoppingList.swipeRightHint')}</Text>
+          <Text style={styles.hintSeparator}>•</Text>
+          <Text style={styles.hintText}>{t('ShoppingList.swipeLeftHint')}</Text>
+          <Text style={styles.hintSeparator}>•</Text>
+          <Text style={styles.hintText}>{t('ShoppingList.longPressHint')}</Text>
         </View>
-      )}
+      </View>
     </View>
   )
 }
@@ -95,14 +106,17 @@ const styles = StyleSheet.create((theme) => ({
     paddingBottom: 16,
   },
   footer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: theme.sizes.screenPadding,
-    paddingVertical: 12,
+    paddingVertical: 8,
     backgroundColor: theme.colors.surface,
     borderTopWidth: 1,
     borderTopColor: theme.colors.surfaceBorder,
+  },
+  footerTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 6,
   },
   footerText: {
     fontSize: theme.typography.fontSizeS,
@@ -118,6 +132,23 @@ const styles = StyleSheet.create((theme) => ({
     color: '#ffffff',
     fontSize: theme.typography.fontSizeS,
     fontWeight: 'bold',
+  },
+  hintsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexWrap: 'wrap',
+  },
+  hintText: {
+    fontSize: 11,
+    color: theme.colors.textSecondary,
+    opacity: 0.6,
+  },
+  hintSeparator: {
+    fontSize: 11,
+    color: theme.colors.textSecondary,
+    opacity: 0.4,
+    marginHorizontal: 6,
   },
   settingsIcon: {
     fontSize: 22,

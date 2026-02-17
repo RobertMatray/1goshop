@@ -21,7 +21,7 @@ interface Props {
   isActive?: boolean
 }
 
-const QUANTITY_THRESHOLD = 60
+const SWIPE_THRESHOLD = 30
 
 export function ShoppingListItem({ item, drag, isActive }: Props): React.ReactElement {
   const translateX = useSharedValue(0)
@@ -39,8 +39,8 @@ export function ShoppingListItem({ item, drag, isActive }: Props): React.ReactEl
   }, [itemWidth])
 
   const panGesture = Gesture.Pan()
-    .activeOffsetX([-15, 15])
-    .failOffsetY([-10, 10])
+    .activeOffsetX([-8, 8])
+    .failOffsetY([-8, 8])
     .onStart((event) => {
       startX.value = event.x
     })
@@ -58,13 +58,13 @@ export function ShoppingListItem({ item, drag, isActive }: Props): React.ReactEl
       const isLeftHalf = startX.value < itemWidth.value / 2
 
       if (isLeftHalf) {
-        if (event.translationX > QUANTITY_THRESHOLD) {
+        if (event.translationX > SWIPE_THRESHOLD) {
           runOnJS(onIncrementQuantity)()
-        } else if (event.translationX < -QUANTITY_THRESHOLD) {
+        } else if (event.translationX < -SWIPE_THRESHOLD) {
           runOnJS(onDecrementQuantity)()
         }
       } else {
-        if (event.translationX < -QUANTITY_THRESHOLD) {
+        if (event.translationX < -SWIPE_THRESHOLD) {
           runOnJS(onConfirmDelete)()
         }
       }
@@ -86,7 +86,7 @@ export function ShoppingListItem({ item, drag, isActive }: Props): React.ReactEl
     const isLeftHalf = startX.value < itemWidth.value / 2
     const show = isLeftHalf && translateX.value > 0
     const opacity = show
-      ? interpolate(translateX.value, [0, QUANTITY_THRESHOLD], [0, 1], Extrapolation.CLAMP)
+      ? interpolate(translateX.value, [0, SWIPE_THRESHOLD], [0, 1], Extrapolation.CLAMP)
       : 0
     return { opacity }
   })
@@ -95,7 +95,7 @@ export function ShoppingListItem({ item, drag, isActive }: Props): React.ReactEl
     const isLeftHalf = startX.value < itemWidth.value / 2
     const show = isLeftHalf && translateX.value < 0
     const opacity = show
-      ? interpolate(translateX.value, [0, -QUANTITY_THRESHOLD], [0, 1], Extrapolation.CLAMP)
+      ? interpolate(translateX.value, [0, -SWIPE_THRESHOLD], [0, 1], Extrapolation.CLAMP)
       : 0
     return { opacity }
   })
@@ -104,7 +104,7 @@ export function ShoppingListItem({ item, drag, isActive }: Props): React.ReactEl
     const isLeftHalf = startX.value < itemWidth.value / 2
     const show = !isLeftHalf && translateX.value < 0
     const opacity = show
-      ? interpolate(translateX.value, [0, -QUANTITY_THRESHOLD], [0, 1], Extrapolation.CLAMP)
+      ? interpolate(translateX.value, [0, -SWIPE_THRESHOLD], [0, 1], Extrapolation.CLAMP)
       : 0
     return { opacity }
   })
@@ -129,22 +129,24 @@ export function ShoppingListItem({ item, drag, isActive }: Props): React.ReactEl
 
         <GestureDetector gesture={composedGesture}>
           <Animated.View style={[styles.itemContainer, item.isChecked && styles.itemChecked, animatedItemStyle]}>
-            <View style={styles.checkbox}>
-              {item.isChecked && <Text style={styles.checkmark}>✓</Text>}
-            </View>
-
-            <Text
-              style={[styles.itemName, item.isChecked && styles.itemNameChecked]}
-              numberOfLines={1}
-            >
-              {item.name}
-            </Text>
-
-            {item.quantity > 1 && (
-              <View style={styles.quantityBadge}>
-                <Text style={styles.quantityText}>x{item.quantity}</Text>
+            <View style={styles.itemContent} pointerEvents="none">
+              <View style={styles.checkbox}>
+                {item.isChecked && <Text style={styles.checkmark}>✓</Text>}
               </View>
-            )}
+
+              <Text
+                style={[styles.itemName, item.isChecked && styles.itemNameChecked]}
+                numberOfLines={1}
+              >
+                {item.name}
+              </Text>
+
+              {item.quantity > 1 && (
+                <View style={styles.quantityBadge}>
+                  <Text style={styles.quantityText}>x{item.quantity}</Text>
+                </View>
+              )}
+            </View>
 
             <Pressable
               onLongPress={onDragStart}
@@ -256,6 +258,11 @@ const styles = StyleSheet.create((theme) => ({
   itemChecked: {
     backgroundColor: theme.colors.checked,
     borderColor: theme.colors.checked,
+  },
+  itemContent: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   checkbox: {
     width: 28,
