@@ -23,6 +23,11 @@ interface Props {
 
 const TOTAL_STEPS = 8
 
+// Layout constants for finger positioning (in pixels).
+// The animation area is 220px tall. Items are ~48px tall.
+// Scene uses width '85%' with alignItems center.
+const FINGER_SIZE = 36
+
 export function TutorialOverlay({ visible, onClose }: Props): React.ReactElement | null {
   const { t } = useTranslation()
   const insets = useSafeAreaInsets()
@@ -104,7 +109,7 @@ export function TutorialOverlay({ visible, onClose }: Props): React.ReactElement
           <View style={styles.navigation}>
             {step > 0 ? (
               <Pressable style={styles.navButton} onPress={() => setStep(step - 1)}>
-                <Text style={styles.navButtonText}>‹ {t('Tutorial.prev')}</Text>
+                <Text style={styles.navButtonText}>{'\u2039'} {t('Tutorial.prev')}</Text>
               </Pressable>
             ) : (
               <View style={styles.navButton} />
@@ -112,7 +117,7 @@ export function TutorialOverlay({ visible, onClose }: Props): React.ReactElement
 
             {step < TOTAL_STEPS - 1 ? (
               <Pressable style={[styles.navButton, styles.navButtonPrimary]} onPress={() => setStep(step + 1)}>
-                <Text style={styles.navButtonPrimaryText}>{t('Tutorial.next')} ›</Text>
+                <Text style={styles.navButtonPrimaryText}>{t('Tutorial.next')} {'\u203A'}</Text>
               </Pressable>
             ) : (
               <Pressable style={[styles.navButton, styles.navButtonPrimary]} onPress={onClose}>
@@ -149,7 +154,7 @@ function StepAnimation({ step, screenWidth, t }: { step: number; screenWidth: nu
   }
 }
 
-// Step 1: Add item animation
+// Step 1: Add item animation (no finger needed)
 function AddItemAnimation({ t }: { t: (key: string) => string }): React.ReactElement {
   const inputOpacity = useSharedValue(0)
   const textWidth = useSharedValue(0)
@@ -194,15 +199,20 @@ function AddItemAnimation({ t }: { t: (key: string) => string }): React.ReactEle
   )
 }
 
-// Step 2: Delete item (LEFT half swipe left) - finger drags item off screen
+// Step 2: Delete item (LEFT half swipe left) - finger is a top-level sibling
 function DeleteItemAnimation({ t }: { t: (key: string) => string }): React.ReactElement {
   const itemTranslateX = useSharedValue(0)
   const itemOpacity = useSharedValue(1)
   const bgOpacity = useSharedValue(0)
-  const fingerX = useSharedValue(0)
-  const fingerY = useSharedValue(-40)
+  const fingerLeft = useSharedValue(60)
+  const fingerTop = useSharedValue(20)
   const fingerOpacity = useSharedValue(0)
   const fingerScale = useSharedValue(1)
+
+  // Zone label is ~20px, then item starts at ~28px (with gap).
+  // Item center vertically: ~28 + 24 = ~52px from top of scene.
+  // Finger start: above item at ~20px, target on item at ~50px.
+  // For LEFT half: finger left should be around 60px (left quarter area).
 
   useEffect(() => {
     const CYCLE = 3500
@@ -214,28 +224,28 @@ function DeleteItemAnimation({ t }: { t: (key: string) => string }): React.React
       bgOpacity.value = 0
       fingerOpacity.value = 0
       fingerScale.value = 1
-      fingerX.value = -40 // Start finger on left side of item
-      fingerY.value = -40
+      fingerLeft.value = 60
+      fingerTop.value = 20
 
-      // 1. Finger appears and moves down to item (0-400ms)
+      // 1. Finger appears above the item (0-400ms)
       fingerOpacity.value = withDelay(200, withTiming(1, { duration: 200 }))
-      fingerY.value = withDelay(200, withTiming(8, { duration: 400, easing: Easing.out(Easing.quad) }))
+      fingerTop.value = withDelay(200, withTiming(50, { duration: 400, easing: Easing.out(Easing.quad) }))
 
-      // 2. Finger "presses" (400-600ms)
+      // 2. Finger "presses" (600ms)
       fingerScale.value = withDelay(600, withSequence(
         withTiming(0.85, { duration: 100 }),
         withTiming(0.9, { duration: 100 }),
       ))
 
-      // 3. Finger drags item left to -80 (800-1600ms)
-      fingerX.value = withDelay(800, withTiming(-120, { duration: 800, easing: Easing.out(Easing.quad) }))
+      // 3. Finger drags item left (800-1600ms)
+      fingerLeft.value = withDelay(800, withTiming(-40, { duration: 800, easing: Easing.out(Easing.quad) }))
       itemTranslateX.value = withDelay(800, withTiming(-80, { duration: 800, easing: Easing.out(Easing.quad) }))
       bgOpacity.value = withDelay(800, withTiming(1, { duration: 400 }))
 
-      // 4. Item slides off screen (1600-2200ms)
+      // 4. Item slides off screen (1700-2200ms)
       itemTranslateX.value = withDelay(1700, withTiming(-300, { duration: 500, easing: Easing.in(Easing.quad) }))
       itemOpacity.value = withDelay(1700, withTiming(0, { duration: 500 }))
-      fingerX.value = withDelay(1700, withTiming(-280, { duration: 500, easing: Easing.in(Easing.quad) }))
+      fingerLeft.value = withDelay(1700, withTiming(-200, { duration: 500, easing: Easing.in(Easing.quad) }))
       fingerOpacity.value = withDelay(1900, withTiming(0, { duration: 200 }))
 
       // 5. Item reappears (2700ms)
@@ -256,16 +266,18 @@ function DeleteItemAnimation({ t }: { t: (key: string) => string }): React.React
   }))
   const bgStyle = useAnimatedStyle(() => ({ opacity: bgOpacity.value }))
   const fingerStyle = useAnimatedStyle(() => ({
+    position: 'absolute',
+    left: fingerLeft.value,
+    top: fingerTop.value,
     opacity: fingerOpacity.value,
-    transform: [
-      { translateX: fingerX.value },
-      { translateY: fingerY.value },
-      { scale: fingerScale.value },
-    ],
+    fontSize: FINGER_SIZE,
+    zIndex: 1000,
+    transform: [{ scale: fingerScale.value }],
   }))
 
   return (
-    <View style={animStyles.scene}>
+    <View style={animStyles.sceneRelative}>
+      {/* Content */}
       <View style={animStyles.zoneLabel}>
         <Text style={animStyles.zoneLabelTextActive}>LEFT half</Text>
         <Text style={animStyles.zoneLabelTextDim} />
@@ -273,32 +285,35 @@ function DeleteItemAnimation({ t }: { t: (key: string) => string }): React.React
       <View style={animStyles.swipeDemo}>
         <View style={animStyles.itemWrapper}>
           <Animated.View style={[animStyles.deleteBg, bgStyle]}>
-            <Text style={animStyles.bgText}>🗑</Text>
+            <Text style={animStyles.bgText}>{'\uD83D\uDDD1'}</Text>
           </Animated.View>
           <Animated.View style={[animStyles.listItem, animStyles.listItemFull, itemStyle]}>
             <View style={animStyles.checkbox} />
             <Text style={animStyles.itemName}>{t('Tutorial.exampleItem2')}</Text>
           </Animated.View>
-          <Animated.Text style={[animStyles.fingerEmoji, animStyles.fingerOnItem, fingerStyle]}>
-            👆
-          </Animated.Text>
         </View>
       </View>
+
+      {/* Finger - direct child of outermost View, pixel positioning */}
+      <Animated.Text style={fingerStyle}>{'\uD83D\uDC46'}</Animated.Text>
     </View>
   )
 }
 
-// Step 3: Increment (+1) - RIGHT half swipe right - finger drags, qty animates
+// Step 3: Increment (+1) - RIGHT half swipe right
 function IncrementAnimation({ t }: { t: (key: string) => string }): React.ReactElement {
   const itemTranslateX = useSharedValue(0)
   const bgOpacity = useSharedValue(0)
-  const fingerX = useSharedValue(60)
-  const fingerY = useSharedValue(-40)
+  const fingerLeft = useSharedValue(170)
+  const fingerTop = useSharedValue(20)
   const fingerOpacity = useSharedValue(0)
   const fingerScale = useSharedValue(1)
   const qtyScale = useSharedValue(1)
   const qtyFlashOpacity = useSharedValue(0)
   const [displayQty, setDisplayQty] = useState(1)
+
+  // For RIGHT half: finger starts at ~170px (right side of item area).
+  // Item starts at ~28px from top (after zone label).
 
   const setQty = useCallback((val: number) => {
     setDisplayQty(val)
@@ -313,15 +328,15 @@ function IncrementAnimation({ t }: { t: (key: string) => string }): React.ReactE
       bgOpacity.value = 0
       fingerOpacity.value = 0
       fingerScale.value = 1
-      fingerX.value = 60
-      fingerY.value = -40
+      fingerLeft.value = 170
+      fingerTop.value = 20
       qtyScale.value = 1
       qtyFlashOpacity.value = 0
       runOnJS(setQty)(1)
 
-      // 1. Finger appears on right side and moves to item (0-400ms)
+      // 1. Finger appears on right side and moves down to item (0-400ms)
       fingerOpacity.value = withDelay(200, withTiming(1, { duration: 200 }))
-      fingerY.value = withDelay(200, withTiming(8, { duration: 400, easing: Easing.out(Easing.quad) }))
+      fingerTop.value = withDelay(200, withTiming(50, { duration: 400, easing: Easing.out(Easing.quad) }))
 
       // 2. Finger presses (600ms)
       fingerScale.value = withDelay(600, withSequence(
@@ -330,7 +345,7 @@ function IncrementAnimation({ t }: { t: (key: string) => string }): React.ReactE
       ))
 
       // 3. Finger drags item right to +80 (800-1600ms)
-      fingerX.value = withDelay(800, withTiming(140, { duration: 800, easing: Easing.out(Easing.quad) }))
+      fingerLeft.value = withDelay(800, withTiming(250, { duration: 800, easing: Easing.out(Easing.quad) }))
       itemTranslateX.value = withDelay(800, withTiming(80, { duration: 800, easing: Easing.out(Easing.quad) }))
       bgOpacity.value = withDelay(800, withTiming(1, { duration: 400 }))
 
@@ -361,12 +376,13 @@ function IncrementAnimation({ t }: { t: (key: string) => string }): React.ReactE
   }))
   const bgStyle = useAnimatedStyle(() => ({ opacity: bgOpacity.value }))
   const fingerStyle = useAnimatedStyle(() => ({
+    position: 'absolute',
+    left: fingerLeft.value,
+    top: fingerTop.value,
     opacity: fingerOpacity.value,
-    transform: [
-      { translateX: fingerX.value },
-      { translateY: fingerY.value },
-      { scale: fingerScale.value },
-    ],
+    fontSize: FINGER_SIZE,
+    zIndex: 1000,
+    transform: [{ scale: fingerScale.value }],
   }))
   const qtyStyle = useAnimatedStyle(() => ({
     transform: [{ scale: qtyScale.value }],
@@ -376,7 +392,8 @@ function IncrementAnimation({ t }: { t: (key: string) => string }): React.ReactE
   }))
 
   return (
-    <View style={animStyles.scene}>
+    <View style={animStyles.sceneRelative}>
+      {/* Content */}
       <View style={animStyles.zoneLabel}>
         <Text style={animStyles.zoneLabelTextDim} />
         <Text style={animStyles.zoneLabelTextActive}>RIGHT half</Text>
@@ -394,21 +411,21 @@ function IncrementAnimation({ t }: { t: (key: string) => string }): React.ReactE
               <Text style={animStyles.qtyText}>x{displayQty}</Text>
             </Animated.View>
           </Animated.View>
-          <Animated.Text style={[animStyles.fingerEmoji, animStyles.fingerOnItem, fingerStyle]}>
-            👆
-          </Animated.Text>
         </View>
       </View>
+
+      {/* Finger - direct child of outermost View, pixel positioning */}
+      <Animated.Text style={fingerStyle}>{'\uD83D\uDC46'}</Animated.Text>
     </View>
   )
 }
 
-// Step 4: Decrement (-1) - RIGHT half swipe left - finger drags, qty animates
+// Step 4: Decrement (-1) - RIGHT half swipe left
 function DecrementAnimation({ t }: { t: (key: string) => string }): React.ReactElement {
   const itemTranslateX = useSharedValue(0)
   const bgOpacity = useSharedValue(0)
-  const fingerX = useSharedValue(60)
-  const fingerY = useSharedValue(-40)
+  const fingerLeft = useSharedValue(170)
+  const fingerTop = useSharedValue(20)
   const fingerOpacity = useSharedValue(0)
   const fingerScale = useSharedValue(1)
   const qtyScale = useSharedValue(1)
@@ -428,15 +445,15 @@ function DecrementAnimation({ t }: { t: (key: string) => string }): React.ReactE
       bgOpacity.value = 0
       fingerOpacity.value = 0
       fingerScale.value = 1
-      fingerX.value = 60
-      fingerY.value = -40
+      fingerLeft.value = 170
+      fingerTop.value = 20
       qtyScale.value = 1
       qtyFlashOpacity.value = 0
       runOnJS(setQty)(3)
 
-      // 1. Finger appears on right side and moves to item (0-400ms)
+      // 1. Finger appears on right side and moves down to item (0-400ms)
       fingerOpacity.value = withDelay(200, withTiming(1, { duration: 200 }))
-      fingerY.value = withDelay(200, withTiming(8, { duration: 400, easing: Easing.out(Easing.quad) }))
+      fingerTop.value = withDelay(200, withTiming(50, { duration: 400, easing: Easing.out(Easing.quad) }))
 
       // 2. Finger presses (600ms)
       fingerScale.value = withDelay(600, withSequence(
@@ -445,7 +462,7 @@ function DecrementAnimation({ t }: { t: (key: string) => string }): React.ReactE
       ))
 
       // 3. Finger drags item left to -80 (800-1600ms)
-      fingerX.value = withDelay(800, withTiming(-20, { duration: 800, easing: Easing.out(Easing.quad) }))
+      fingerLeft.value = withDelay(800, withTiming(90, { duration: 800, easing: Easing.out(Easing.quad) }))
       itemTranslateX.value = withDelay(800, withTiming(-80, { duration: 800, easing: Easing.out(Easing.quad) }))
       bgOpacity.value = withDelay(800, withTiming(1, { duration: 400 }))
 
@@ -476,12 +493,13 @@ function DecrementAnimation({ t }: { t: (key: string) => string }): React.ReactE
   }))
   const bgStyle = useAnimatedStyle(() => ({ opacity: bgOpacity.value }))
   const fingerStyle = useAnimatedStyle(() => ({
+    position: 'absolute',
+    left: fingerLeft.value,
+    top: fingerTop.value,
     opacity: fingerOpacity.value,
-    transform: [
-      { translateX: fingerX.value },
-      { translateY: fingerY.value },
-      { scale: fingerScale.value },
-    ],
+    fontSize: FINGER_SIZE,
+    zIndex: 1000,
+    transform: [{ scale: fingerScale.value }],
   }))
   const qtyStyle = useAnimatedStyle(() => ({
     transform: [{ scale: qtyScale.value }],
@@ -491,7 +509,8 @@ function DecrementAnimation({ t }: { t: (key: string) => string }): React.ReactE
   }))
 
   return (
-    <View style={animStyles.scene}>
+    <View style={animStyles.sceneRelative}>
+      {/* Content */}
       <View style={animStyles.zoneLabel}>
         <Text style={animStyles.zoneLabelTextDim} />
         <Text style={animStyles.zoneLabelTextActive}>RIGHT half</Text>
@@ -509,19 +528,19 @@ function DecrementAnimation({ t }: { t: (key: string) => string }): React.ReactE
               <Text style={animStyles.qtyText}>x{displayQty}</Text>
             </Animated.View>
           </Animated.View>
-          <Animated.Text style={[animStyles.fingerEmoji, animStyles.fingerOnItem, fingerStyle]}>
-            👆
-          </Animated.Text>
         </View>
       </View>
+
+      {/* Finger - direct child of outermost View, pixel positioning */}
+      <Animated.Text style={fingerStyle}>{'\uD83D\uDC46'}</Animated.Text>
     </View>
   )
 }
 
 // Step 5: Start shopping - finger taps checkboxes then taps button
 function StartShoppingAnimation({ t }: { t: (key: string) => string }): React.ReactElement {
-  const fingerX = useSharedValue(0)
-  const fingerY = useSharedValue(-30)
+  const fingerLeft = useSharedValue(110)
+  const fingerTop = useSharedValue(10)
   const fingerOpacity = useSharedValue(0)
   const fingerScale = useSharedValue(1)
   const check1Opacity = useSharedValue(0)
@@ -533,6 +552,9 @@ function StartShoppingAnimation({ t }: { t: (key: string) => string }): React.Re
   const buttonScale = useSharedValue(1)
   const buttonGlow = useSharedValue(0)
 
+  // Items are at ~0px and ~52px from top. Button at ~116px.
+  // Checkbox is at left ~20px of item. Finger starts centered above.
+
   useEffect(() => {
     // Sequential animation (plays once)
 
@@ -540,8 +562,8 @@ function StartShoppingAnimation({ t }: { t: (key: string) => string }): React.Re
     fingerOpacity.value = withDelay(200, withTiming(1, { duration: 200 }))
 
     // 2. Finger moves to first checkbox position (300-700ms)
-    fingerX.value = withDelay(300, withTiming(-60, { duration: 400, easing: Easing.inOut(Easing.quad) }))
-    fingerY.value = withDelay(300, withTiming(0, { duration: 400, easing: Easing.inOut(Easing.quad) }))
+    fingerLeft.value = withDelay(300, withTiming(30, { duration: 400, easing: Easing.inOut(Easing.quad) }))
+    fingerTop.value = withDelay(300, withTiming(10, { duration: 400, easing: Easing.inOut(Easing.quad) }))
 
     // 3. Finger taps first item (700-900ms)
     fingerScale.value = withDelay(700, withSequence(
@@ -556,7 +578,7 @@ function StartShoppingAnimation({ t }: { t: (key: string) => string }): React.Re
     check1BgOpacity.value = withDelay(780, withTiming(1, { duration: 200 }))
 
     // 4. Finger moves to second item (1000-1400ms)
-    fingerY.value = withDelay(1000, withTiming(44, { duration: 400, easing: Easing.inOut(Easing.quad) }))
+    fingerTop.value = withDelay(1000, withTiming(56, { duration: 400, easing: Easing.inOut(Easing.quad) }))
 
     // 5. Finger taps second item (1400-1600ms)
     fingerScale.value = withDelay(1400, withSequence(
@@ -571,8 +593,8 @@ function StartShoppingAnimation({ t }: { t: (key: string) => string }): React.Re
     check2BgOpacity.value = withDelay(1480, withTiming(1, { duration: 200 }))
 
     // 6. Finger moves to start button (1800-2300ms)
-    fingerX.value = withDelay(1800, withTiming(0, { duration: 500, easing: Easing.inOut(Easing.quad) }))
-    fingerY.value = withDelay(1800, withTiming(105, { duration: 500, easing: Easing.inOut(Easing.quad) }))
+    fingerLeft.value = withDelay(1800, withTiming(100, { duration: 500, easing: Easing.inOut(Easing.quad) }))
+    fingerTop.value = withDelay(1800, withTiming(120, { duration: 500, easing: Easing.inOut(Easing.quad) }))
 
     // 7. Finger taps button (2300-2500ms)
     fingerScale.value = withDelay(2300, withSequence(
@@ -599,12 +621,13 @@ function StartShoppingAnimation({ t }: { t: (key: string) => string }): React.Re
   }, [])
 
   const fingerStyle = useAnimatedStyle(() => ({
+    position: 'absolute',
+    left: fingerLeft.value,
+    top: fingerTop.value,
     opacity: fingerOpacity.value,
-    transform: [
-      { translateX: fingerX.value },
-      { translateY: fingerY.value },
-      { scale: fingerScale.value },
-    ],
+    fontSize: FINGER_SIZE,
+    zIndex: 1000,
+    transform: [{ scale: fingerScale.value }],
   }))
   const item1Style = useAnimatedStyle(() => ({
     transform: [{ scale: item1Scale.value }],
@@ -626,32 +649,34 @@ function StartShoppingAnimation({ t }: { t: (key: string) => string }): React.Re
   }))
 
   return (
-    <View style={animStyles.scene}>
+    <View style={animStyles.sceneRelative}>
+      {/* Content */}
       <Animated.View style={[animStyles.listItem, item1Style]}>
         <Animated.View style={[animStyles.checkbox, check1BgStyle]}>
-          <Animated.Text style={[animStyles.checkmarkText, check1Style]}>✓</Animated.Text>
+          <Animated.Text style={[animStyles.checkmarkText, check1Style]}>{'\u2713'}</Animated.Text>
         </Animated.View>
         <Text style={animStyles.itemName}>{t('Tutorial.exampleItem1')}</Text>
       </Animated.View>
       <Animated.View style={[animStyles.listItem, { marginTop: 4 }, item2Style]}>
         <Animated.View style={[animStyles.checkbox, check2BgStyle]}>
-          <Animated.Text style={[animStyles.checkmarkText, check2Style]}>✓</Animated.Text>
+          <Animated.Text style={[animStyles.checkmarkText, check2Style]}>{'\u2713'}</Animated.Text>
         </Animated.View>
         <Text style={animStyles.itemName}>{t('Tutorial.exampleItem2')}</Text>
       </Animated.View>
       <Animated.View style={[animStyles.startButton, buttonStyle]}>
         <Text style={animStyles.startButtonText}>{t('ActiveShopping.startShopping')}</Text>
       </Animated.View>
-      <Animated.Text style={[animStyles.fingerEmoji, animStyles.fingerCenter, fingerStyle]}>
-        👆
-      </Animated.Text>
+
+      {/* Finger - direct child of outermost View, pixel positioning */}
+      <Animated.Text style={fingerStyle}>{'\uD83D\uDC46'}</Animated.Text>
     </View>
   )
 }
 
 // Step 6: Mark bought - finger taps item, green circle fills
 function MarkBoughtAnimation({ t }: { t: (key: string) => string }): React.ReactElement {
-  const fingerY = useSharedValue(-35)
+  const fingerLeft = useSharedValue(110)
+  const fingerTop = useSharedValue(10)
   const fingerOpacity = useSharedValue(0)
   const fingerScale = useSharedValue(1)
   const tapScale = useSharedValue(1)
@@ -659,12 +684,16 @@ function MarkBoughtAnimation({ t }: { t: (key: string) => string }): React.React
   const circleFill = useSharedValue(0)
   const nameOpacity = useSharedValue(1)
 
+  // Item is centered in scene. Finger appears above and moves down to item center.
+  // Item starts at roughly y=0 in the scene (centered by gap). Item center ~24px.
+
   useEffect(() => {
     const CYCLE = 2800
 
     function animate(): void {
       // Reset
-      fingerY.value = -35
+      fingerLeft.value = 110
+      fingerTop.value = 10
       fingerOpacity.value = 0
       fingerScale.value = 1
       tapScale.value = 1
@@ -674,7 +703,7 @@ function MarkBoughtAnimation({ t }: { t: (key: string) => string }): React.React
 
       // 1. Finger appears and moves down to item (0-500ms)
       fingerOpacity.value = withDelay(100, withTiming(1, { duration: 200 }))
-      fingerY.value = withDelay(100, withTiming(8, { duration: 500, easing: Easing.out(Easing.quad) }))
+      fingerTop.value = withDelay(100, withTiming(48, { duration: 500, easing: Easing.out(Easing.quad) }))
 
       // 2. Finger taps item (600-800ms)
       fingerScale.value = withDelay(600, withSequence(
@@ -703,11 +732,13 @@ function MarkBoughtAnimation({ t }: { t: (key: string) => string }): React.React
   }, [])
 
   const fingerStyle = useAnimatedStyle(() => ({
+    position: 'absolute',
+    left: fingerLeft.value,
+    top: fingerTop.value,
     opacity: fingerOpacity.value,
-    transform: [
-      { translateY: fingerY.value },
-      { scale: fingerScale.value },
-    ],
+    fontSize: FINGER_SIZE,
+    zIndex: 1000,
+    transform: [{ scale: fingerScale.value }],
   }))
   const itemStyle = useAnimatedStyle(() => ({
     transform: [{ scale: tapScale.value }],
@@ -722,33 +753,37 @@ function MarkBoughtAnimation({ t }: { t: (key: string) => string }): React.React
   }))
 
   return (
-    <View style={animStyles.scene}>
+    <View style={animStyles.sceneRelative}>
+      {/* Content */}
       <Animated.View style={[animStyles.shoppingItem, itemStyle]}>
         <Animated.View style={[animStyles.boughtCircle, circleStyle]}>
-          <Animated.Text style={[animStyles.boughtCheck, checkStyle]}>✓</Animated.Text>
+          <Animated.Text style={[animStyles.boughtCheck, checkStyle]}>{'\u2713'}</Animated.Text>
         </Animated.View>
         <Animated.Text style={[animStyles.itemName, nameStyle]}>{t('Tutorial.exampleItem1')}</Animated.Text>
         <View style={animStyles.qtyBadge}>
           <Text style={animStyles.qtyText}>x2</Text>
         </View>
       </Animated.View>
-      <Animated.Text style={[animStyles.fingerEmoji, animStyles.fingerCenterBelow, fingerStyle]}>
-        👆
-      </Animated.Text>
+
+      {/* Finger - direct child of outermost View, pixel positioning */}
+      <Animated.Text style={fingerStyle}>{'\uD83D\uDC46'}</Animated.Text>
     </View>
   )
 }
 
 // Step 7: Finish shopping - finger taps button, dialog appears, finger taps confirm
 function FinishShoppingAnimation({ t }: { t: (key: string) => string }): React.ReactElement {
-  const fingerX = useSharedValue(0)
-  const fingerY = useSharedValue(-30)
+  const fingerLeft = useSharedValue(110)
+  const fingerTop = useSharedValue(10)
   const fingerOpacity = useSharedValue(0)
   const fingerScale = useSharedValue(1)
   const buttonScale = useSharedValue(1)
   const dialogOpacity = useSharedValue(0)
   const dialogTranslateY = useSharedValue(40)
   const confirmHighlight = useSharedValue(0)
+
+  // Status row ~20px, button at ~36px, dialog at ~100px.
+  // Confirm button in dialog is at roughly ~180px from scene top.
 
   useEffect(() => {
     // Sequential animation (plays once)
@@ -757,7 +792,8 @@ function FinishShoppingAnimation({ t }: { t: (key: string) => string }): React.R
     fingerOpacity.value = withDelay(200, withTiming(1, { duration: 200 }))
 
     // 2. Finger moves to finish button (200-700ms)
-    fingerY.value = withDelay(200, withTiming(28, { duration: 500, easing: Easing.inOut(Easing.quad) }))
+    fingerLeft.value = withDelay(200, withTiming(110, { duration: 500, easing: Easing.inOut(Easing.quad) }))
+    fingerTop.value = withDelay(200, withTiming(46, { duration: 500, easing: Easing.inOut(Easing.quad) }))
 
     // 3. Finger taps button (700-900ms)
     fingerScale.value = withDelay(700, withSequence(
@@ -774,8 +810,8 @@ function FinishShoppingAnimation({ t }: { t: (key: string) => string }): React.R
     dialogTranslateY.value = withDelay(1000, withTiming(0, { duration: 400, easing: Easing.out(Easing.back(1.3)) }))
 
     // 5. Finger moves to confirm button (1500-2000ms)
-    fingerX.value = withDelay(1500, withTiming(40, { duration: 500, easing: Easing.inOut(Easing.quad) }))
-    fingerY.value = withDelay(1500, withTiming(140, { duration: 500, easing: Easing.inOut(Easing.quad) }))
+    fingerLeft.value = withDelay(1500, withTiming(150, { duration: 500, easing: Easing.inOut(Easing.quad) }))
+    fingerTop.value = withDelay(1500, withTiming(170, { duration: 500, easing: Easing.inOut(Easing.quad) }))
 
     // 6. Finger taps confirm (2100-2300ms)
     fingerScale.value = withDelay(2100, withSequence(
@@ -792,12 +828,13 @@ function FinishShoppingAnimation({ t }: { t: (key: string) => string }): React.R
   }, [])
 
   const fingerStyle = useAnimatedStyle(() => ({
+    position: 'absolute',
+    left: fingerLeft.value,
+    top: fingerTop.value,
     opacity: fingerOpacity.value,
-    transform: [
-      { translateX: fingerX.value },
-      { translateY: fingerY.value },
-      { scale: fingerScale.value },
-    ],
+    fontSize: FINGER_SIZE,
+    zIndex: 1000,
+    transform: [{ scale: fingerScale.value }],
   }))
   const buttonStyle = useAnimatedStyle(() => ({
     transform: [{ scale: buttonScale.value }],
@@ -812,9 +849,10 @@ function FinishShoppingAnimation({ t }: { t: (key: string) => string }): React.R
   }))
 
   return (
-    <View style={animStyles.scene}>
+    <View style={animStyles.sceneRelative}>
+      {/* Content */}
       <View style={animStyles.statusRow}>
-        <Text style={animStyles.statusText}>3 / 3 ✓</Text>
+        <Text style={animStyles.statusText}>3 / 3 {'\u2713'}</Text>
       </View>
       <Animated.View style={[animStyles.finishButton, buttonStyle]}>
         <Text style={animStyles.finishButtonText}>{t('ActiveShopping.finishShopping')}</Text>
@@ -827,14 +865,14 @@ function FinishShoppingAnimation({ t }: { t: (key: string) => string }): React.R
           <Animated.Text style={[animStyles.dialogConfirm, confirmStyle]}>{t('ActiveShopping.finish')}</Animated.Text>
         </View>
       </Animated.View>
-      <Animated.Text style={[animStyles.fingerEmoji, animStyles.fingerCenter, fingerStyle]}>
-        👆
-      </Animated.Text>
+
+      {/* Finger - direct child of outermost View, pixel positioning */}
+      <Animated.Text style={fingerStyle}>{'\uD83D\uDC46'}</Animated.Text>
     </View>
   )
 }
 
-// Step 8: History
+// Step 8: History (no finger needed)
 function HistoryAnimation({ t }: { t: (key: string) => string }): React.ReactElement {
   const card1Y = useSharedValue(30)
   const card1Opacity = useSharedValue(0)
@@ -878,11 +916,11 @@ function HistoryAnimation({ t }: { t: (key: string) => string }): React.ReactEle
       </Animated.View>
       <Animated.View style={[animStyles.historyCard, card1Style]}>
         <Text style={animStyles.historyDate}>15.2.2026</Text>
-        <Text style={animStyles.historyInfo}>5 / 5 ✓</Text>
+        <Text style={animStyles.historyInfo}>5 / 5 {'\u2713'}</Text>
       </Animated.View>
       <Animated.View style={[animStyles.historyCard, card2Style]}>
         <Text style={animStyles.historyDate}>14.2.2026</Text>
-        <Text style={animStyles.historyInfo}>4 / 5 ✓</Text>
+        <Text style={animStyles.historyInfo}>4 / 5 {'\u2713'}</Text>
       </Animated.View>
     </View>
   )
@@ -996,12 +1034,12 @@ const animStyles = StyleSheet.create((theme) => ({
     gap: 8,
     overflow: 'visible',
   },
-  sceneLabel: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: theme.colors.tint,
-    letterSpacing: 2,
-    marginBottom: 4,
+  sceneRelative: {
+    width: '100%',
+    alignItems: 'center',
+    gap: 8,
+    overflow: 'visible',
+    position: 'relative',
   },
   inputRow: {
     flexDirection: 'row',
@@ -1117,47 +1155,6 @@ const animStyles = StyleSheet.create((theme) => ({
     fontSize: 11,
     color: 'rgba(255,255,255,0.15)',
   },
-  splitDiagram: {
-    flexDirection: 'row',
-    width: '85%',
-    marginBottom: 8,
-    borderRadius: 8,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
-  },
-  splitLeft: {
-    flex: 1,
-    paddingVertical: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRightWidth: 1,
-    borderRightColor: 'rgba(255,255,255,0.3)',
-  },
-  splitRight: {
-    flex: 1,
-    paddingVertical: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  splitActive: {
-    backgroundColor: 'rgba(255,255,255,0.15)',
-  },
-  splitInactive: {
-    backgroundColor: 'rgba(255,255,255,0.03)',
-  },
-  splitLabelActive: {
-    fontSize: 13,
-    fontWeight: 'bold',
-    color: '#ffffff',
-    letterSpacing: 1,
-  },
-  splitLabelInactive: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: 'rgba(255,255,255,0.25)',
-    letterSpacing: 1,
-  },
   swipeDemo: {
     width: '85%',
     alignItems: 'center',
@@ -1213,46 +1210,6 @@ const animStyles = StyleSheet.create((theme) => ({
     fontWeight: 'bold',
     color: '#ffffff',
   },
-  grabFlashLeft: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    left: 0,
-    width: '50%',
-    backgroundColor: 'rgba(255,255,255,0.3)',
-    borderTopLeftRadius: 8,
-    borderBottomLeftRadius: 8,
-  },
-  grabFlashRight: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    right: 0,
-    width: '50%',
-    backgroundColor: 'rgba(255,255,255,0.3)',
-    borderTopRightRadius: 8,
-    borderBottomRightRadius: 8,
-  },
-  arrowRow: {
-    width: '100%',
-    flexDirection: 'row',
-    marginTop: 4,
-  },
-  arrowLeft: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  arrowRight: {
-    flex: 1,
-    marginLeft: '50%',
-    alignItems: 'center',
-  },
-  arrowContainer: {
-    marginTop: 0,
-  },
-  arrowText: {
-    fontSize: 24,
-  },
   shoppingItem: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1278,32 +1235,6 @@ const animStyles = StyleSheet.create((theme) => ({
     color: theme.colors.tint,
     fontSize: 14,
     fontWeight: 'bold',
-  },
-  fingerEmoji: {
-    position: 'absolute',
-    fontSize: 32,
-    zIndex: 100,
-  },
-  fingerOnItem: {
-    top: 6,
-    left: '50%',
-    marginLeft: -16,
-  },
-  fingerCenter: {
-    top: '50%',
-    left: '50%',
-    marginLeft: -16,
-    marginTop: -16,
-    zIndex: 100,
-  },
-  fingerCenterBelow: {
-    bottom: -44,
-    left: '50%',
-    marginLeft: -16,
-    zIndex: 100,
-  },
-  fingerIcon: {
-    marginTop: 8,
   },
   startButton: {
     backgroundColor: theme.colors.tint,
