@@ -227,17 +227,21 @@ const styles = StyleSheet.create((theme) => ({
     left: 0,
     right: 0,
     borderRadius: theme.sizes.radiusSm,
-    justifyContent: 'center',
+    flexDirection: 'row',
     alignItems: 'center',
+    paddingHorizontal: 20,
   },
   bgPlus: {
     backgroundColor: theme.colors.tint,
+    justifyContent: 'flex-start',
   },
   bgMinus: {
     backgroundColor: '#FF9800',
+    justifyContent: 'flex-end',
   },
   bgDelete: {
     backgroundColor: theme.colors.danger,
+    justifyContent: 'flex-end',
   },
   actionText: {
     color: '#ffffff',

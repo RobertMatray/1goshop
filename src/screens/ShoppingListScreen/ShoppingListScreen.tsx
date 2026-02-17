@@ -1,5 +1,6 @@
 import React, { useMemo, useCallback } from 'react'
 import { View, Text, Pressable } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import DraggableFlatList, { type RenderItemParams } from 'react-native-draggable-flatlist'
 import { StyleSheet } from 'react-native-unistyles'
 import { useTranslation } from 'react-i18next'
@@ -17,6 +18,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'ShoppingLis
 export function ShoppingListScreen(): React.ReactElement {
   const { t } = useTranslation()
   const navigation = useNavigation<NavigationProp>()
+  const insets = useSafeAreaInsets()
   const items = useShoppingListStore((s) => s.items)
   const clearChecked = useShoppingListStore((s) => s.clearChecked)
 
@@ -71,7 +73,7 @@ export function ShoppingListScreen(): React.ReactElement {
           autoscrollSpeed={200}
         />
       )}
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 8) }]}>
         {items.length > 0 && (
           <View style={styles.footerTop}>
             <Text style={styles.footerText}>
