@@ -2,11 +2,17 @@ import React from 'react'
 import { View, Text, Pressable } from 'react-native'
 import { StyleSheet } from 'react-native-unistyles'
 import { useTranslation } from 'react-i18next'
+import { useNavigation } from '@react-navigation/native'
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import type { RootStackParamList } from '../../navigation/AppNavigator'
 import { useThemeStore, type ThemeMode } from '../../stores/ThemeStore'
 import type { SupportedLanguage } from '../../i18n/i18n'
 
+type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'SettingsScreen'>
+
 export function SettingsScreen(): React.ReactElement {
   const { t, i18n } = useTranslation()
+  const navigation = useNavigation<NavigationProp>()
   const { themeMode, setTheme } = useThemeStore()
 
   const currentLang = i18n.language as SupportedLanguage
@@ -61,6 +67,14 @@ export function SettingsScreen(): React.ReactElement {
           ))}
         </View>
       </View>
+
+      <Pressable style={styles.section} onPress={() => navigation.navigate('ShoppingHistoryScreen')}>
+        <View style={styles.historyRow}>
+          <Text style={styles.sectionTitle}>{t('History.title')}</Text>
+          <Text style={styles.historyArrow}>›</Text>
+        </View>
+        <Text style={styles.hintText}>{t('History.description')}</Text>
+      </Pressable>
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>{t('Settings.about')}</Text>
@@ -122,6 +136,16 @@ const styles = StyleSheet.create((theme) => ({
   },
   optionTextActive: {
     color: theme.colors.textOnTint,
+  },
+  historyRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  historyArrow: {
+    fontSize: 24,
+    color: theme.colors.textSecondary,
+    fontWeight: 'bold',
   },
   aboutText: {
     fontSize: theme.typography.fontSizeM,

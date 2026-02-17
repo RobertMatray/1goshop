@@ -18,7 +18,10 @@
     "itemCount_one": "{{count}} polozka",
     "itemCount_few": "{{count}} polozky",
     "itemCount_other": "{{count}} poloziek",
-    "checkedCount": "{{count}} kupenych"
+    "checkedCount": "{{count}} kupenych",
+    "markedForShopping_one": "{{count}} oznacena na nakup",
+    "markedForShopping_few": "{{count}} oznacene na nakup",
+    "markedForShopping_other": "{{count}} oznacenych na nakup"
   },
   "ActiveShopping": {
     "title": "Nakup",
@@ -31,6 +34,21 @@
     "finishTitle": "Ukoncit nakup?",
     "finishMessage": "Nakup bude ulozeny.",
     "finish": "Ukoncit",
+    "cancel": "Zrusit"
+  },
+  "History": {
+    "title": "Historia nakupov",
+    "description": "Prezrite si dokoncene nakupy a statistiky",
+    "empty": "Ziadne dokoncene nakupy",
+    "statistics": "Statistiky",
+    "totalSessions": "Nakupov",
+    "totalItems": "Poloziek",
+    "totalBought": "Kupenych",
+    "boughtOf": "{{bought}} z {{total}} kupenych",
+    "clearHistory": "Vymazat historiu",
+    "clearTitle": "Vymazat historiu?",
+    "clearMessage": "Vsetky zaznamy o nakupoch budu vymazane.",
+    "clear": "Vymazat",
     "cancel": "Zrusit"
   },
   "Settings": {

@@ -10,18 +10,22 @@ export interface ActiveShoppingStoreState {
   session: ShoppingSession | null
   showBought: boolean
   isLoaded: boolean
+  history: ShoppingSession[]
 
   load: () => Promise<void>
+  loadHistory: () => Promise<void>
   startShopping: (items: ShoppingItem[]) => void
   toggleBought: (id: string) => void
   toggleShowBought: () => void
   finishShopping: () => Promise<void>
+  clearHistory: () => Promise<void>
 }
 
 export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get) => ({
   session: null,
   showBought: true,
   isLoaded: false,
+  history: [],
 
   load: async () => {
     try {
@@ -34,6 +38,18 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
       }
     } catch {
       set({ isLoaded: true })
+    }
+  },
+
+  loadHistory: async () => {
+    try {
+      const historyRaw = await AsyncStorage.getItem(HISTORY_KEY)
+      if (historyRaw) {
+        const history = JSON.parse(historyRaw) as ShoppingSession[]
+        set({ history: history.sort((a, b) => (b.finishedAt ?? '').localeCompare(a.finishedAt ?? '')) })
+      }
+    } catch {
+      // Ignore
     }
   },
 
@@ -99,6 +115,11 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
     // Clear active session
     set({ session: null, showBought: true })
     await AsyncStorage.removeItem(SESSION_KEY).catch(() => {})
+  },
+
+  clearHistory: async () => {
+    set({ history: [] })
+    await AsyncStorage.removeItem(HISTORY_KEY).catch(() => {})
   },
 }))
 

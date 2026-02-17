@@ -17,7 +17,9 @@
     "longPressHint": "Long press to reorder",
     "itemCount_one": "{{count}} item",
     "itemCount_other": "{{count}} items",
-    "checkedCount": "{{count}} checked"
+    "checkedCount": "{{count}} checked",
+    "markedForShopping_one": "{{count}} marked for shopping",
+    "markedForShopping_other": "{{count}} marked for shopping"
   },
   "ActiveShopping": {
     "title": "Shopping",
@@ -30,6 +32,21 @@
     "finishTitle": "Finish shopping?",
     "finishMessage": "Shopping session will be saved.",
     "finish": "Finish",
+    "cancel": "Cancel"
+  },
+  "History": {
+    "title": "Shopping History",
+    "description": "View completed shopping trips and statistics",
+    "empty": "No completed shopping trips",
+    "statistics": "Statistics",
+    "totalSessions": "Trips",
+    "totalItems": "Items",
+    "totalBought": "Bought",
+    "boughtOf": "{{bought}} of {{total}} bought",
+    "clearHistory": "Clear history",
+    "clearTitle": "Clear history?",
+    "clearMessage": "All shopping records will be deleted.",
+    "clear": "Clear",
     "cancel": "Cancel"
   },
   "Settings": {
