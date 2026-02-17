@@ -23,9 +23,7 @@ export function ShoppingListScreen(): React.ReactElement {
   const clearChecked = useShoppingListStore((s) => s.clearChecked)
 
   const sortedItems = useMemo(() => {
-    const unchecked = items.filter((i) => !i.isChecked).sort((a, b) => a.order - b.order)
-    const checked = items.filter((i) => i.isChecked).sort((a, b) => a.order - b.order)
-    return [...unchecked, ...checked]
+    return [...items].sort((a, b) => a.order - b.order)
   }, [items])
 
   const checkedCount = useMemo(() => items.filter((i) => i.isChecked).length, [items])
