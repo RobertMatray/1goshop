@@ -24,8 +24,13 @@ export function SettingsScreen(): React.ReactElement {
   ]
 
   const languageOptions: { label: string; value: SupportedLanguage }[] = [
-    { label: 'Slovencina', value: 'sk' },
-    { label: 'English', value: 'en' },
+    { label: 'SK', value: 'sk' },
+    { label: 'EN', value: 'en' },
+    { label: 'DE', value: 'de' },
+    { label: 'HU', value: 'hu' },
+    { label: 'UK', value: 'uk' },
+    { label: 'CS', value: 'cs' },
+    { label: 'ZH', value: 'zh' },
   ]
 
   return (

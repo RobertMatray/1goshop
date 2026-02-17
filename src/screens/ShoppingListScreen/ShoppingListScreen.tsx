@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback } from 'react'
+import React, { useState, useMemo, useCallback } from 'react'
 import { View, Text, Pressable } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -13,6 +13,7 @@ import { useActiveShoppingStore } from '../../stores/ActiveShoppingStore'
 import { ShoppingListItem } from './components/ShoppingListItem'
 import { AddItemInput } from './components/AddItemInput'
 import { EmptyListPlaceholder } from './components/EmptyListPlaceholder'
+import { TutorialOverlay } from './components/TutorialOverlay'
 import type { ShoppingItem } from '../../types/shopping'
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'ShoppingListScreen'>
@@ -21,6 +22,7 @@ export function ShoppingListScreen(): React.ReactElement {
   const { t } = useTranslation()
   const navigation = useNavigation<NavigationProp>()
   const insets = useSafeAreaInsets()
+  const [showTutorial, setShowTutorial] = useState(false)
   const items = useShoppingListStore((s) => s.items)
   const activeSession = useActiveShoppingStore((s) => s.session)
   const startShopping = useActiveShoppingStore((s) => s.startShopping)
@@ -95,14 +97,17 @@ export function ShoppingListScreen(): React.ReactElement {
             <Text style={styles.startShoppingText}>{t('ActiveShopping.startShopping')}</Text>
           </Pressable>
         )}
-        <View style={styles.hintsRow}>
+        <Pressable style={styles.hintsRow} onPress={() => setShowTutorial(true)}>
           <Text style={styles.hintText}>{t('ShoppingList.swipeRightHint')}</Text>
           <Text style={styles.hintSeparator}>•</Text>
           <Text style={styles.hintText}>{t('ShoppingList.swipeLeftHint')}</Text>
           <Text style={styles.hintSeparator}>•</Text>
           <Text style={styles.hintText}>{t('ShoppingList.longPressHint')}</Text>
-        </View>
+          <Text style={styles.hintSeparator}>•</Text>
+          <Text style={styles.tutorialLink}>{t('Tutorial.showTutorial')}</Text>
+        </Pressable>
       </View>
+      <TutorialOverlay visible={showTutorial} onClose={() => setShowTutorial(false)} />
     </View>
   )
 
@@ -163,5 +168,10 @@ const styles = StyleSheet.create((theme) => ({
     color: theme.colors.textSecondary,
     opacity: 0.4,
     marginHorizontal: 6,
+  },
+  tutorialLink: {
+    fontSize: 11,
+    color: theme.colors.tint,
+    fontWeight: '600',
   },
 }))

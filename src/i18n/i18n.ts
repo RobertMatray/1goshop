@@ -3,8 +3,13 @@ import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
 import sk from './locales/sk.json'
 import en from './locales/en.json'
+import de from './locales/de.json'
+import hu from './locales/hu.json'
+import uk from './locales/uk.json'
+import cs from './locales/cs.json'
+import zh from './locales/zh.json'
 
-const supportedLanguages = ['sk', 'en'] as const
+const supportedLanguages = ['sk', 'en', 'de', 'hu', 'uk', 'cs', 'zh'] as const
 export type SupportedLanguage = (typeof supportedLanguages)[number]
 
 function isSupportedLanguage(lang: string): lang is SupportedLanguage {
@@ -21,6 +26,11 @@ export async function initI18n(): Promise<void> {
     resources: {
       sk: { translation: sk },
       en: { translation: en },
+      de: { translation: de },
+      hu: { translation: hu },
+      uk: { translation: uk },
+      cs: { translation: cs },
+      zh: { translation: zh },
     },
     interpolation: { escapeValue: false },
     debug: false,
