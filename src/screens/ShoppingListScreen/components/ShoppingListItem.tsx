@@ -1,102 +1,145 @@
-import React from 'react'
-import { View, Text, Pressable } from 'react-native'
+import React, { useCallback } from 'react'
+import { View, Text, Alert, LayoutChangeEvent } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
-  withTiming,
   runOnJS,
   interpolate,
   Extrapolation,
 } from 'react-native-reanimated'
 import { StyleSheet } from 'react-native-unistyles'
 import * as Haptics from 'expo-haptics'
+import { useTranslation } from 'react-i18next'
 import type { ShoppingItem } from '../../../types/shopping'
 import { useShoppingListStore } from '../../../stores/ShoppingListStore'
 
 interface Props {
   item: ShoppingItem
+  drag?: () => void
+  isActive?: boolean
 }
 
-const SWIPE_THRESHOLD = 80
-const DELETE_THRESHOLD = 160
+const QUANTITY_THRESHOLD = 60
 
-export function ShoppingListItem({ item }: Props): React.ReactElement {
+export function ShoppingListItem({ item, drag, isActive }: Props): React.ReactElement {
   const translateX = useSharedValue(0)
-  const itemHeight = useSharedValue(60)
-  const itemOpacity = useSharedValue(1)
-  const isDeleting = useSharedValue(false)
+  const itemWidth = useSharedValue(0)
+  const startX = useSharedValue(0)
+  const { t } = useTranslation()
 
   const incrementQuantity = useShoppingListStore((s) => s.incrementQuantity)
+  const decrementQuantity = useShoppingListStore((s) => s.decrementQuantity)
   const removeItem = useShoppingListStore((s) => s.removeItem)
   const toggleChecked = useShoppingListStore((s) => s.toggleChecked)
+
+  const onLayout = useCallback((event: LayoutChangeEvent) => {
+    itemWidth.value = event.nativeEvent.layout.width
+  }, [itemWidth])
 
   const panGesture = Gesture.Pan()
     .activeOffsetX([-20, 20])
     .failOffsetY([-10, 10])
+    .onStart((event) => {
+      startX.value = event.x
+    })
     .onUpdate((event) => {
       translateX.value = event.translationX
     })
     .onEnd((event) => {
-      if (event.translationX > SWIPE_THRESHOLD) {
-        runOnJS(onIncrementQuantity)()
-        translateX.value = withSpring(0)
-      } else if (event.translationX < -DELETE_THRESHOLD) {
-        isDeleting.value = true
-        translateX.value = withTiming(-400, { duration: 200 })
-        itemHeight.value = withTiming(0, { duration: 200 })
-        itemOpacity.value = withTiming(0, { duration: 200 }, () => {
-          runOnJS(onRemoveItem)()
-        })
-      } else if (event.translationX < -SWIPE_THRESHOLD) {
-        translateX.value = withSpring(-SWIPE_THRESHOLD)
+      const isLeftHalf = startX.value < itemWidth.value / 2
+
+      if (isLeftHalf) {
+        // Left half: swipe right = +1, swipe left = -1
+        if (event.translationX > QUANTITY_THRESHOLD) {
+          runOnJS(onIncrementQuantity)()
+        } else if (event.translationX < -QUANTITY_THRESHOLD) {
+          runOnJS(onDecrementQuantity)()
+        }
       } else {
-        translateX.value = withSpring(0)
+        // Right half: swipe left = delete with confirm
+        if (event.translationX < -QUANTITY_THRESHOLD) {
+          runOnJS(onConfirmDelete)()
+        }
+      }
+
+      translateX.value = withSpring(0)
+    })
+
+  const longPressGesture = Gesture.LongPress()
+    .minDuration(300)
+    .onStart(() => {
+      if (drag) {
+        runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Medium)
+        runOnJS(drag)()
       }
     })
 
   const tapGesture = Gesture.Tap().onEnd(() => {
-    if (translateX.value < -40) {
-      translateX.value = withSpring(0)
-    } else {
-      runOnJS(onToggleChecked)()
-    }
+    runOnJS(onToggleChecked)()
   })
 
-  const composedGesture = Gesture.Race(panGesture, tapGesture)
+  const composedGesture = Gesture.Race(panGesture, Gesture.Exclusive(longPressGesture, tapGesture))
 
   const animatedItemStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.value }],
   }))
 
-  const animatedContainerStyle = useAnimatedStyle(() => ({
-    height: isDeleting.value ? itemHeight.value : undefined,
-    opacity: itemOpacity.value,
-    overflow: 'hidden' as const,
-  }))
+  // Left half background: green (+1) on right swipe, orange (-1) on left swipe
+  const leftBgStyle = useAnimatedStyle(() => {
+    const isLeftHalf = startX.value < itemWidth.value / 2
+    if (!isLeftHalf) return { opacity: 0 }
 
-  const rightActionStyle = useAnimatedStyle(() => {
-    const opacity = interpolate(translateX.value, [0, -SWIPE_THRESHOLD], [0, 1], Extrapolation.CLAMP)
-    return { opacity }
+    if (translateX.value > 0) {
+      const opacity = interpolate(translateX.value, [0, QUANTITY_THRESHOLD], [0, 1], Extrapolation.CLAMP)
+      return { opacity }
+    } else {
+      return { opacity: 0 }
+    }
   })
 
-  const leftActionStyle = useAnimatedStyle(() => {
-    const opacity = interpolate(translateX.value, [0, SWIPE_THRESHOLD], [0, 1], Extrapolation.CLAMP)
-    return { opacity }
+  const leftMinusBgStyle = useAnimatedStyle(() => {
+    const isLeftHalf = startX.value < itemWidth.value / 2
+    if (!isLeftHalf) return { opacity: 0 }
+
+    if (translateX.value < 0) {
+      const opacity = interpolate(translateX.value, [0, -QUANTITY_THRESHOLD], [0, 1], Extrapolation.CLAMP)
+      return { opacity }
+    } else {
+      return { opacity: 0 }
+    }
+  })
+
+  // Right half background: red (delete) on left swipe
+  const rightBgStyle = useAnimatedStyle(() => {
+    const isLeftHalf = startX.value < itemWidth.value / 2
+    if (isLeftHalf) return { opacity: 0 }
+
+    if (translateX.value < 0) {
+      const opacity = interpolate(translateX.value, [0, -QUANTITY_THRESHOLD], [0, 1], Extrapolation.CLAMP)
+      return { opacity }
+    } else {
+      return { opacity: 0 }
+    }
   })
 
   return (
-    <Animated.View style={animatedContainerStyle}>
+    <View style={[styles.outerContainer, isActive && styles.activeItem]} onLayout={onLayout}>
       <View style={styles.swipeContainer}>
-        <Animated.View style={[styles.leftAction, leftActionStyle]}>
+        {/* +1 background (left half, swipe right) */}
+        <Animated.View style={[styles.bgAction, styles.bgPlus, leftBgStyle]}>
           <Text style={styles.actionText}>+1</Text>
         </Animated.View>
 
-        <Animated.View style={[styles.rightAction, rightActionStyle]}>
-          <Pressable onPress={onRemoveItem} style={styles.deleteButton}>
-            <Text style={styles.actionText}>🗑</Text>
-          </Pressable>
+        {/* -1 background (left half, swipe left) */}
+        <Animated.View style={[styles.bgAction, styles.bgMinus, leftMinusBgStyle]}>
+          <Text style={styles.actionText}>-1</Text>
+        </Animated.View>
+
+        {/* Delete background (right half, swipe left) */}
+        <Animated.View style={[styles.bgAction, styles.bgDelete, rightBgStyle]}>
+          <Text style={styles.actionText}>🗑</Text>
         </Animated.View>
 
         <GestureDetector gesture={composedGesture}>
@@ -117,10 +160,12 @@ export function ShoppingListItem({ item }: Props): React.ReactElement {
                 <Text style={styles.quantityText}>x{item.quantity}</Text>
               </View>
             )}
+
+            <Text style={styles.dragHandle}>☰</Text>
           </Animated.View>
         </GestureDetector>
       </View>
-    </Animated.View>
+    </View>
   )
 
   function onIncrementQuantity(): void {
@@ -128,9 +173,26 @@ export function ShoppingListItem({ item }: Props): React.ReactElement {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
   }
 
-  function onRemoveItem(): void {
-    removeItem(item.id)
+  function onDecrementQuantity(): void {
+    if (item.quantity <= 1) return
+    decrementQuantity(item.id)
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+  }
+
+  function onConfirmDelete(): void {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+    Alert.alert(
+      t('ShoppingList.deleteTitle'),
+      t('ShoppingList.deleteMessage', { name: item.name }),
+      [
+        { text: t('ShoppingList.cancel'), style: 'cancel' },
+        {
+          text: t('ShoppingList.delete'),
+          style: 'destructive',
+          onPress: () => removeItem(item.id),
+        },
+      ],
+    )
   }
 
   function onToggleChecked(): void {
@@ -140,38 +202,41 @@ export function ShoppingListItem({ item }: Props): React.ReactElement {
 }
 
 const styles = StyleSheet.create((theme) => ({
-  swipeContainer: {
-    position: 'relative',
+  outerContainer: {
     marginHorizontal: theme.sizes.screenPadding,
     marginVertical: 2,
   },
-  leftAction: {
+  activeItem: {
+    opacity: 0.9,
+    transform: [{ scale: 1.03 }],
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+    zIndex: 999,
+  },
+  swipeContainer: {
+    position: 'relative',
+  },
+  bgAction: {
     position: 'absolute',
+    top: 0,
+    bottom: 0,
     left: 0,
-    top: 0,
-    bottom: 0,
-    width: SWIPE_THRESHOLD,
-    backgroundColor: theme.colors.tint,
-    borderRadius: theme.sizes.radiusSm,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  rightAction: {
-    position: 'absolute',
     right: 0,
-    top: 0,
-    bottom: 0,
-    width: SWIPE_THRESHOLD,
-    backgroundColor: theme.colors.danger,
     borderRadius: theme.sizes.radiusSm,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  deleteButton: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: '100%',
+  bgPlus: {
+    backgroundColor: theme.colors.tint,
+  },
+  bgMinus: {
+    backgroundColor: '#FF9800',
+  },
+  bgDelete: {
+    backgroundColor: theme.colors.danger,
   },
   actionText: {
     color: '#ffffff',
@@ -228,5 +293,11 @@ const styles = StyleSheet.create((theme) => ({
     fontSize: theme.typography.fontSizeS,
     fontWeight: 'bold',
     color: theme.colors.tint,
+  },
+  dragHandle: {
+    fontSize: 18,
+    color: theme.colors.textSecondary,
+    marginLeft: 8,
+    opacity: 0.5,
   },
 }))

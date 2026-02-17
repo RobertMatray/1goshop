@@ -1,5 +1,6 @@
 import React, { useMemo, useCallback } from 'react'
-import { View, Text, Pressable, FlatList } from 'react-native'
+import { View, Text, Pressable } from 'react-native'
+import DraggableFlatList, { type RenderItemParams } from 'react-native-draggable-flatlist'
 import { StyleSheet } from 'react-native-unistyles'
 import { useTranslation } from 'react-i18next'
 import { useNavigation } from '@react-navigation/native'
@@ -28,11 +29,20 @@ export function ShoppingListScreen(): React.ReactElement {
   const checkedCount = useMemo(() => items.filter((i) => i.isChecked).length, [items])
 
   const renderItem = useCallback(
-    ({ item }: { item: ShoppingItem }) => <ShoppingListItem item={item} />,
+    ({ item, drag, isActive }: RenderItemParams<ShoppingItem>) => (
+      <ShoppingListItem item={item} drag={drag} isActive={isActive} />
+    ),
     [],
   )
 
   const keyExtractor = useCallback((item: ShoppingItem) => item.id, [])
+
+  const setItems = useShoppingListStore((s) => s.setItems)
+
+  const handleDragEnd = useCallback(({ data }: { data: ShoppingItem[] }) => {
+    const reordered = data.map((item, index) => ({ ...item, order: index }))
+    setItems(reordered)
+  }, [setItems])
 
   React.useLayoutEffect(() => {
     navigation.setOptions({
@@ -47,14 +57,18 @@ export function ShoppingListScreen(): React.ReactElement {
   return (
     <View style={styles.container}>
       <AddItemInput />
-      <FlatList
-        data={sortedItems}
-        keyExtractor={keyExtractor}
-        renderItem={renderItem}
-        ListEmptyComponent={<EmptyListPlaceholder />}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-      />
+      {sortedItems.length === 0 ? (
+        <EmptyListPlaceholder />
+      ) : (
+        <DraggableFlatList
+          data={sortedItems}
+          keyExtractor={keyExtractor}
+          renderItem={renderItem}
+          onDragEnd={handleDragEnd}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
       {items.length > 0 && (
         <View style={styles.footer}>
           <Text style={styles.footerText}>

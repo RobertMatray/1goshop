@@ -2,13 +2,41 @@ import { readFileSync } from 'fs'
 
 const sessionSecret = '{"id":"928c128d-7ef3-4ab2-9d90-86c376de041d","version":1,"expires_at":2080944000000}'
 const projectId = 'f6744446-31a1-40f5-abe9-77e7dc41a501'
-const buildId = 'ec382662-ec35-4661-ad17-7ea6b376d15e'
 
 // Read the API key
 const keyP8 = readFileSync('./internals/appstore-api/AuthKey_79PJWGG49Z.p8', 'utf8')
 
+// First, get the latest iOS build ID
+const buildQuery = JSON.stringify({
+  query: `query {
+    app {
+      byId(appId: "${projectId}") {
+        builds(offset: 0, limit: 1, filter: { platform: IOS }) {
+          id
+          status
+          platform
+        }
+      }
+    }
+  }`
+})
+
+const buildRes = await fetch('https://api.expo.dev/graphql', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json', 'expo-session': sessionSecret },
+  body: buildQuery
+})
+
+const buildData = await buildRes.json()
+const buildId = buildData.data?.app?.byId?.builds?.[0]?.id
+console.log('Latest build ID:', buildId)
+
+if (!buildId) {
+  console.error('No builds found!')
+  process.exit(1)
+}
+
 // Create iOS submission via Expo GraphQL API
-// Note: We're NOT providing ascAppIdentifier - EAS should be able to look it up or create it
 const mutation = JSON.stringify({
   query: `mutation CreateIosSubmission($input: CreateIosSubmissionInput!) {
     submission {
@@ -57,19 +85,21 @@ if (d.data?.submission?.createIosSubmission?.submission?.id) {
   console.log('\nSubmission created! ID:', submissionId)
   console.log('Monitoring submission status...')
 
-  // Poll for status
+  // Poll for status via app submissions list
   for (let i = 0; i < 60; i++) {
     await new Promise(r => setTimeout(r, 10000))
 
     const statusQuery = JSON.stringify({
       query: `query {
-        submission {
-          byId(submissionId: "${submissionId}") {
-            id
-            status
-            error {
-              message
-              errorCode
+        app {
+          byId(appId: "${projectId}") {
+            submissions(offset: 0, limit: 1, filter: { platform: IOS }) {
+              id
+              status
+              error {
+                message
+                errorCode
+              }
             }
           }
         }
@@ -86,7 +116,7 @@ if (d.data?.submission?.createIosSubmission?.submission?.id) {
     })
 
     const statusData = await statusRes.json()
-    const sub = statusData.data?.submission?.byId
+    const sub = statusData.data?.app?.byId?.submissions?.[0]
     console.log(`[${new Date().toISOString()}] Status: ${sub?.status}`)
 
     if (sub?.error) {
