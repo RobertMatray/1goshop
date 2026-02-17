@@ -57,20 +57,22 @@ export function ShoppingListScreen(): React.ReactElement {
   return (
     <View style={styles.container}>
       <AddItemInput />
-      {sortedItems.length === 0 ? (
-        <EmptyListPlaceholder />
-      ) : (
-        <DraggableFlatList
-          data={sortedItems}
-          keyExtractor={keyExtractor}
-          renderItem={renderItem}
-          onDragEnd={handleDragEnd}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-          autoscrollThreshold={80}
-          autoscrollSpeed={200}
-        />
-      )}
+      <View style={styles.listWrapper}>
+        {sortedItems.length === 0 ? (
+          <EmptyListPlaceholder />
+        ) : (
+          <DraggableFlatList
+            data={sortedItems}
+            keyExtractor={keyExtractor}
+            renderItem={renderItem}
+            onDragEnd={handleDragEnd}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+            autoscrollThreshold={80}
+            autoscrollSpeed={200}
+          />
+        )}
+      </View>
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 8) }]}>
         {items.length > 0 && (
           <View style={styles.footerTop}>
@@ -101,6 +103,9 @@ const styles = StyleSheet.create((theme) => ({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
+  },
+  listWrapper: {
+    flex: 1,
   },
   listContent: {
     paddingBottom: 16,

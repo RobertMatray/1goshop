@@ -29,8 +29,12 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
     try {
       const saved = await AsyncStorage.getItem(STORAGE_KEY)
       if (saved) {
-        const items = JSON.parse(saved) as ShoppingItem[]
+        const parsed = JSON.parse(saved) as ShoppingItem[]
+        const items = parsed
+          .sort((a, b) => a.order - b.order)
+          .map((item, i) => ({ ...item, order: i }))
         set({ items, isLoaded: true })
+        persist(items)
       } else {
         set({ isLoaded: true })
       }
