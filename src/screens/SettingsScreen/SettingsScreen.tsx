@@ -1,11 +1,13 @@
 import React from 'react'
-import { View, Text, Pressable } from 'react-native'
+import { View, Text, Pressable, Alert, ScrollView } from 'react-native'
+import * as Clipboard from 'expo-clipboard'
 import { StyleSheet } from 'react-native-unistyles'
 import { useTranslation } from 'react-i18next'
 import { useNavigation } from '@react-navigation/native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import type { RootStackParamList } from '../../navigation/AppNavigator'
 import { useThemeStore, type ThemeMode } from '../../stores/ThemeStore'
+import { createBackup, restoreBackup } from '../../services/BackupService'
 import type { SupportedLanguage } from '../../i18n/i18n'
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'SettingsScreen'>
@@ -34,7 +36,7 @@ export function SettingsScreen(): React.ReactElement {
   ]
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>{t('Settings.language')}</Text>
         <View style={styles.langGrid}>
@@ -89,11 +91,60 @@ export function SettingsScreen(): React.ReactElement {
         <Text style={styles.hintText}>{t('ShoppingList.swipeLeftHint')}</Text>
         <Text style={styles.hintText}>{t('ShoppingList.longPressHint')}</Text>
       </View>
-    </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>{t('Backup.title')}</Text>
+        <Text style={styles.hintText}>{t('Backup.description')}</Text>
+        <View style={styles.backupButtons}>
+          <Pressable style={styles.backupButton} onPress={handleBackup}>
+            <Text style={styles.backupButtonText}>{t('Backup.export')}</Text>
+          </Pressable>
+          <Pressable style={[styles.backupButton, styles.restoreButton]} onPress={handleRestore}>
+            <Text style={styles.backupButtonText}>{t('Backup.import')}</Text>
+          </Pressable>
+        </View>
+      </View>
+    </ScrollView>
   )
 
   function handleChangeLanguage(lang: SupportedLanguage): void {
     i18n.changeLanguage(lang)
+  }
+
+  async function handleBackup(): Promise<void> {
+    try {
+      const json = await createBackup()
+      await Clipboard.setStringAsync(json)
+      Alert.alert(t('Backup.exportDoneTitle'), t('Backup.exportDoneMessage'))
+    } catch {
+      Alert.alert(t('Backup.error'), t('Backup.exportError'))
+    }
+  }
+
+  async function handleRestore(): Promise<void> {
+    try {
+      const json = await Clipboard.getStringAsync()
+      if (!json || !json.startsWith('{')) {
+        Alert.alert(t('Backup.error'), t('Backup.noData'))
+        return
+      }
+      Alert.alert(t('Backup.importTitle'), t('Backup.importMessage'), [
+        { text: t('Backup.cancel'), style: 'cancel' },
+        {
+          text: t('Backup.import'),
+          onPress: async () => {
+            const success = await restoreBackup(json)
+            if (success) {
+              Alert.alert(t('Backup.importDoneTitle'), t('Backup.importDoneMessage'))
+            } else {
+              Alert.alert(t('Backup.error'), t('Backup.importError'))
+            }
+          },
+        },
+      ])
+    } catch {
+      Alert.alert(t('Backup.error'), t('Backup.importError'))
+    }
   }
 }
 
@@ -101,6 +152,8 @@ const styles = StyleSheet.create((theme) => ({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
+  },
+  scrollContent: {
     padding: theme.sizes.screenPadding,
     gap: 24,
   },
@@ -193,5 +246,27 @@ const styles = StyleSheet.create((theme) => ({
     fontSize: theme.typography.fontSizeS,
     color: theme.colors.textSecondary,
     marginTop: 4,
+  },
+  backupButtons: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 12,
+  },
+  backupButton: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: theme.sizes.radiusSm,
+    backgroundColor: theme.colors.tint,
+    alignItems: 'center',
+  },
+  restoreButton: {
+    backgroundColor: theme.colors.background,
+    borderWidth: 1,
+    borderColor: theme.colors.surfaceBorder,
+  },
+  backupButtonText: {
+    fontSize: theme.typography.fontSizeS,
+    color: theme.colors.text,
+    fontWeight: '600',
   },
 }))

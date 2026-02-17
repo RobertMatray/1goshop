@@ -86,5 +86,22 @@
     "themeDark": "Temna",
     "about": "Pro dodatok",
     "version": "Versiya"
+  },
+  "Backup": {
+    "title": "Rezervna kopiya",
+    "description": "Eksportuvaty abo importuvaty vsi dani (spysok, istoriya, nalashtuvannya) cherez bufer obminu.",
+    "export": "Eksport",
+    "import": "Import",
+    "exportDoneTitle": "Eksportovano",
+    "exportDoneMessage": "Dani skopiiovano do buferu obminu. Vstavte ih u notatky abo email.",
+    "importTitle": "Importuvaty dani?",
+    "importMessage": "Potochni dani budut zamineni danimi z buferu obminu. Neobhidno perestartuvannya.",
+    "importDoneTitle": "Importovano",
+    "importDoneMessage": "Dani vidnovleno. Perestartuite dodatok.",
+    "importError": "Ne vdalosya importuvaty dani. Perevirte format.",
+    "exportError": "Ne vdalosya eksportuvaty dani.",
+    "noData": "V buferi obminu nemaye danih dlya importu.",
+    "error": "Pomylka",
+    "cancel": "Skasuvaty"
   }
 }

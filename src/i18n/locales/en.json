@@ -84,5 +84,22 @@
     "themeDark": "Dark",
     "about": "About",
     "version": "Version"
+  },
+  "Backup": {
+    "title": "Data Backup",
+    "description": "Export or import all data (list, history, settings) via clipboard.",
+    "export": "Export",
+    "import": "Import",
+    "exportDoneTitle": "Exported",
+    "exportDoneMessage": "Data has been copied to clipboard. Paste it into notes or email.",
+    "importTitle": "Import data?",
+    "importMessage": "Current data will be replaced with data from clipboard. App restart required.",
+    "importDoneTitle": "Imported",
+    "importDoneMessage": "Data has been restored. Restart the app to load changes.",
+    "importError": "Failed to import data. Check the format.",
+    "exportError": "Failed to export data.",
+    "noData": "No data found in clipboard for import.",
+    "error": "Error",
+    "cancel": "Cancel"
   }
 }

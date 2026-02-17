@@ -82,5 +82,22 @@
     "themeDark": "深色",
     "about": "关于",
     "version": "版本"
+  },
+  "Backup": {
+    "title": "数据备份",
+    "description": "通过剪贴板导出或导入所有数据（列表、历史、设置）。",
+    "export": "导出",
+    "import": "导入",
+    "exportDoneTitle": "已导出",
+    "exportDoneMessage": "数据已复制到剪贴板。请粘贴到备忘录或邮件中。",
+    "importTitle": "导入数据？",
+    "importMessage": "当前数据将被剪贴板中的数据替换。需要重启应用。",
+    "importDoneTitle": "已导入",
+    "importDoneMessage": "数据已恢复。请重启应用以加载更改。",
+    "importError": "导入失败。请检查格式。",
+    "exportError": "导出失败。",
+    "noData": "剪贴板中没有可导入的数据。",
+    "error": "错误",
+    "cancel": "取消"
   }
 }

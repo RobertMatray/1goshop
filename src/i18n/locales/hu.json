@@ -84,5 +84,22 @@
     "themeDark": "Sotet",
     "about": "Rolunk",
     "version": "Verzio"
+  },
+  "Backup": {
+    "title": "Adatmentes",
+    "description": "Minden adat (lista, elozmenyek, beallitasok) exportalasa vagy importalasa a vagolapon keresztul.",
+    "export": "Exportalas",
+    "import": "Importalas",
+    "exportDoneTitle": "Exportalva",
+    "exportDoneMessage": "Az adatok a vagolapra masolva. Illessze be jegyzetekbe vagy e-mailbe.",
+    "importTitle": "Adatok importalasa?",
+    "importMessage": "A jelenlegi adatok lecserelodnek a vagolap adataival. Ujrainditás szukseges.",
+    "importDoneTitle": "Importalva",
+    "importDoneMessage": "Az adatok visszaallitva. Inditsa ujra az alkalmazast.",
+    "importError": "Az importalas sikertelen. Ellenorizze a formatumot.",
+    "exportError": "Az exportalas sikertelen.",
+    "noData": "Nincs adat a vagolapon az importalashoz.",
+    "error": "Hiba",
+    "cancel": "Megse"
   }
 }

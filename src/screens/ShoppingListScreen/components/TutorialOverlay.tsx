@@ -300,7 +300,9 @@ function DeleteItemAnimation({ t }: { t: (key: string) => string }): React.React
         </View>
       </View>
       {/* Finger in normal flow, positioned with transform */}
-      <Animated.Text style={[animStyles.finger, fingerStyle]}>{'\uD83D\uDC46'}</Animated.Text>
+      <Animated.View style={fingerStyle}>
+        <Text style={animStyles.finger}>{'\u261D'}</Text>
+      </Animated.View>
     </View>
   )
 }
@@ -430,7 +432,9 @@ function IncrementAnimation({ t }: { t: (key: string) => string }): React.ReactE
         </View>
       </View>
       {/* Finger in normal flow */}
-      <Animated.Text style={[animStyles.finger, fingerStyle]}>{'\uD83D\uDC46'}</Animated.Text>
+      <Animated.View style={fingerStyle}>
+        <Text style={animStyles.finger}>{'\u261D'}</Text>
+      </Animated.View>
     </View>
   )
 }
@@ -560,7 +564,9 @@ function DecrementAnimation({ t }: { t: (key: string) => string }): React.ReactE
         </View>
       </View>
       {/* Finger in normal flow */}
-      <Animated.Text style={[animStyles.finger, fingerStyle]}>{'\uD83D\uDC46'}</Animated.Text>
+      <Animated.View style={fingerStyle}>
+        <Text style={animStyles.finger}>{'\u261D'}</Text>
+      </Animated.View>
     </View>
   )
 }
@@ -692,7 +698,9 @@ function StartShoppingAnimation({ t }: { t: (key: string) => string }): React.Re
         <Text style={animStyles.startButtonText}>{t('ActiveShopping.startShopping')}</Text>
       </Animated.View>
       {/* Finger in normal flow */}
-      <Animated.Text style={[animStyles.finger, fingerStyle]}>{'\uD83D\uDC46'}</Animated.Text>
+      <Animated.View style={fingerStyle}>
+        <Text style={animStyles.finger}>{'\u261D'}</Text>
+      </Animated.View>
     </View>
   )
 }
@@ -783,7 +791,9 @@ function MarkBoughtAnimation({ t }: { t: (key: string) => string }): React.React
         </View>
       </Animated.View>
       {/* Finger in normal flow */}
-      <Animated.Text style={[animStyles.finger, fingerStyle]}>{'\uD83D\uDC46'}</Animated.Text>
+      <Animated.View style={fingerStyle}>
+        <Text style={animStyles.finger}>{'\u261D'}</Text>
+      </Animated.View>
     </View>
   )
 }
@@ -877,7 +887,9 @@ function FinishShoppingAnimation({ t }: { t: (key: string) => string }): React.R
         </View>
       </Animated.View>
       {/* Finger in normal flow */}
-      <Animated.Text style={[animStyles.finger, fingerStyle]}>{'\uD83D\uDC46'}</Animated.Text>
+      <Animated.View style={fingerStyle}>
+        <Text style={animStyles.finger}>{'\u261D'}</Text>
+      </Animated.View>
     </View>
   )
 }

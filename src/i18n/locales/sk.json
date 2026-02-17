@@ -86,5 +86,22 @@
     "themeDark": "Tmava",
     "about": "O aplikacii",
     "version": "Verzia"
+  },
+  "Backup": {
+    "title": "Zaloha dat",
+    "description": "Exportujte alebo importujte vsetky data (zoznam, historia, nastavenia) cez schranku.",
+    "export": "Exportovat",
+    "import": "Importovat",
+    "exportDoneTitle": "Exportovane",
+    "exportDoneMessage": "Data boli skopirovane do schranky. Vlozte ich do poznamok alebo e-mailu.",
+    "importTitle": "Importovat data?",
+    "importMessage": "Sucasne data budu nahradene datami zo schranky. Aplikaciu bude potrebne restartnout.",
+    "importDoneTitle": "Importovane",
+    "importDoneMessage": "Data boli obnovene. Restartujte aplikaciu pre nacitanie zmien.",
+    "importError": "Nepodarilo sa importovat data. Skontrolujte format.",
+    "exportError": "Nepodarilo sa exportovat data.",
+    "noData": "V schranke nie su ziadne data na import.",
+    "error": "Chyba",
+    "cancel": "Zrusit"
   }
 }

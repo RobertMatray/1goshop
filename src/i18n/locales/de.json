@@ -84,5 +84,22 @@
     "themeDark": "Dunkel",
     "about": "Info",
     "version": "Version"
+  },
+  "Backup": {
+    "title": "Datensicherung",
+    "description": "Alle Daten (Liste, Verlauf, Einstellungen) uber die Zwischenablage exportieren oder importieren.",
+    "export": "Exportieren",
+    "import": "Importieren",
+    "exportDoneTitle": "Exportiert",
+    "exportDoneMessage": "Daten wurden in die Zwischenablage kopiert. Fugen Sie sie in Notizen oder E-Mail ein.",
+    "importTitle": "Daten importieren?",
+    "importMessage": "Aktuelle Daten werden durch Daten aus der Zwischenablage ersetzt. Neustart erforderlich.",
+    "importDoneTitle": "Importiert",
+    "importDoneMessage": "Daten wurden wiederhergestellt. Starten Sie die App neu.",
+    "importError": "Import fehlgeschlagen. Uberprufen Sie das Format.",
+    "exportError": "Export fehlgeschlagen.",
+    "noData": "Keine Daten in der Zwischenablage gefunden.",
+    "error": "Fehler",
+    "cancel": "Abbrechen"
   }
 }

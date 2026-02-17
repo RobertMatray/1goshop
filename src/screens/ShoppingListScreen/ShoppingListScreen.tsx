@@ -24,7 +24,6 @@ export function ShoppingListScreen(): React.ReactElement {
   const insets = useSafeAreaInsets()
   const [showTutorial, setShowTutorial] = useState(false)
   const items = useShoppingListStore((s) => s.items)
-  const activeSession = useActiveShoppingStore((s) => s.session)
   const startShopping = useActiveShoppingStore((s) => s.startShopping)
 
   const sortedItems = useMemo(() => {
@@ -58,13 +57,6 @@ export function ShoppingListScreen(): React.ReactElement {
       ),
     })
   }, [navigation])
-
-  // Resume active shopping session if app was closed mid-shopping
-  React.useEffect(() => {
-    if (activeSession) {
-      navigation.navigate('ActiveShoppingScreen')
-    }
-  }, [activeSession, navigation])
 
   return (
     <View style={styles.container}>
