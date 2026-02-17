@@ -47,9 +47,9 @@ src/
     AppNavigator.tsx           # Stack navigator (2 screens)
   screens/
     ShoppingListScreen/
-      ShoppingListScreen.tsx   # Main screen - FlatList with sorted items
+      ShoppingListScreen.tsx   # Main screen - DraggableFlatList with footer
       components/
-        ShoppingListItem.tsx   # Swipeable item (gestures: pan, tap)
+        ShoppingListItem.tsx   # Swipeable item (pan, tap, drag handle)
         AddItemInput.tsx       # Text input + add button
         EmptyListPlaceholder.tsx
     SettingsScreen/
@@ -79,23 +79,37 @@ interface ShoppingItem {
 }
 ```
 
-### Gesture Design
+### Gesture Design (v1.0.0)
 
-| Gesture | Action | Visual Feedback |
-|---------|--------|-----------------|
-| Swipe RIGHT (>80px) | +1 quantity | Green bg with "+1" |
-| Swipe LEFT (>80px) | Reveal delete button | Red bg with trash |
-| Swipe LEFT (>160px) | Auto-delete | Item slides off |
-| Tap | Toggle checked/unchecked | Strikethrough |
+The item row is divided into **left half** and **right half**. The gesture action depends on which half you start the swipe from.
+
+| Gesture | Where | Action | Visual Feedback |
+|---------|-------|--------|-----------------|
+| Swipe RIGHT (>30px) | Left half | +1 quantity | Green bg with "+1" (aligned left) |
+| Swipe LEFT (>30px) | Left half | -1 quantity | Orange bg with "-1" (aligned right) |
+| Swipe LEFT (>30px) | Right half | Delete with confirmation | Red bg with trash (aligned right) |
+| Tap | Anywhere | Toggle checked/unchecked | Strikethrough + checkmark |
+| Long press ☰ icon | Drag handle | Reorder (drag up/down) | Item lifts, others shift |
+
+**Technical details:**
+- `activeOffsetX: [-8, 8]` - gesture activates after 8px horizontal movement
+- `failOffsetY: [-8, 8]` - gesture fails if vertical movement detected first
+- `SWIPE_THRESHOLD = 30` - action triggers after 30px swipe
+- `pointerEvents="none"` on item content so gestures work over text/badges
+- Drag handle (`☰`) uses `Pressable` with `onLongPress` (200ms delay)
+- `DraggableFlatList` from `react-native-draggable-flatlist` for reorder
+- `autoscrollThreshold=80`, `autoscrollSpeed=200` for smooth scroll during drag
+- Checked items stay in place (no auto-sorting to bottom)
 
 ### State Management
 
 - **ShoppingListStore**: Zustand store with manual AsyncStorage persistence
   - `items: ShoppingItem[]` - all items
   - CRUD: addItem, removeItem, toggleChecked, incrementQuantity, decrementQuantity
-  - reorderItems(fromIndex, toIndex)
+  - setItems (for drag reorder), reorderItems(fromIndex, toIndex)
   - clearChecked, clearAll
   - Persistence via `persist()` helper function (fire-and-forget)
+  - On load: items sorted by order and reindexed (0,1,2...) to fix any gaps
 
 - **ThemeStore**: auto/light/dark with AsyncStorage
   - Applies theme via `UnistylesRuntime.setTheme()`
@@ -235,56 +249,62 @@ curl -s -X POST https://api.github.com/user/repos \
   - GitHub: https://github.com/robertmatray/superapp-ai-poc
   - Same Apple Developer account, same EAS credentials pattern
 
-## Current Status (February 2026)
+## Current Status (v1.0.0 - February 17, 2026)
 
-### Implemented
-- Shopping list CRUD (add, remove, toggle, quantity, reorder)
-- Swipe gestures (right=+1, left=delete, tap=check)
-- AsyncStorage persistence
+### Implemented (all working on TestFlight)
+- Shopping list CRUD (add, remove, toggle checked, quantity +1/-1, reorder)
+- Gesture controls: left half swipe (+1/-1), right half swipe (delete with confirm), tap (toggle), long press drag handle (reorder)
+- DraggableFlatList with auto-scroll during drag (both directions)
+- Checked items stay in place (no auto-sorting)
+- Footer with item count, clear checked button, gesture hints
+- Safe area support (footer visible above home indicator)
+- AsyncStorage persistence with order reindexing on load
 - Light/dark theme with adaptive system theme
 - SK + EN translations
 - Settings screen (language + theme toggle)
-- Haptic feedback on gestures
+- Haptic feedback on all gestures
 - TypeScript strict mode passes
-- Successfully deployed to TestFlight and running on iPhone
+- Successfully deployed to TestFlight (Build #15) and running on iPhone
 
-### Build & Deploy Status (February 16, 2026)
+### Build & Deploy Status
 
 **EAS Project**: `f6744446-31a1-40f5-abe9-77e7dc41a501`
 **Bundle ID registered**: `com.robertmatray.onegoshop` (Apple Developer Portal ID: L6PPTCB3X6)
 **Provisioning Profile**: f649b342-4c71-4d84-98c3-cc22a77085ba (ACTIVE, expires 2026-12-12)
 **Distribution Certificate**: 28T88DA5Q5 (shared with moja4ka-zdravie)
 
-**Latest successful build**: Build #8
-- EAS Build ID: `ec382662-ec35-4661-ad17-7ea6b376d15e`
-- IPA: https://expo.dev/artifacts/eas/vaPLf6iKFg3ZPHfKDu2Xi1.ipa
-- Build logs: https://expo.dev/accounts/robertmatray/projects/1goshop/builds/ec382662-ec35-4661-ad17-7ea6b376d15e
+**Latest successful build**: Build #15 (v1.0.0)
+- EAS Build ID: `266bfbec-574e-4406-9947-87597ee3856d`
+- Git tag: `v1.0.0`
 
 **App Store Connect**:
 - **ascAppId**: `6759269751`
 - **TestFlight URL**: https://appstoreconnect.apple.com/apps/6759269751/testflight/ios
 - **App Store Connect login**: `matray@realise.sk` (Account Holder + Admin role)
 
-**TestFlight submission**: FINISHED (February 16, 2026)
-- Submission ID: `9bd1b5d4-1901-482c-9c7f-6fafbf8e63f0`
-- Submitted via Expo GraphQL API (`scripts/submit-via-api.mjs`)
-- IPA uploaded to App Store Connect successfully
-- App installed and running on iPhone via TestFlight
+### Build History
+| Build | Date | Changes |
+|-------|------|---------|
+| #9 | Feb 16 | Fix crash: replaced uuid with expo-crypto randomUUID() |
+| #10 | Feb 17 | Gesture redesign: left/right half, DraggableFlatList |
+| #11 | Feb 17 | Fix drag (Pressable onLongPress) and pan activation |
+| #12 | Feb 17 | Fix swipe through text (pointerEvents), lower threshold to 30px |
+| #13 | Feb 17 | Align +1 left, -1/trash right, fix footer safe area |
+| #14 | Feb 17 | Keep checked items in place |
+| #15 | Feb 17 | Fix footer layout (listWrapper), reindex order on load |
 
 ### Scripts (for CI/CD automation)
 
-- `scripts/generate-provisioning-profile.mjs` - Generate iOS provisioning profile via Apple API
-- `scripts/setup-credentials-api.mjs` - Setup EAS credentials via Expo GraphQL API
-- `scripts/create-app-store-app.mjs` - Create app in App Store Connect (requires Admin API key)
-- `scripts/submit-via-api.mjs` - Submit IPA to TestFlight via Expo GraphQL API (bypasses EAS CLI interactive mode)
+- `scripts/submit-via-api.mjs` - Submit IPA to TestFlight via Expo GraphQL API (auto-detects latest build)
 - `scripts/check-submission.mjs` - Check submission status via Expo GraphQL API
+- `scripts/fetch-crashes.mjs` - Fetch crash reports from App Store Connect API
+- `scripts/fetch-crash-log.mjs` - Fetch specific crash log details
 
 ### Not Yet Done
 - No custom app icon (uses Expo default)
-- No drag-to-reorder (long press) - only swipe gestures implemented
 - No splash screen customization
+- No Android build/deploy yet
 
-### Known Issues
-- Long press + drag reorder is not implemented yet (only swipe right/left and tap)
-- App icon is default Expo icon
-- Apple API key has Developer access - cannot create App Store Connect apps via API (need Admin key or manual creation)
+### Known Limitations
+- Apple API key has Developer access - cannot create App Store Connect apps via API (manual creation required)
+- `npx eas-cli submit --non-interactive` does NOT work - must use `scripts/submit-via-api.mjs`
