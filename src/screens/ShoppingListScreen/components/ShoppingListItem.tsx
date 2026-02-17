@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react'
-import { View, Text, Alert, LayoutChangeEvent } from 'react-native'
+import { View, Text, Alert, Pressable, LayoutChangeEvent } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import Animated, {
   useSharedValue,
@@ -39,89 +39,74 @@ export function ShoppingListItem({ item, drag, isActive }: Props): React.ReactEl
   }, [itemWidth])
 
   const panGesture = Gesture.Pan()
-    .activeOffsetX([-20, 20])
+    .activeOffsetX([-15, 15])
     .failOffsetY([-10, 10])
     .onStart((event) => {
       startX.value = event.x
     })
     .onUpdate((event) => {
-      translateX.value = event.translationX
+      const isLeftHalf = startX.value < itemWidth.value / 2
+
+      if (isLeftHalf) {
+        translateX.value = event.translationX
+      } else {
+        // Right half: only allow swipe left
+        translateX.value = Math.min(0, event.translationX)
+      }
     })
     .onEnd((event) => {
       const isLeftHalf = startX.value < itemWidth.value / 2
 
       if (isLeftHalf) {
-        // Left half: swipe right = +1, swipe left = -1
         if (event.translationX > QUANTITY_THRESHOLD) {
           runOnJS(onIncrementQuantity)()
         } else if (event.translationX < -QUANTITY_THRESHOLD) {
           runOnJS(onDecrementQuantity)()
         }
       } else {
-        // Right half: swipe left = delete with confirm
         if (event.translationX < -QUANTITY_THRESHOLD) {
           runOnJS(onConfirmDelete)()
         }
       }
 
-      translateX.value = withSpring(0)
-    })
-
-  const longPressGesture = Gesture.LongPress()
-    .minDuration(300)
-    .onStart(() => {
-      if (drag) {
-        runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Medium)
-        runOnJS(drag)()
-      }
+      translateX.value = withSpring(0, { damping: 15, stiffness: 150 })
     })
 
   const tapGesture = Gesture.Tap().onEnd(() => {
     runOnJS(onToggleChecked)()
   })
 
-  const composedGesture = Gesture.Race(panGesture, Gesture.Exclusive(longPressGesture, tapGesture))
+  const composedGesture = Gesture.Exclusive(panGesture, tapGesture)
 
   const animatedItemStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.value }],
   }))
 
-  // Left half background: green (+1) on right swipe, orange (-1) on left swipe
   const leftBgStyle = useAnimatedStyle(() => {
     const isLeftHalf = startX.value < itemWidth.value / 2
-    if (!isLeftHalf) return { opacity: 0 }
-
-    if (translateX.value > 0) {
-      const opacity = interpolate(translateX.value, [0, QUANTITY_THRESHOLD], [0, 1], Extrapolation.CLAMP)
-      return { opacity }
-    } else {
-      return { opacity: 0 }
-    }
+    const show = isLeftHalf && translateX.value > 0
+    const opacity = show
+      ? interpolate(translateX.value, [0, QUANTITY_THRESHOLD], [0, 1], Extrapolation.CLAMP)
+      : 0
+    return { opacity }
   })
 
   const leftMinusBgStyle = useAnimatedStyle(() => {
     const isLeftHalf = startX.value < itemWidth.value / 2
-    if (!isLeftHalf) return { opacity: 0 }
-
-    if (translateX.value < 0) {
-      const opacity = interpolate(translateX.value, [0, -QUANTITY_THRESHOLD], [0, 1], Extrapolation.CLAMP)
-      return { opacity }
-    } else {
-      return { opacity: 0 }
-    }
+    const show = isLeftHalf && translateX.value < 0
+    const opacity = show
+      ? interpolate(translateX.value, [0, -QUANTITY_THRESHOLD], [0, 1], Extrapolation.CLAMP)
+      : 0
+    return { opacity }
   })
 
-  // Right half background: red (delete) on left swipe
   const rightBgStyle = useAnimatedStyle(() => {
     const isLeftHalf = startX.value < itemWidth.value / 2
-    if (isLeftHalf) return { opacity: 0 }
-
-    if (translateX.value < 0) {
-      const opacity = interpolate(translateX.value, [0, -QUANTITY_THRESHOLD], [0, 1], Extrapolation.CLAMP)
-      return { opacity }
-    } else {
-      return { opacity: 0 }
-    }
+    const show = !isLeftHalf && translateX.value < 0
+    const opacity = show
+      ? interpolate(translateX.value, [0, -QUANTITY_THRESHOLD], [0, 1], Extrapolation.CLAMP)
+      : 0
+    return { opacity }
   })
 
   return (
@@ -161,12 +146,26 @@ export function ShoppingListItem({ item, drag, isActive }: Props): React.ReactEl
               </View>
             )}
 
-            <Text style={styles.dragHandle}>☰</Text>
+            <Pressable
+              onLongPress={onDragStart}
+              delayLongPress={200}
+              style={styles.dragHandleArea}
+              hitSlop={8}
+            >
+              <Text style={styles.dragHandle}>☰</Text>
+            </Pressable>
           </Animated.View>
         </GestureDetector>
       </View>
     </View>
   )
+
+  function onDragStart(): void {
+    if (drag) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+      drag()
+    }
+  }
 
   function onIncrementQuantity(): void {
     incrementQuantity(item.id)
@@ -294,10 +293,15 @@ const styles = StyleSheet.create((theme) => ({
     fontWeight: 'bold',
     color: theme.colors.tint,
   },
+  dragHandleArea: {
+    paddingLeft: 12,
+    paddingVertical: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   dragHandle: {
     fontSize: 18,
     color: theme.colors.textSecondary,
-    marginLeft: 8,
     opacity: 0.5,
   },
 }))
