@@ -347,8 +347,8 @@ function DeleteItemAnimation({ t }: { t: (key: string) => string }): React.React
           </Animated.View>
         </View>
       </View>
-      {/* Finger in normal flow, positioned with transform */}
-      <Animated.View style={fingerStyle}>
+      {/* Finger - absolute positioned to avoid clipping */}
+      <Animated.View style={[animStyles.fingerAbsolute, fingerStyle]}>
         <FingerPointer />
       </Animated.View>
     </View>
@@ -479,8 +479,8 @@ function IncrementAnimation({ t }: { t: (key: string) => string }): React.ReactE
           </Animated.View>
         </View>
       </View>
-      {/* Finger in normal flow */}
-      <Animated.View style={fingerStyle}>
+      {/* Finger - absolute positioned to avoid clipping */}
+      <Animated.View style={[animStyles.fingerAbsolute, fingerStyle]}>
         <FingerPointer />
       </Animated.View>
     </View>
@@ -611,8 +611,8 @@ function DecrementAnimation({ t }: { t: (key: string) => string }): React.ReactE
           </Animated.View>
         </View>
       </View>
-      {/* Finger in normal flow */}
-      <Animated.View style={fingerStyle}>
+      {/* Finger - absolute positioned to avoid clipping */}
+      <Animated.View style={[animStyles.fingerAbsolute, fingerStyle]}>
         <FingerPointer />
       </Animated.View>
     </View>
@@ -745,8 +745,8 @@ function StartShoppingAnimation({ t }: { t: (key: string) => string }): React.Re
       <Animated.View style={[animStyles.startButton, buttonStyle]}>
         <Text style={animStyles.startButtonText}>{t('ActiveShopping.startShopping')}</Text>
       </Animated.View>
-      {/* Finger in normal flow */}
-      <Animated.View style={fingerStyle}>
+      {/* Finger - absolute positioned to avoid clipping */}
+      <Animated.View style={[animStyles.fingerAbsolute, fingerStyle]}>
         <FingerPointer />
       </Animated.View>
     </View>
@@ -838,8 +838,8 @@ function MarkBoughtAnimation({ t }: { t: (key: string) => string }): React.React
           <Text style={animStyles.qtyText}>x2</Text>
         </View>
       </Animated.View>
-      {/* Finger in normal flow */}
-      <Animated.View style={fingerStyle}>
+      {/* Finger - absolute positioned to avoid clipping */}
+      <Animated.View style={[animStyles.fingerAbsolute, fingerStyle]}>
         <FingerPointer />
       </Animated.View>
     </View>
@@ -934,8 +934,8 @@ function FinishShoppingAnimation({ t }: { t: (key: string) => string }): React.R
           <Animated.Text style={[animStyles.dialogConfirm, confirmStyle]}>{t('ActiveShopping.finish')}</Animated.Text>
         </View>
       </Animated.View>
-      {/* Finger in normal flow */}
-      <Animated.View style={fingerStyle}>
+      {/* Finger - absolute positioned to avoid clipping */}
+      <Animated.View style={[animStyles.fingerAbsolute, fingerStyle]}>
         <FingerPointer />
       </Animated.View>
     </View>
@@ -1034,6 +1034,7 @@ const styles = StyleSheet.create((theme) => ({
   },
   stepContent: {
     alignItems: 'center',
+    overflow: 'visible',
   },
   animationArea: {
     width: '100%',
@@ -1041,6 +1042,7 @@ const styles = StyleSheet.create((theme) => ({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 24,
+    overflow: 'visible',
   },
   stepTitle: {
     fontSize: 22,
@@ -1107,6 +1109,7 @@ const animStyles = StyleSheet.create((theme) => ({
     width: '100%',
     alignItems: 'center',
     gap: 8,
+    overflow: 'visible',
   },
   inputRow: {
     flexDirection: 'row',
@@ -1223,10 +1226,12 @@ const animStyles = StyleSheet.create((theme) => ({
     width: '85%',
     alignItems: 'center',
     gap: 8,
+    overflow: 'visible',
   },
   itemWrapper: {
     width: '100%',
     position: 'relative',
+    overflow: 'visible',
   },
   deleteBg: {
     position: 'absolute',
@@ -1293,7 +1298,12 @@ const animStyles = StyleSheet.create((theme) => ({
     borderTopRightRadius: 8,
     borderBottomRightRadius: 8,
   },
-  // Finger pointer container (no styles needed - FingerPointer component handles its own styles)
+  fingerAbsolute: {
+    position: 'absolute',
+    bottom: -10,
+    alignSelf: 'center',
+    zIndex: 100,
+  },
   shoppingItem: {
     flexDirection: 'row',
     alignItems: 'center',
