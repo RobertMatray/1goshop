@@ -316,8 +316,8 @@ curl -s -X POST https://api.github.com/user/repos \
 **Provisioning Profile**: f649b342-4c71-4d84-98c3-cc22a77085ba (ACTIVE, expires 2026-12-12)
 **Distribution Certificate**: 28T88DA5Q5 (shared with moja4ka-zdravie)
 
-**Latest successful build**: Build #44 (v1.0.1)
-- EAS Build ID: `0a46ceb0-dbe7-4f0f-b411-90bf01b216c3`
+**Latest successful build**: Build #45 (v1.0.1)
+- EAS Build ID: `ecc126d4-ed13-4165-aefb-e9eb402546b7`
 
 **App Store Connect**:
 - **ascAppId**: `6759269751`
