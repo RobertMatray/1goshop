@@ -96,7 +96,14 @@ interface ActiveShoppingItem {
   quantity: number        // >= 1
   isBought: boolean       // Bought during shopping
   order: number           // Sort position
-  purchasedAt: string | null  // ISO timestamp when marked as bought
+  purchasedAt: string | null  // ISO timestamp when marked as bought (set on toggle, cleared on untoggle)
+}
+
+interface ShoppingSession {
+  id: string              // UUID v4
+  items: ActiveShoppingItem[]
+  startedAt: string       // ISO timestamp when shopping started
+  finishedAt: string | null  // ISO timestamp when shopping finished
 }
 ```
 
@@ -136,9 +143,10 @@ The item row is divided into **left half** and **right half**. The gesture actio
   - On load: items sorted by order and reindexed (0,1,2...) to fix any gaps
 
 - **ActiveShoppingStore**: Active shopping session management
-  - startShopping(items) - creates session from checked items
-  - Toggle bought status during shopping
-  - Finish shopping - saves to history
+  - startShopping(items) - creates session from checked items (purchasedAt: null)
+  - toggleBought(id) - marks item as bought with `purchasedAt` timestamp (ISO), clears on untoggle
+  - finishShopping() - saves session to history with finishedAt timestamp
+  - Session and history persisted in AsyncStorage (`@active_shopping`, `@shopping_history`)
 
 - **ThemeStore**: auto/light/dark with AsyncStorage
   - Applies theme via `UnistylesRuntime.setTheme()`
@@ -298,6 +306,7 @@ curl -s -X POST https://api.github.com/user/repos \
 - Settings screen (language grid, theme toggle, history link, backup/restore)
 - Settings gear icon (Ionicons settings-outline, 24px, white)
 - Haptic feedback on all gestures
+- purchasedAt timestamp tracked for each item during active shopping (for future analytics)
 - TypeScript strict mode passes
 
 ### Build & Deploy Status
@@ -367,4 +376,3 @@ Interactive animated tutorial showing all gestures with pulsing touch indicator:
 
 ### Known Limitations
 - Apple API key has Developer access - cannot create App Store Connect apps via API (manual creation required)
-- `npx eas-cli submit --non-interactive` does NOT work - must use `scripts/submit-via-api.mjs`
