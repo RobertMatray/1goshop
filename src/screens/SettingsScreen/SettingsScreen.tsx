@@ -1,13 +1,12 @@
 import React from 'react'
-import { View, Text, Pressable, Alert, ScrollView, Share } from 'react-native'
-import * as Clipboard from 'expo-clipboard'
+import { View, Text, Pressable, Alert, ScrollView } from 'react-native'
 import { StyleSheet } from 'react-native-unistyles'
 import { useTranslation } from 'react-i18next'
 import { useNavigation } from '@react-navigation/native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import type { RootStackParamList } from '../../navigation/AppNavigator'
 import { useThemeStore, type ThemeMode } from '../../stores/ThemeStore'
-import { createBackup, restoreBackup } from '../../services/BackupService'
+import { createAndShareBackup, restoreFromFile } from '../../services/BackupService'
 import type { SupportedLanguage } from '../../i18n/i18n'
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'SettingsScreen'>
@@ -113,8 +112,7 @@ export function SettingsScreen(): React.ReactElement {
 
   async function handleBackup(): Promise<void> {
     try {
-      const json = await createBackup()
-      await Share.share({ message: json, title: '1GoShop Backup' })
+      await createAndShareBackup()
     } catch {
       Alert.alert(t('Backup.error'), t('Backup.exportError'))
     }
@@ -122,25 +120,12 @@ export function SettingsScreen(): React.ReactElement {
 
   async function handleRestore(): Promise<void> {
     try {
-      const json = await Clipboard.getStringAsync()
-      if (!json || !json.startsWith('{')) {
-        Alert.alert(t('Backup.error'), t('Backup.noData'))
-        return
+      const success = await restoreFromFile()
+      if (success) {
+        Alert.alert(t('Backup.importDoneTitle'), t('Backup.importDoneMessage'))
+      } else {
+        Alert.alert(t('Backup.error'), t('Backup.importError'))
       }
-      Alert.alert(t('Backup.importTitle'), t('Backup.importMessage'), [
-        { text: t('Backup.cancel'), style: 'cancel' },
-        {
-          text: t('Backup.import'),
-          onPress: async () => {
-            const success = await restoreBackup(json)
-            if (success) {
-              Alert.alert(t('Backup.importDoneTitle'), t('Backup.importDoneMessage'))
-            } else {
-              Alert.alert(t('Backup.error'), t('Backup.importError'))
-            }
-          },
-        },
-      ])
     } catch {
       Alert.alert(t('Backup.error'), t('Backup.importError'))
     }
