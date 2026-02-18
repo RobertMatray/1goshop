@@ -33,8 +33,10 @@ npm run typecheck   # Same as verify
 - **react-native-gesture-handler** + **react-native-reanimated** for gestures
 - **react-native-unistyles** for styling (light/dark theme)
 - **AsyncStorage** for persistence
-- **i18next** for i18n (SK + EN)
-- **React Navigation** (native stack, 2 screens)
+- **i18next** for i18n (7 languages: SK, EN, DE, HU, UK, CS, ZH)
+- **React Navigation** (native stack, 4 screens)
+- **@expo/vector-icons** (Ionicons) for icons
+- **expo-clipboard** for backup/restore
 
 ### File Structure
 
@@ -44,7 +46,7 @@ src/
   App.tsx                     # Root component with providers
   unistyles.ts                # Theme config (light + dark)
   navigation/
-    AppNavigator.tsx           # Stack navigator (2 screens)
+    AppNavigator.tsx           # Stack navigator (4 screens)
   screens/
     ShoppingListScreen/
       ShoppingListScreen.tsx   # Main screen - DraggableFlatList with footer
@@ -52,18 +54,28 @@ src/
         ShoppingListItem.tsx   # Swipeable item (pan, tap, drag handle)
         AddItemInput.tsx       # Text input + add button
         EmptyListPlaceholder.tsx
+        TutorialOverlay.tsx    # 9-step interactive tutorial with animations
+    ActiveShoppingScreen/
+      ActiveShoppingScreen.tsx # Active shopping mode (checked = bought)
+      components/
+        ActiveShoppingItem.tsx # Item in active shopping
+    ShoppingHistoryScreen/
+      ShoppingHistoryScreen.tsx # Shopping history and statistics
     SettingsScreen/
-      SettingsScreen.tsx       # Language + theme toggle
+      SettingsScreen.tsx       # Language, theme, history, backup/restore
   stores/
     ShoppingListStore.ts       # Items CRUD + AsyncStorage persistence
+    ActiveShoppingStore.ts     # Active shopping session state
     ThemeStore.ts              # Theme preference (auto/light/dark)
+  services/
+    BackupService.ts           # Export/import via Share sheet
   i18n/
-    i18n.ts                    # i18next setup (SK + EN)
+    i18n.ts                    # i18next setup (7 languages)
     locales/
-      sk.json
-      en.json
+      sk.json, en.json, de.json, hu.json, uk.json, cs.json, zh.json
   types/
     shopping.ts                # ShoppingItem interface
+    expo-vector-icons.d.ts     # Type declarations for @expo/vector-icons
 ```
 
 ### Data Model
@@ -79,17 +91,20 @@ interface ShoppingItem {
 }
 ```
 
-### Gesture Design (v1.0.0)
+### Gesture Design (v1.0.1)
 
 The item row is divided into **left half** and **right half**. The gesture action depends on which half you start the swipe from.
 
 | Gesture | Where | Action | Visual Feedback |
 |---------|-------|--------|-----------------|
-| Swipe RIGHT (>30px) | Left half | +1 quantity | Green bg with "+1" (aligned left) |
-| Swipe LEFT (>30px) | Left half | -1 quantity | Orange bg with "-1" (aligned right) |
-| Swipe LEFT (>30px) | Right half | Delete with confirmation | Red bg with trash (aligned right) |
-| Tap | Anywhere | Toggle checked/unchecked | Strikethrough + checkmark |
+| Swipe LEFT (>30px) | Left half | Delete with confirmation | Red bg with trash (aligned right) |
+| Swipe RIGHT (>30px) | Left half | Edit item name (Alert.prompt) | Blue bg with pencil (aligned left) |
+| Swipe RIGHT (>30px) | Right half | +1 quantity | Green bg with "+1" (aligned left) |
+| Swipe LEFT (>30px) | Right half | -1 quantity | Orange bg with "-1" (aligned right) |
+| Tap | Anywhere | Toggle checked/unchecked | Checkmark (no strikethrough on main list) |
 | Long press ☰ icon | Drag handle | Reorder (drag up/down) | Item lifts, others shift |
+
+**Note**: Checked items on main list are marked for shopping (no strikethrough). Strikethrough is only in ActiveShoppingScreen for bought items.
 
 **Technical details:**
 - `activeOffsetX: [-8, 8]` - gesture activates after 8px horizontal movement
@@ -105,11 +120,16 @@ The item row is divided into **left half** and **right half**. The gesture actio
 
 - **ShoppingListStore**: Zustand store with manual AsyncStorage persistence
   - `items: ShoppingItem[]` - all items
-  - CRUD: addItem, removeItem, toggleChecked, incrementQuantity, decrementQuantity
+  - CRUD: addItem, removeItem, editItem, toggleChecked, incrementQuantity, decrementQuantity
   - setItems (for drag reorder), reorderItems(fromIndex, toIndex)
   - clearChecked, clearAll
   - Persistence via `persist()` helper function (fire-and-forget)
   - On load: items sorted by order and reindexed (0,1,2...) to fix any gaps
+
+- **ActiveShoppingStore**: Active shopping session management
+  - startShopping(items) - creates session from checked items
+  - Toggle bought status during shopping
+  - Finish shopping - saves to history
 
 - **ThemeStore**: auto/light/dark with AsyncStorage
   - Applies theme via `UnistylesRuntime.setTheme()`
@@ -197,7 +217,7 @@ node scripts/check-submission.mjs
 npx eas-cli build --platform android --profile preview
 ```
 
-**IMPORTANT**: `npx eas-cli submit --non-interactive` does NOT work for this project because EAS CLI cannot configure API keys non-interactively. Use `scripts/submit-via-api.mjs` instead - it calls Expo's GraphQL API directly with the API key embedded.
+**Note**: `npx eas-cli submit --platform ios --latest --non-interactive` now works (tested Build 40). Alternative: `scripts/submit-via-api.mjs` calls Expo's GraphQL API directly.
 
 ### EAS Configuration (eas.json)
 - `appVersionSource: "remote"` - versions managed by EAS
@@ -249,22 +269,27 @@ curl -s -X POST https://api.github.com/user/repos \
   - GitHub: https://github.com/robertmatray/superapp-ai-poc
   - Same Apple Developer account, same EAS credentials pattern
 
-## Current Status (v1.0.0 - February 17, 2026)
+## Current Status (v1.0.1 - February 18, 2026)
 
 ### Implemented (all working on TestFlight)
-- Shopping list CRUD (add, remove, toggle checked, quantity +1/-1, reorder)
-- Gesture controls: left half swipe (+1/-1), right half swipe (delete with confirm), tap (toggle), long press drag handle (reorder)
+- Shopping list CRUD (add, remove, edit, toggle checked, quantity +1/-1, reorder)
+- Gesture controls: left half swipe (left=delete, right=edit), right half swipe (right=+1, left=-1), tap (toggle), long press drag handle (reorder)
+- Edit item via Alert.prompt (left half swipe right, blue background)
 - DraggableFlatList with auto-scroll during drag (both directions)
-- Checked items stay in place (no auto-sorting)
-- Footer with item count, clear checked button, gesture hints
+- Checked items stay in place (no auto-sorting, no strikethrough on main list)
+- Active shopping mode: start shopping with checked items, mark as bought (strikethrough only here)
+- Shopping history with statistics
+- Interactive 9-step tutorial overlay with pulsing touch indicator animations
+- Footer with item count, marked-for-shopping count, "Start shopping" button, gesture hints
 - Safe area support (footer visible above home indicator)
 - AsyncStorage persistence with order reindexing on load
+- Backup/restore via Share sheet (export JSON, import from clipboard)
 - Light/dark theme with adaptive system theme
-- SK + EN translations
-- Settings screen (language + theme toggle)
+- 7 language translations (SK, EN, DE, HU, UK, CS, ZH) with proper diacritics
+- Settings screen (language grid, theme toggle, history link, backup/restore)
+- Settings gear icon (Ionicons settings-outline, 24px, white)
 - Haptic feedback on all gestures
 - TypeScript strict mode passes
-- Successfully deployed to TestFlight (Build #15) and running on iPhone
 
 ### Build & Deploy Status
 
@@ -273,9 +298,9 @@ curl -s -X POST https://api.github.com/user/repos \
 **Provisioning Profile**: f649b342-4c71-4d84-98c3-cc22a77085ba (ACTIVE, expires 2026-12-12)
 **Distribution Certificate**: 28T88DA5Q5 (shared with moja4ka-zdravie)
 
-**Latest successful build**: Build #15 (v1.0.0)
-- EAS Build ID: `266bfbec-574e-4406-9947-87597ee3856d`
-- Git tag: `v1.0.0`
+**Latest successful build**: Build #40 (v1.0.1)
+- EAS Build ID: `014ae649-c91b-4ee0-9d41-d35c9000b00c`
+- Git tag: `v1.0.1-build40`
 
 **App Store Connect**:
 - **ascAppId**: `6759269751`
@@ -291,7 +316,12 @@ curl -s -X POST https://api.github.com/user/repos \
 | #12 | Feb 17 | Fix swipe through text (pointerEvents), lower threshold to 30px |
 | #13 | Feb 17 | Align +1 left, -1/trash right, fix footer safe area |
 | #14 | Feb 17 | Keep checked items in place |
-| #15 | Feb 17 | Fix footer layout (listWrapper), reindex order on load |
+| #15 | Feb 17 | Fix footer layout (listWrapper), reindex order on load (v1.0.0 tag) |
+| #16-24 | Feb 17 | Active shopping, history, tutorial animations, 7 languages |
+| #25 | Feb 17 | Full tutorial rewrite with finger-driven interactions |
+| #26-38 | Feb 17-18 | Tutorial finger visibility fixes, language selector redesign, cloud backup, iCloud, icon proposals |
+| #39 | Feb 18 | Edit item feature, tutorial step 3 for edit, diacritics fixes in all locales |
+| #40 | Feb 18 | Fix gear icon (settings-outline), remove strikethrough on main list |
 
 ### Scripts (for CI/CD automation)
 
@@ -300,10 +330,31 @@ curl -s -X POST https://api.github.com/user/repos \
 - `scripts/fetch-crashes.mjs` - Fetch crash reports from App Store Connect API
 - `scripts/fetch-crash-log.mjs` - Fetch specific crash log details
 
+### App Screens
+
+1. **ShoppingListScreen** (main) - Master list of all items. Tap to mark for shopping. Swipe gestures for edit/delete/quantity. Footer shows count + "Start Shopping" button when items are checked. Tutorial overlay accessible from footer.
+2. **ActiveShoppingScreen** - Active shopping session. Shows only checked items. Tap to mark as bought (strikethrough). Finish button saves to history.
+3. **ShoppingHistoryScreen** - Past shopping sessions with statistics.
+4. **SettingsScreen** - Language (7 langs with flags), theme (auto/light/dark), history link, backup/restore.
+
+### Tutorial Overlay (9 steps)
+
+Interactive animated tutorial showing all gestures with pulsing touch indicator:
+1. Add item (tap input + add button)
+2. Delete item (left half, swipe left)
+3. Edit item (left half, swipe right)
+4. +1 quantity (right half, swipe right)
+5. -1 quantity (right half, swipe left)
+6. Start shopping (tap items, tap button)
+7. Mark as bought (tap in active shopping)
+8. Finish shopping (tap finish button)
+9. View history (navigate to history)
+
 ### Not Yet Done
-- No custom app icon (uses Expo default)
+- No custom app icon (uses Expo default) - 10 SVG/PNG icon proposals generated in `icon-proposals/`
 - No splash screen customization
 - No Android build/deploy yet
+- iCloud sync not working (app not visible in iCloud settings - requires CloudKit entitlement)
 
 ### Known Limitations
 - Apple API key has Developer access - cannot create App Store Connect apps via API (manual creation required)
