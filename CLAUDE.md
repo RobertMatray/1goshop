@@ -316,8 +316,8 @@ curl -s -X POST https://api.github.com/user/repos \
 **Provisioning Profile**: f649b342-4c71-4d84-98c3-cc22a77085ba (ACTIVE, expires 2026-12-12)
 **Distribution Certificate**: 28T88DA5Q5 (shared with moja4ka-zdravie)
 
-**Latest successful build**: Build #43 (v1.0.1)
-- EAS Build ID: `d1e942c3-9b5f-4dec-b251-a772bce3ff89`
+**Latest successful build**: Build #44 (v1.0.1)
+- EAS Build ID: `0a46ceb0-dbe7-4f0f-b411-90bf01b216c3`
 
 **App Store Connect**:
 - **ascAppId**: `6759269751`
@@ -341,6 +341,7 @@ curl -s -X POST https://api.github.com/user/repos \
 | #40 | Feb 18 | Fix gear icon (settings-outline), remove strikethrough on main list |
 | #42 | Feb 18 | Add purchasedAt timestamp to active shopping items (for future use) |
 | #43 | Feb 18 | Custom app icon (green cart with checkmark) |
+| #44 | Feb 18 | Remove white border from app icon |
 
 ### Scripts (for CI/CD automation)
 
