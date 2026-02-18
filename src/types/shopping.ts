@@ -13,6 +13,7 @@ export interface ActiveShoppingItem {
   quantity: number
   isBought: boolean
   order: number
+  purchasedAt: string | null
 }
 
 export interface ShoppingSession {

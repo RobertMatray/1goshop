@@ -64,6 +64,7 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
       quantity: item.quantity,
       isBought: false,
       order: index,
+      purchasedAt: null,
     }))
 
     const session: ShoppingSession = {
@@ -82,7 +83,9 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
     if (!session) return
 
     const updatedItems = session.items.map((item) =>
-      item.id === id ? { ...item, isBought: !item.isBought } : item,
+      item.id === id
+        ? { ...item, isBought: !item.isBought, purchasedAt: !item.isBought ? new Date().toISOString() : null }
+        : item,
     )
     const updatedSession = { ...session, items: updatedItems }
     set({ session: updatedSession })
