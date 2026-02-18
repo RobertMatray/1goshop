@@ -51,8 +51,8 @@ export function ShoppingListScreen(): React.ReactElement {
   React.useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <Pressable onPress={() => navigation.navigate('SettingsScreen')} hitSlop={8}>
-          <Ionicons name="settings-sharp" size={24} color="#ffffff" />
+        <Pressable onPress={() => navigation.navigate('SettingsScreen')} hitSlop={12} style={{ marginRight: 12, padding: 4 }}>
+          <Ionicons name="settings-outline" size={24} color="#ffffff" />
         </Pressable>
       ),
     })

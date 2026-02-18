@@ -1,5 +1,5 @@
 import React from 'react'
-import { View, Text, Pressable, Alert, ScrollView } from 'react-native'
+import { View, Text, Pressable, Alert, ScrollView, Share } from 'react-native'
 import * as Clipboard from 'expo-clipboard'
 import { StyleSheet } from 'react-native-unistyles'
 import { useTranslation } from 'react-i18next'
@@ -26,13 +26,13 @@ export function SettingsScreen(): React.ReactElement {
   ]
 
   const languageOptions: { flag: string; label: string; value: SupportedLanguage }[] = [
-    { flag: '🇸🇰', label: 'Slovensky', value: 'sk' },
-    { flag: '🇬🇧', label: 'English', value: 'en' },
-    { flag: '🇩🇪', label: 'Deutsch', value: 'de' },
-    { flag: '🇭🇺', label: 'Magyar', value: 'hu' },
-    { flag: '🇺🇦', label: 'Ukrainska', value: 'uk' },
-    { flag: '🇨🇿', label: 'Cesky', value: 'cs' },
-    { flag: '🇨🇳', label: 'Zhongwen', value: 'zh' },
+    { flag: '\uD83C\uDDF8\uD83C\uDDF0', label: 'Slovensky', value: 'sk' },
+    { flag: '\uD83C\uDDEC\uD83C\uDDE7', label: 'English', value: 'en' },
+    { flag: '\uD83C\uDDE9\uD83C\uDDEA', label: 'Deutsch', value: 'de' },
+    { flag: '\uD83C\uDDED\uD83C\uDDFA', label: 'Magyar', value: 'hu' },
+    { flag: '\uD83C\uDDFA\uD83C\uDDE6', label: 'Ukrainska', value: 'uk' },
+    { flag: '\uD83C\uDDE8\uD83C\uDDFF', label: 'Cesky', value: 'cs' },
+    { flag: '\uD83C\uDDE8\uD83C\uDDF3', label: 'Zhongwen', value: 'zh' },
   ]
 
   return (
@@ -79,7 +79,7 @@ export function SettingsScreen(): React.ReactElement {
       <Pressable style={styles.section} onPress={() => navigation.navigate('ShoppingHistoryScreen')}>
         <View style={styles.historyRow}>
           <Text style={styles.sectionTitle}>{t('History.title')}</Text>
-          <Text style={styles.historyArrow}>›</Text>
+          <Text style={styles.historyArrow}>{'\u203A'}</Text>
         </View>
         <Text style={styles.hintText}>{t('History.description')}</Text>
       </Pressable>
@@ -114,8 +114,7 @@ export function SettingsScreen(): React.ReactElement {
   async function handleBackup(): Promise<void> {
     try {
       const json = await createBackup()
-      await Clipboard.setStringAsync(json)
-      Alert.alert(t('Backup.exportDoneTitle'), t('Backup.exportDoneMessage'))
+      await Share.share({ message: json, title: '1GoShop Backup' })
     } catch {
       Alert.alert(t('Backup.error'), t('Backup.exportError'))
     }

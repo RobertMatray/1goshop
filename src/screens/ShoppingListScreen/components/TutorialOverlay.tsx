@@ -21,7 +21,7 @@ interface Props {
   onClose: () => void
 }
 
-const TOTAL_STEPS = 8
+const TOTAL_STEPS = 9
 
 export function TutorialOverlay({ visible, onClose }: Props): React.ReactElement | null {
   const { t } = useTranslation()
@@ -44,6 +44,7 @@ export function TutorialOverlay({ visible, onClose }: Props): React.ReactElement
     t('Tutorial.step6Title'),
     t('Tutorial.step7Title'),
     t('Tutorial.step8Title'),
+    t('Tutorial.step9Title'),
   ]
 
   const stepDescriptions = [
@@ -55,6 +56,7 @@ export function TutorialOverlay({ visible, onClose }: Props): React.ReactElement
     t('Tutorial.step6Desc'),
     t('Tutorial.step7Desc'),
     t('Tutorial.step8Desc'),
+    t('Tutorial.step9Desc'),
   ]
 
   return (
@@ -133,16 +135,18 @@ function StepAnimation({ step, screenWidth, t }: { step: number; screenWidth: nu
     case 1:
       return <DeleteItemAnimation t={t} />
     case 2:
-      return <IncrementAnimation t={t} />
+      return <EditItemAnimation t={t} />
     case 3:
-      return <DecrementAnimation t={t} />
+      return <IncrementAnimation t={t} />
     case 4:
-      return <StartShoppingAnimation t={t} />
+      return <DecrementAnimation t={t} />
     case 5:
-      return <MarkBoughtAnimation t={t} />
+      return <StartShoppingAnimation t={t} />
     case 6:
-      return <FinishShoppingAnimation t={t} />
+      return <MarkBoughtAnimation t={t} />
     case 7:
+      return <FinishShoppingAnimation t={t} />
+    case 8:
       return <HistoryAnimation t={t} />
     default:
       return <View />
@@ -205,6 +209,92 @@ function TouchIndicator({ delay = 0, style }: { delay?: number; style?: object }
 }
 
 // ============================================================
+// Swipe touch indicator - slides in the swipe direction, then resets
+// direction: 'left' or 'right'
+// ============================================================
+function SwipeTouchIndicator({ delay = 0, direction, style }: { delay?: number; direction: 'left' | 'right'; style?: object }): React.ReactElement {
+  const translateX = React.useRef(new RNAnimated.Value(0)).current
+  const opacity = React.useRef(new RNAnimated.Value(0)).current
+  const scale = React.useRef(new RNAnimated.Value(1)).current
+  const slideDistance = direction === 'left' ? -80 : 80
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      // Fade in
+      RNAnimated.timing(opacity, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start()
+
+      // Looping: pulse once, then slide, then reset
+      RNAnimated.loop(
+        RNAnimated.sequence([
+          // Pulse in place
+          RNAnimated.timing(scale, {
+            toValue: 1.2,
+            duration: 400,
+            useNativeDriver: true,
+          }),
+          RNAnimated.timing(scale, {
+            toValue: 1,
+            duration: 400,
+            useNativeDriver: true,
+          }),
+          // Slide in swipe direction
+          RNAnimated.timing(translateX, {
+            toValue: slideDistance,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+          // Fade out briefly
+          RNAnimated.timing(opacity, {
+            toValue: 0,
+            duration: 200,
+            useNativeDriver: true,
+          }),
+          // Reset position while invisible
+          RNAnimated.timing(translateX, {
+            toValue: 0,
+            duration: 0,
+            useNativeDriver: true,
+          }),
+          // Pause
+          RNAnimated.delay(400),
+          // Fade back in
+          RNAnimated.timing(opacity, {
+            toValue: 1,
+            duration: 200,
+            useNativeDriver: true,
+          }),
+        ]),
+      ).start()
+    }, delay)
+
+    return () => clearTimeout(timeout)
+  }, [delay, opacity, scale, translateX, slideDistance])
+
+  return (
+    <RNAnimated.View
+      style={[
+        {
+          width: 40,
+          height: 40,
+          borderRadius: 20,
+          backgroundColor: 'rgba(255,255,255,0.25)',
+          borderWidth: 2,
+          borderColor: 'rgba(255,255,255,0.5)',
+          position: 'absolute' as const,
+          transform: [{ translateX }, { scale }],
+          opacity,
+        },
+        style,
+      ]}
+    />
+  )
+}
+
+// ============================================================
 // Step 1: Add item animation (no finger)
 // ============================================================
 function AddItemAnimation({ t }: { t: (key: string) => string }): React.ReactElement {
@@ -239,9 +329,13 @@ function AddItemAnimation({ t }: { t: (key: string) => string }): React.ReactEle
         <View style={animStyles.inputField}>
           <Animated.Text style={[animStyles.inputText, textStyle]}>{t('Tutorial.exampleItem1')}</Animated.Text>
         </View>
-        <Animated.View style={[animStyles.addButton, buttonStyle]}>
-          <Text style={animStyles.addButtonText}>+</Text>
-        </Animated.View>
+        <View style={{ position: 'relative' as const }}>
+          <Animated.View style={[animStyles.addButton, buttonStyle]}>
+            <Text style={animStyles.addButtonText}>+</Text>
+          </Animated.View>
+          {/* Pulsing touch indicator centered on the + button */}
+          <TouchIndicator delay={1200} style={{ top: 0, left: 0 }} />
+        </View>
       </Animated.View>
       <Animated.View style={[animStyles.listItem, itemStyle]}>
         <View style={animStyles.checkbox} />
@@ -309,7 +403,7 @@ function DeleteItemAnimation({ t }: { t: (key: string) => string }): React.React
   return (
     <View style={animStyles.scene}>
       <View style={animStyles.zoneLabel}>
-        <Text style={animStyles.zoneLabelTextActive}>LEFT half</Text>
+        <Text style={animStyles.zoneLabelTextActive}>{t('Tutorial.leftHalf')}</Text>
         <Text style={animStyles.zoneLabelTextDim} />
       </View>
       <View style={animStyles.swipeDemo}>
@@ -323,8 +417,8 @@ function DeleteItemAnimation({ t }: { t: (key: string) => string }): React.React
             <View style={animStyles.checkbox} />
             <Text style={animStyles.itemName}>{t('Tutorial.exampleItem2')}</Text>
           </Animated.View>
-          {/* Pulsing touch indicator on the left side */}
-          <TouchIndicator delay={600} style={{ top: 4, left: 10 }} />
+          {/* Sliding touch indicator - starts on left half, swipes left to delete */}
+          <SwipeTouchIndicator delay={600} direction="left" style={{ top: 4, left: '20%' }} />
         </View>
       </View>
     </View>
@@ -332,7 +426,100 @@ function DeleteItemAnimation({ t }: { t: (key: string) => string }): React.React
 }
 
 // ============================================================
-// Step 3: Increment (+1) - RIGHT half swipe right
+// Step 3: Edit item - LEFT half swipe right
+// Sequence: left zone flashes -> finger appears -> drags right -> edit bg reveals -> dialog appears
+// ============================================================
+function EditItemAnimation({ t }: { t: (key: string) => string }): React.ReactElement {
+  const itemTranslateX = useSharedValue(0)
+  const bgOpacity = useSharedValue(0)
+  const zoneFlashOpacity = useSharedValue(0)
+  const dialogOpacity = useSharedValue(0)
+  const dialogTranslateY = useSharedValue(30)
+
+  useEffect(() => {
+    const CYCLE = 5000
+
+    function animate(): void {
+      // Reset
+      itemTranslateX.value = 0
+      bgOpacity.value = 0
+      zoneFlashOpacity.value = 0
+      dialogOpacity.value = 0
+      dialogTranslateY.value = 30
+
+      // Phase 1: Left zone flashes (0-600ms)
+      zoneFlashOpacity.value = withDelay(100, withSequence(
+        withTiming(0.6, { duration: 200 }),
+        withTiming(0, { duration: 200 }),
+        withTiming(0.6, { duration: 200 }),
+        withTiming(0, { duration: 200 }),
+      ))
+
+      // Phase 2: Item drags right (1300-2100ms)
+      itemTranslateX.value = withDelay(1300, withTiming(100, { duration: 800, easing: Easing.out(Easing.quad) }))
+      bgOpacity.value = withDelay(1300, withTiming(1, { duration: 400 }))
+
+      // Phase 3: Item snaps back (2200-2500ms)
+      itemTranslateX.value = withDelay(2200, withTiming(0, { duration: 300, easing: Easing.out(Easing.quad) }))
+      bgOpacity.value = withDelay(2200, withTiming(0, { duration: 300 }))
+
+      // Phase 4: Edit dialog appears (2600-3000ms)
+      dialogOpacity.value = withDelay(2600, withTiming(1, { duration: 300 }))
+      dialogTranslateY.value = withDelay(2600, withTiming(0, { duration: 400, easing: Easing.out(Easing.back(1.3)) }))
+    }
+
+    animate()
+    const interval = setInterval(animate, CYCLE)
+    return () => clearInterval(interval)
+  }, [])
+
+  const itemStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: itemTranslateX.value }],
+  }))
+  const bgStyle = useAnimatedStyle(() => ({ opacity: bgOpacity.value }))
+  const zoneFlashStyle = useAnimatedStyle(() => ({ opacity: zoneFlashOpacity.value }))
+  const dialogStyle = useAnimatedStyle(() => ({
+    opacity: dialogOpacity.value,
+    transform: [{ translateY: dialogTranslateY.value }],
+  }))
+
+  return (
+    <View style={animStyles.scene}>
+      <View style={animStyles.zoneLabel}>
+        <Text style={animStyles.zoneLabelTextActive}>{t('Tutorial.leftHalf')}</Text>
+        <Text style={animStyles.zoneLabelTextDim} />
+      </View>
+      <View style={animStyles.swipeDemo}>
+        <View style={animStyles.itemWrapper}>
+          <Animated.View style={[animStyles.editBg, bgStyle]}>
+            <Text style={animStyles.bgText}>{'\u270F\uFE0F'}</Text>
+          </Animated.View>
+          <Animated.View style={[animStyles.listItem, animStyles.listItemFull, itemStyle]}>
+            {/* Left zone flash overlay */}
+            <Animated.View style={[animStyles.zoneFlashLeft, zoneFlashStyle]} />
+            <View style={animStyles.checkbox} />
+            <Text style={animStyles.itemName}>{t('Tutorial.exampleItem2')}</Text>
+          </Animated.View>
+          {/* Sliding touch indicator - starts on left half, swipes right to edit */}
+          <SwipeTouchIndicator delay={600} direction="right" style={{ top: 4, left: '20%' }} />
+        </View>
+      </View>
+      <Animated.View style={[animStyles.dialog, { width: '85%' }, dialogStyle]}>
+        <Text style={animStyles.dialogTitle}>{t('ShoppingList.editTitle')}</Text>
+        <View style={animStyles.editInputField}>
+          <Text style={animStyles.editInputText}>{t('Tutorial.exampleItem2')}</Text>
+        </View>
+        <View style={animStyles.dialogButtons}>
+          <Text style={animStyles.dialogCancel}>{t('ShoppingList.cancel')}</Text>
+          <Text style={animStyles.dialogConfirm}>{t('ShoppingList.save')}</Text>
+        </View>
+      </Animated.View>
+    </View>
+  )
+}
+
+// ============================================================
+// Step 4: Increment (+1) - RIGHT half swipe right
 // Sequence: right zone flashes -> finger appears -> drags right -> +1 bg reveals -> qty x1->x2
 // ============================================================
 function IncrementAnimation({ t }: { t: (key: string) => string }): React.ReactElement {
@@ -408,7 +595,7 @@ function IncrementAnimation({ t }: { t: (key: string) => string }): React.ReactE
     <View style={animStyles.scene}>
       <View style={animStyles.zoneLabel}>
         <Text style={animStyles.zoneLabelTextDim} />
-        <Text style={animStyles.zoneLabelTextActive}>RIGHT half</Text>
+        <Text style={animStyles.zoneLabelTextActive}>{t('Tutorial.rightHalf')}</Text>
       </View>
       <View style={animStyles.swipeDemo}>
         <View style={animStyles.itemWrapper}>
@@ -425,8 +612,8 @@ function IncrementAnimation({ t }: { t: (key: string) => string }): React.ReactE
               <Text style={animStyles.qtyText}>x{displayQty}</Text>
             </Animated.View>
           </Animated.View>
-          {/* Pulsing touch indicator on the right side */}
-          <TouchIndicator delay={600} style={{ top: 4, right: 10 }} />
+          {/* Sliding touch indicator - starts on right half, swipes right to increment */}
+          <SwipeTouchIndicator delay={600} direction="right" style={{ top: 4, right: '20%' }} />
         </View>
       </View>
     </View>
@@ -510,7 +697,7 @@ function DecrementAnimation({ t }: { t: (key: string) => string }): React.ReactE
     <View style={animStyles.scene}>
       <View style={animStyles.zoneLabel}>
         <Text style={animStyles.zoneLabelTextDim} />
-        <Text style={animStyles.zoneLabelTextActive}>RIGHT half</Text>
+        <Text style={animStyles.zoneLabelTextActive}>{t('Tutorial.rightHalf')}</Text>
       </View>
       <View style={animStyles.swipeDemo}>
         <View style={animStyles.itemWrapper}>
@@ -527,8 +714,8 @@ function DecrementAnimation({ t }: { t: (key: string) => string }): React.ReactE
               <Text style={animStyles.qtyText}>x{displayQty}</Text>
             </Animated.View>
           </Animated.View>
-          {/* Pulsing touch indicator on the right side */}
-          <TouchIndicator delay={600} style={{ top: 4, right: 10 }} />
+          {/* Sliding touch indicator - starts on right half, swipes left to decrement */}
+          <SwipeTouchIndicator delay={600} direction="left" style={{ top: 4, right: '20%' }} />
         </View>
       </View>
     </View>
@@ -613,7 +800,7 @@ function StartShoppingAnimation({ t }: { t: (key: string) => string }): React.Re
           <Text style={animStyles.itemName}>{t('Tutorial.exampleItem1')}</Text>
         </Animated.View>
         {/* Pulsing touch indicator on the first checkbox */}
-        <TouchIndicator delay={300} style={{ top: 2, left: 6 }} />
+        <TouchIndicator delay={300} style={{ top: 4, left: 6 }} />
       </View>
       <Animated.View style={[animStyles.listItem, { marginTop: 4 }, item2Style]}>
         <Animated.View style={[animStyles.checkbox, check2BgStyle]}>
@@ -621,9 +808,13 @@ function StartShoppingAnimation({ t }: { t: (key: string) => string }): React.Re
         </Animated.View>
         <Text style={animStyles.itemName}>{t('Tutorial.exampleItem2')}</Text>
       </Animated.View>
-      <Animated.View style={[animStyles.startButton, buttonStyle]}>
-        <Text style={animStyles.startButtonText}>{t('ActiveShopping.startShopping')}</Text>
-      </Animated.View>
+      <View style={{ position: 'relative' as const, width: '85%', alignItems: 'center' as const }}>
+        <Animated.View style={[animStyles.startButton, { width: '100%' }, buttonStyle]}>
+          <Text style={animStyles.startButtonText}>{t('ActiveShopping.startShopping')}</Text>
+        </Animated.View>
+        {/* Pulsing touch indicator on the start button */}
+        <TouchIndicator delay={2000} style={{ top: 2, right: 20 }} />
+      </View>
     </View>
   )
 }
@@ -690,8 +881,8 @@ function MarkBoughtAnimation({ t }: { t: (key: string) => string }): React.React
             <Text style={animStyles.qtyText}>x2</Text>
           </View>
         </Animated.View>
-        {/* Pulsing touch indicator on the item */}
-        <TouchIndicator delay={200} style={{ top: 2, left: 6 }} />
+        {/* Pulsing touch indicator on the bought circle */}
+        <TouchIndicator delay={200} style={{ top: 4, left: 6 }} />
       </View>
     </View>
   )
@@ -1089,6 +1280,32 @@ const animStyles = StyleSheet.create((theme) => ({
     alignItems: 'center',
     justifyContent: 'flex-end',
     paddingHorizontal: 16,
+  },
+  editBg: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    borderRadius: 8,
+    backgroundColor: '#2196F3',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    paddingHorizontal: 16,
+  },
+  editInputField: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
+    marginBottom: 16,
+  },
+  editInputText: {
+    fontSize: 15,
+    color: '#ffffff',
   },
   bgText: {
     fontSize: 18,

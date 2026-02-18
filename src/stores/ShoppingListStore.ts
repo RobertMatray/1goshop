@@ -13,6 +13,7 @@ export interface ShoppingListStoreState {
   addItem: (name: string) => void
   removeItem: (id: string) => void
   toggleChecked: (id: string) => void
+  editItem: (id: string, name: string) => void
   incrementQuantity: (id: string) => void
   decrementQuantity: (id: string) => void
   reorderItems: (fromIndex: number, toIndex: number) => void
@@ -72,6 +73,16 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
   toggleChecked: (id: string) => {
     const updated = get().items.map((item) =>
       item.id === id ? { ...item, isChecked: !item.isChecked } : item,
+    )
+    set({ items: updated })
+    persist(updated)
+  },
+
+  editItem: (id: string, name: string) => {
+    const trimmed = name.trim()
+    if (!trimmed) return
+    const updated = get().items.map((item) =>
+      item.id === id ? { ...item, name: trimmed } : item,
     )
     set({ items: updated })
     persist(updated)

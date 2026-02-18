@@ -29,6 +29,7 @@ export function ShoppingListItem({ item, drag, isActive }: Props): React.ReactEl
   const startX = useSharedValue(0)
   const { t } = useTranslation()
 
+  const editItem = useShoppingListStore((s) => s.editItem)
   const incrementQuantity = useShoppingListStore((s) => s.incrementQuantity)
   const decrementQuantity = useShoppingListStore((s) => s.decrementQuantity)
   const removeItem = useShoppingListStore((s) => s.removeItem)
@@ -48,8 +49,8 @@ export function ShoppingListItem({ item, drag, isActive }: Props): React.ReactEl
       const isLeftHalf = startX.value < itemWidth.value / 2
 
       if (isLeftHalf) {
-        // Left half: only allow swipe left (delete)
-        translateX.value = Math.min(0, event.translationX)
+        // Left half: swipe left (delete), swipe right (edit)
+        translateX.value = event.translationX
       } else {
         // Right half: both directions (+1/-1)
         translateX.value = event.translationX
@@ -61,6 +62,8 @@ export function ShoppingListItem({ item, drag, isActive }: Props): React.ReactEl
       if (isLeftHalf) {
         if (event.translationX < -SWIPE_THRESHOLD) {
           runOnJS(onConfirmDelete)()
+        } else if (event.translationX > SWIPE_THRESHOLD) {
+          runOnJS(onEditItem)()
         }
       } else {
         if (event.translationX > SWIPE_THRESHOLD) {
@@ -110,12 +113,26 @@ export function ShoppingListItem({ item, drag, isActive }: Props): React.ReactEl
     return { opacity }
   })
 
+  const editBgStyle = useAnimatedStyle(() => {
+    const isLeftHalf = startX.value < itemWidth.value / 2
+    const show = isLeftHalf && translateX.value > 0
+    const opacity = show
+      ? interpolate(translateX.value, [0, SWIPE_THRESHOLD], [0, 1], Extrapolation.CLAMP)
+      : 0
+    return { opacity }
+  })
+
   return (
     <View style={[styles.outerContainer, isActive && styles.activeItem]} onLayout={onLayout}>
       <View style={styles.swipeContainer}>
         {/* Delete background (left half, swipe left) */}
         <Animated.View style={[styles.bgAction, styles.bgDelete, deleteBgStyle]}>
-          <Text style={styles.actionText}>🗑</Text>
+          <Text style={styles.actionText}>{'\uD83D\uDDD1'}</Text>
+        </Animated.View>
+
+        {/* Edit background (left half, swipe right) */}
+        <Animated.View style={[styles.bgAction, styles.bgEdit, editBgStyle]}>
+          <Text style={styles.actionText}>{'\u270F\uFE0F'}</Text>
         </Animated.View>
 
         {/* +1 background (right half, swipe right) */}
@@ -181,6 +198,27 @@ export function ShoppingListItem({ item, drag, isActive }: Props): React.ReactEl
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
   }
 
+  function onEditItem(): void {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    Alert.prompt(
+      t('ShoppingList.editTitle'),
+      undefined,
+      [
+        { text: t('ShoppingList.cancel'), style: 'cancel' },
+        {
+          text: t('ShoppingList.save'),
+          onPress: (value: string | undefined) => {
+            if (value && value.trim()) {
+              editItem(item.id, value)
+            }
+          },
+        },
+      ],
+      'plain-text',
+      item.name,
+    )
+  }
+
   function onConfirmDelete(): void {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
     Alert.alert(
@@ -244,6 +282,10 @@ const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.danger,
     justifyContent: 'flex-end',
   },
+  bgEdit: {
+    backgroundColor: '#2196F3',
+    justifyContent: 'flex-start',
+  },
   actionText: {
     color: '#ffffff',
     fontSize: 20,
@@ -290,7 +332,6 @@ const styles = StyleSheet.create((theme) => ({
     color: theme.colors.text,
   },
   itemNameChecked: {
-    textDecorationLine: 'line-through',
     color: theme.colors.textSecondary,
   },
   quantityBadge: {
