@@ -316,8 +316,8 @@ curl -s -X POST https://api.github.com/user/repos \
 **Provisioning Profile**: f649b342-4c71-4d84-98c3-cc22a77085ba (ACTIVE, expires 2026-12-12)
 **Distribution Certificate**: 28T88DA5Q5 (shared with moja4ka-zdravie)
 
-**Latest successful build**: Build #42 (v1.0.1)
-- EAS Build ID: `f4d63f40-f908-4870-968a-1e99f7580dcc`
+**Latest successful build**: Build #43 (v1.0.1)
+- EAS Build ID: `d1e942c3-9b5f-4dec-b251-a772bce3ff89`
 
 **App Store Connect**:
 - **ascAppId**: `6759269751`
@@ -340,6 +340,7 @@ curl -s -X POST https://api.github.com/user/repos \
 | #39 | Feb 18 | Edit item feature, tutorial step 3 for edit, diacritics fixes in all locales |
 | #40 | Feb 18 | Fix gear icon (settings-outline), remove strikethrough on main list |
 | #42 | Feb 18 | Add purchasedAt timestamp to active shopping items (for future use) |
+| #43 | Feb 18 | Custom app icon (green cart with checkmark) |
 
 ### Scripts (for CI/CD automation)
 
@@ -369,7 +370,6 @@ Interactive animated tutorial showing all gestures with pulsing touch indicator:
 9. View history (navigate to history)
 
 ### Not Yet Done
-- No custom app icon (uses Expo default) - 10 SVG/PNG icon proposals generated in `icon-proposals/`
 - No splash screen customization
 - No Android build/deploy yet
 - iCloud sync not working (app not visible in iCloud settings - requires CloudKit entitlement)
