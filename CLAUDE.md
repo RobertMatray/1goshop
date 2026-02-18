@@ -36,7 +36,8 @@ npm run typecheck   # Same as verify
 - **i18next** for i18n (7 languages: SK, EN, DE, HU, UK, CS, ZH)
 - **React Navigation** (native stack, 4 screens)
 - **@expo/vector-icons** (Ionicons) for icons
-- **expo-clipboard** for backup/restore
+- **expo-file-system** + **expo-sharing** for file-based backup export
+- **expo-file-system** (`File.pickFileAsync`) for backup import from file picker
 
 ### File Structure
 
@@ -300,7 +301,7 @@ curl -s -X POST https://api.github.com/user/repos \
 - Footer with item count, marked-for-shopping count, "Start shopping" button, gesture hints
 - Safe area support (footer visible above home indicator)
 - AsyncStorage persistence with order reindexing on load
-- Backup/restore via Share sheet (export JSON, import from clipboard)
+- Backup/restore via file sharing (export creates .json file shared via native share sheet, import picks .json file via system file picker)
 - Light/dark theme with adaptive system theme
 - 7 language translations (SK, EN, DE, HU, UK, CS, ZH) with proper diacritics
 - Settings screen (language grid, theme toggle, history link, backup/restore)
@@ -316,8 +317,8 @@ curl -s -X POST https://api.github.com/user/repos \
 **Provisioning Profile**: f649b342-4c71-4d84-98c3-cc22a77085ba (ACTIVE, expires 2026-12-12)
 **Distribution Certificate**: 28T88DA5Q5 (shared with moja4ka-zdravie)
 
-**Latest successful build**: Build #45 (v1.0.1)
-- EAS Build ID: `ecc126d4-ed13-4165-aefb-e9eb402546b7`
+**Latest successful build**: Build #47 (v1.0.1)
+- EAS Build ID: `60fb1bf8-0d8b-4fc3-8780-a9e9a28cf2d4`
 
 **App Store Connect**:
 - **ascAppId**: `6759269751`
@@ -342,6 +343,9 @@ curl -s -X POST https://api.github.com/user/repos \
 | #42 | Feb 18 | Add purchasedAt timestamp to active shopping items (for future use) |
 | #43 | Feb 18 | Custom app icon (green cart with checkmark) |
 | #44 | Feb 18 | Remove white border from app icon |
+| #45 | Feb 18 | Center cart icon visually (10px shift down) |
+| #46 | Feb 18 | Rewrite export to share file, import via file picker |
+| #47 | Feb 18 | Recenter cart icon (15px shift), submitted to App Store Review |
 
 ### Scripts (for CI/CD automation)
 
@@ -349,6 +353,9 @@ curl -s -X POST https://api.github.com/user/repos \
 - `scripts/check-submission.mjs` - Check submission status via Expo GraphQL API
 - `scripts/fetch-crashes.mjs` - Fetch crash reports from App Store Connect API
 - `scripts/fetch-crash-log.mjs` - Fetch specific crash log details
+- `scripts/upload-appstore.mjs` - Upload screenshots + metadata to App Store Connect (SK + EN)
+- `scripts/submit-appstore.mjs` - Complete App Store submission (build, category, pricing, age rating, review)
+- `scripts/upscale-screenshots.mjs` - Upscale screenshots to 6.7" and 6.5" sizes
 
 ### App Screens
 
@@ -370,6 +377,21 @@ Interactive animated tutorial showing all gestures with pulsing touch indicator:
 8. Finish shopping (tap finish button)
 9. View history (navigate to history)
 
+### App Store Submission (February 18, 2026)
+
+- **Status**: SUBMITTED FOR REVIEW (Build #47)
+- **Version**: 1.0 (build 47)
+- **Category**: Shopping
+- **Price**: Free
+- **Localizations**: Slovak (SK) + English (EN-US)
+- **Screenshots**: iPhone 6.7" + 6.5" + iPad 12.9" (SK + EN, 4 each = 24 total)
+- **Privacy Policy**: https://robertmatray.github.io/1goshop/privacy-policy.html
+- **Support URL**: https://robertmatray.github.io/1goshop/
+- **GitHub Pages**: `docs/` folder (privacy-policy.html, index.html)
+- **App Privacy**: No data collected
+- **App Store screenshots source**: `appstore-screenshots/` (originals + upscaled)
+- **Git tag**: `v1.0.1`
+
 ### Not Yet Done
 - No splash screen customization
 - No Android build/deploy yet
@@ -377,3 +399,4 @@ Interactive animated tutorial showing all gestures with pulsing touch indicator:
 
 ### Known Limitations
 - Apple API key has Developer access - cannot create App Store Connect apps via API (manual creation required)
+- App Privacy cannot be set via REST API - must be done manually in App Store Connect
