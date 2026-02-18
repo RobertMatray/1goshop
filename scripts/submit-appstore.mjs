@@ -1,7 +1,8 @@
-import { readFileSync } from 'fs'
+import { readFileSync, existsSync } from 'fs'
 import jwt from 'jsonwebtoken'
 const { sign } = jwt
 import { resolve } from 'path'
+import { createHash } from 'crypto'
 
 // ============================================================================
 // Configuration
@@ -14,10 +15,21 @@ const BASE_URL = 'https://api.appstoreconnect.apple.com/v1'
 
 const ASC_APP_ID = '6759269751'
 const VERSION_ID = '139155f5-3177-4e12-9199-23b3667a56cb'
+const APP_INFO_ID = 'f4a3f725-3cb5-413e-9417-eadc5272420f'
 
-// Privacy policy hosted on GitHub Pages (placeholder - replace with real URL if available)
+// AppInfo Localization IDs (for privacy policy URL)
+const APP_INFO_LOC_SK = 'e5877e16-aff9-4066-99d5-74dec1b640fa'
+const APP_INFO_LOC_EN = '58f45bec-4211-4a72-9da1-3539130db3a7'
+
+// Version Localization IDs (for supportUrl)
+const VERSION_LOC_SK = '6fa5b847-f055-4d9c-936e-82fcbb934489'
+const VERSION_LOC_EN = '27df603e-0b50-4b03-a2d2-f8f526135a59'
+
 const PRIVACY_POLICY_URL = 'https://robertmatray.github.io/1goshop/privacy-policy.html'
 const SUPPORT_URL = 'https://robertmatray.github.io/1goshop/'
+const COPYRIGHT = '2026 Robert Matray'
+const CONTACT_EMAIL = 'matray@realise.sk'
+const CONTACT_PHONE = '+421907123456'
 
 // ============================================================================
 // JWT Token Generation
@@ -34,7 +46,7 @@ function generateJWT() {
     aud: 'appstoreconnect-v1',
   }
 
-  const token = sign(payload, privateKey, {
+  const jwtToken = sign(payload, privateKey, {
     algorithm: 'ES256',
     header: {
       alg: 'ES256',
@@ -44,7 +56,7 @@ function generateJWT() {
   })
 
   console.log('[JWT] Token generated successfully')
-  return token
+  return jwtToken
 }
 
 // ============================================================================
@@ -67,6 +79,11 @@ async function apiRequest(method, path, body = null) {
   }
 
   const res = await fetch(url, options)
+
+  if (method === 'DELETE' && res.status === 204) {
+    return { success: true }
+  }
+
   const text = await res.text()
 
   let data
@@ -98,7 +115,6 @@ async function checkBuildStatus() {
   console.log('[STEP 1] Checking build processing status...')
   console.log('========================================')
 
-  // List recent builds for this app, sorted by upload date descending
   const builds = await apiRequest(
     'GET',
     `/builds?filter[app]=${ASC_APP_ID}&sort=-uploadedDate&limit=5`
@@ -111,65 +127,32 @@ async function checkBuildStatus() {
 
   console.log(`[STEP 1] Found ${builds.data.length} build(s):`)
 
-  let targetBuild = null
-
   for (const build of builds.data) {
     const attrs = build.attributes
-    const version = attrs.version          // CFBundleShortVersionString
-    const buildNum = attrs.buildNumber || attrs.uploadedDate  // CFBundleVersion if available
-    const state = attrs.processingState
-    const expired = attrs.expired
-    const iconUrl = attrs.iconAssetToken?.templateUrl
-
-    console.log(`  Build ID: ${build.id}`)
-    console.log(`    Version: ${version}`)
-    console.log(`    Processing State: ${state}`)
-    console.log(`    Expired: ${expired}`)
-    console.log(`    Uploaded: ${attrs.uploadedDate}`)
-    console.log(`    Min OS Version: ${attrs.minOsVersion}`)
-    console.log('')
-
-    // Look for our build - version 1.0.1 and in VALID state
-    if (!targetBuild && version === '1.0.1') {
-      targetBuild = build
-    }
+    console.log(`  Build ${attrs.version} | State: ${attrs.processingState} | Uploaded: ${attrs.uploadedDate}`)
   }
 
-  // If we didn't find 1.0.1, take the most recent one
-  if (!targetBuild) {
-    console.log('[STEP 1] Could not find build with version 1.0.1, using most recent build')
-    targetBuild = builds.data[0]
-  }
-
+  const targetBuild = builds.data.find(b => b.attributes.processingState === 'VALID') || builds.data[0]
   const state = targetBuild.attributes.processingState
-  console.log(`[STEP 1] Target build: ${targetBuild.id} (v${targetBuild.attributes.version})`)
+
+  console.log(`\n[STEP 1] Selected build: ${targetBuild.id} (v${targetBuild.attributes.version})`)
   console.log(`[STEP 1] Processing state: ${state}`)
 
-  if (state === 'PROCESSING') {
-    console.log('[STEP 1] WARNING: Build is still processing. Cannot attach to version yet.')
-    console.log('[STEP 1] You may need to wait and re-run this script.')
+  if (state !== 'VALID') {
+    console.log('[STEP 1] WARNING: Build is not in VALID state.')
     return null
-  }
-
-  if (state === 'FAILED') {
-    console.log('[STEP 1] ERROR: Build processing failed!')
-    return null
-  }
-
-  if (state === 'VALID') {
-    console.log('[STEP 1] Build is VALID and ready to attach.')
   }
 
   return targetBuild
 }
 
 // ============================================================================
-// Step 2: Attach Build to Version
+// Step 2: Attach Build to Version + Set Copyright
 // ============================================================================
 
-async function attachBuildToVersion(build) {
+async function attachBuildAndSetCopyright(build) {
   console.log('\n========================================')
-  console.log('[STEP 2] Attaching build to version...')
+  console.log('[STEP 2] Attaching build to version and setting copyright...')
   console.log('========================================')
 
   if (!build) {
@@ -181,6 +164,9 @@ async function attachBuildToVersion(build) {
     data: {
       type: 'appStoreVersions',
       id: VERSION_ID,
+      attributes: {
+        copyright: COPYRIGHT,
+      },
       relationships: {
         build: {
           data: {
@@ -194,10 +180,10 @@ async function attachBuildToVersion(build) {
 
   try {
     await apiRequest('PATCH', `/appStoreVersions/${VERSION_ID}`, body)
-    console.log(`[STEP 2] Build ${build.id} (v${build.attributes.version}) attached to version ${VERSION_ID}`)
+    console.log(`[STEP 2] Build ${build.attributes.version} attached, copyright set to "${COPYRIGHT}"`)
     return true
   } catch (err) {
-    console.error(`[STEP 2] Failed to attach build: ${err.message}`)
+    console.error(`[STEP 2] Failed: ${err.message}`)
     return false
   }
 }
@@ -211,44 +197,10 @@ async function setAppCategory() {
   console.log('[STEP 3] Setting App Store category to SHOPPING...')
   console.log('========================================')
 
-  // Get appInfos for this app
-  const appInfos = await apiRequest('GET', `/apps/${ASC_APP_ID}/appInfos`)
-
-  if (!appInfos.data || appInfos.data.length === 0) {
-    console.error('[STEP 3] No appInfo found!')
-    return false
-  }
-
-  const appInfoId = appInfos.data[0].id
-  const currentCategory = appInfos.data[0].relationships?.primaryCategory?.data?.id
-  console.log(`[STEP 3] AppInfo ID: ${appInfoId}`)
-  console.log(`[STEP 3] Current primary category: ${currentCategory || 'not set'}`)
-
-  // Get available categories to find SHOPPING
-  try {
-    const categories = await apiRequest('GET', '/appCategories?limit=200')
-    const shoppingCategory = categories.data?.find(c =>
-      c.id === 'SHOPPING' ||
-      c.attributes?.platforms?.includes('IOS') && c.id.includes('SHOPPING')
-    )
-
-    if (shoppingCategory) {
-      console.log(`[STEP 3] Found SHOPPING category ID: ${shoppingCategory.id}`)
-    } else {
-      console.log('[STEP 3] Available categories:')
-      for (const cat of (categories.data || []).slice(0, 30)) {
-        console.log(`  ${cat.id}`)
-      }
-    }
-  } catch (err) {
-    console.log(`[STEP 3] Could not list categories: ${err.message}`)
-  }
-
-  // Set primary category to SHOPPING
   const body = {
     data: {
       type: 'appInfos',
-      id: appInfoId,
+      id: APP_INFO_ID,
       relationships: {
         primaryCategory: {
           data: {
@@ -261,76 +213,42 @@ async function setAppCategory() {
   }
 
   try {
-    await apiRequest('PATCH', `/appInfos/${appInfoId}`, body)
+    await apiRequest('PATCH', `/appInfos/${APP_INFO_ID}`, body)
     console.log('[STEP 3] Primary category set to SHOPPING')
     return true
   } catch (err) {
-    console.error(`[STEP 3] Failed to set category: ${err.message}`)
-    // Try with different category ID format
-    console.log('[STEP 3] Trying alternative category ID formats...')
-
-    const alternatives = ['SHOPPING', 'Shopping', 'ios-shopping']
-    for (const altId of alternatives) {
-      try {
-        body.data.relationships.primaryCategory.data.id = altId
-        await apiRequest('PATCH', `/appInfos/${appInfoId}`, body)
-        console.log(`[STEP 3] Primary category set with ID: ${altId}`)
-        return true
-      } catch {
-        // Continue trying
-      }
-    }
-
-    console.error('[STEP 3] Could not set category with any known ID format')
+    console.error(`[STEP 3] Failed: ${err.message}`)
     return false
   }
 }
 
 // ============================================================================
-// Step 4: Set Privacy Policy URL on Version Localizations
+// Step 4: Set Privacy Policy URL on appInfoLocalizations
 // ============================================================================
 
 async function setPrivacyPolicyUrl() {
   console.log('\n========================================')
-  console.log('[STEP 4] Setting Privacy Policy URL on version localizations...')
+  console.log('[STEP 4] Setting Privacy Policy URL on appInfoLocalizations...')
   console.log('========================================')
-
-  // Get all version localizations
-  const localizations = await apiRequest(
-    'GET',
-    `/appStoreVersions/${VERSION_ID}/appStoreVersionLocalizations`
-  )
-
-  if (!localizations.data || localizations.data.length === 0) {
-    console.error('[STEP 4] No version localizations found!')
-    return false
-  }
-
-  console.log(`[STEP 4] Found ${localizations.data.length} localization(s)`)
 
   let allSuccess = true
 
-  for (const loc of localizations.data) {
-    const locale = loc.attributes.locale
-    const existingUrl = loc.attributes.privacyPolicyUrl
-    console.log(`[STEP 4] Locale: ${locale}, current privacy URL: ${existingUrl || 'not set'}`)
-
+  for (const [locale, locId] of [['sk', APP_INFO_LOC_SK], ['en-US', APP_INFO_LOC_EN]]) {
     const body = {
       data: {
-        type: 'appStoreVersionLocalizations',
-        id: loc.id,
+        type: 'appInfoLocalizations',
+        id: locId,
         attributes: {
           privacyPolicyUrl: PRIVACY_POLICY_URL,
-          supportUrl: SUPPORT_URL,
         },
       },
     }
 
     try {
-      await apiRequest('PATCH', `/appStoreVersionLocalizations/${loc.id}`, body)
+      await apiRequest('PATCH', `/appInfoLocalizations/${locId}`, body)
       console.log(`[STEP 4] Privacy policy URL set for ${locale}`)
     } catch (err) {
-      console.error(`[STEP 4] Failed to set privacy URL for ${locale}: ${err.message}`)
+      console.error(`[STEP 4] Failed for ${locale}: ${err.message}`)
       allSuccess = false
     }
   }
@@ -339,75 +257,69 @@ async function setPrivacyPolicyUrl() {
 }
 
 // ============================================================================
-// Step 5: Set Age Rating Declaration
+// Step 5: Set Support URL on version localizations
+// ============================================================================
+
+async function setSupportUrl() {
+  console.log('\n========================================')
+  console.log('[STEP 5] Setting Support URL on version localizations...')
+  console.log('========================================')
+
+  let allSuccess = true
+
+  for (const [locale, locId] of [['sk', VERSION_LOC_SK], ['en-US', VERSION_LOC_EN]]) {
+    const body = {
+      data: {
+        type: 'appStoreVersionLocalizations',
+        id: locId,
+        attributes: {
+          supportUrl: SUPPORT_URL,
+        },
+      },
+    }
+
+    try {
+      await apiRequest('PATCH', `/appStoreVersionLocalizations/${locId}`, body)
+      console.log(`[STEP 5] Support URL set for ${locale}`)
+    } catch (err) {
+      console.error(`[STEP 5] Failed for ${locale}: ${err.message}`)
+      allSuccess = false
+    }
+  }
+
+  return allSuccess
+}
+
+// ============================================================================
+// Step 6: Set Age Rating Declaration
 // ============================================================================
 
 async function setAgeRating() {
   console.log('\n========================================')
-  console.log('[STEP 5] Setting age rating declaration...')
+  console.log('[STEP 6] Setting age rating declaration...')
   console.log('========================================')
 
-  // Get the age rating declaration for this version
   try {
-    const version = await apiRequest(
+    const ageRatingResult = await apiRequest(
       'GET',
-      `/appStoreVersions/${VERSION_ID}?include=ageRatingDeclaration`
+      `/appInfos/${APP_INFO_ID}/ageRatingDeclaration`
     )
+    const ageRatingId = ageRatingResult.data.id
+    console.log(`[STEP 6] Age rating declaration ID: ${ageRatingId}`)
 
-    // Find the ageRatingDeclaration in included
-    let ageRatingId = null
-
-    if (version.included) {
-      const ageRating = version.included.find(i => i.type === 'ageRatingDeclarations')
-      if (ageRating) {
-        ageRatingId = ageRating.id
-        console.log(`[STEP 5] Found age rating declaration ID: ${ageRatingId}`)
-      }
-    }
-
-    // Try via relationship
-    if (!ageRatingId) {
-      const ageRatingRel = version.data?.relationships?.ageRatingDeclaration?.data
-      if (ageRatingRel) {
-        ageRatingId = ageRatingRel.id
-        console.log(`[STEP 5] Found age rating declaration ID from relationship: ${ageRatingId}`)
-      }
-    }
-
-    // Try direct fetch
-    if (!ageRatingId) {
-      console.log('[STEP 5] Trying to fetch age rating declaration directly...')
-      try {
-        const ageRatingResult = await apiRequest(
-          'GET',
-          `/appStoreVersions/${VERSION_ID}/ageRatingDeclaration`
-        )
-        if (ageRatingResult.data) {
-          ageRatingId = ageRatingResult.data.id
-          console.log(`[STEP 5] Found age rating declaration ID: ${ageRatingId}`)
-        }
-      } catch {
-        console.log('[STEP 5] Could not fetch age rating declaration directly')
-      }
-    }
-
-    if (!ageRatingId) {
-      console.error('[STEP 5] Could not find age rating declaration ID')
-      console.log('[STEP 5] This may need to be set manually in App Store Connect')
-      return false
-    }
-
-    // Set all ratings to NONE - this is a simple shopping list app
+    // Correct types discovered via API error responses:
+    // - String 'NONE' for content intensity levels
+    // - Boolean false for yes/no feature flags
     const body = {
       data: {
         type: 'ageRatingDeclarations',
         id: ageRatingId,
         attributes: {
+          // String NONE fields (content intensity: NONE / INFREQUENT_OR_MILD / FREQUENT_OR_INTENSE)
           alcoholTobaccoOrDrugUseOrReferences: 'NONE',
           contests: 'NONE',
-          gamblingAndContests: false,
-          gambling: false,
           gamblingSimulated: 'NONE',
+          gunsOrOtherWeapons: 'NONE',
           horrorOrFearThemes: 'NONE',
           matureOrSuggestiveThemes: 'NONE',
           medicalOrTreatmentInformation: 'NONE',
@@ -417,140 +329,183 @@ async function setAgeRating() {
           violenceCartoonOrFantasy: 'NONE',
           violenceRealistic: 'NONE',
           violenceRealisticProlongedGraphicOrSadistic: 'NONE',
-          kidsAgeBand: null,
-          seventeenPlus: false,
+          // Boolean fields (yes/no feature flags)
+          advertising: false,
+          ageAssurance: false,
+          gambling: false,
+          healthOrWellnessTopics: false,
+          lootBox: false,
+          messagingAndChat: false,
+          parentalControls: false,
           unrestrictedWebAccess: false,
+          userGeneratedContent: false,
         },
       },
     }
 
     await apiRequest('PATCH', `/ageRatingDeclarations/${ageRatingId}`, body)
-    console.log('[STEP 5] Age rating declaration set to NONE for all categories')
+    console.log('[STEP 6] Age rating declaration set - all categories NONE/false')
     return true
   } catch (err) {
-    console.error(`[STEP 5] Failed to set age rating: ${err.message}`)
+    console.error(`[STEP 6] Failed: ${err.message}`)
     return false
   }
 }
 
 // ============================================================================
-// Step 6: Check Content Rights Declaration
+// Step 7: Set Content Rights Declaration
 // ============================================================================
 
-async function checkContentRights() {
+async function setContentRights() {
   console.log('\n========================================')
-  console.log('[STEP 6] Checking content rights...')
-  console.log('========================================')
-
-  // Content rights is typically a boolean on the version
-  // The app doesn't use third-party content, so we declare no rights needed
-  try {
-    const body = {
-      data: {
-        type: 'appStoreVersions',
-        id: VERSION_ID,
-        attributes: {
-          usesIdfa: false,
-        },
-      },
-    }
-
-    // Note: content rights might not be a direct attribute
-    // Let's check the version details first
-    const versionDetails = await apiRequest(
-      'GET',
-      `/appStoreVersions/${VERSION_ID}`
-    )
-
-    console.log(`[STEP 6] Version state: ${versionDetails.data?.attributes?.appStoreState}`)
-    console.log(`[STEP 6] Version string: ${versionDetails.data?.attributes?.versionString}`)
-    console.log(`[STEP 6] Release type: ${versionDetails.data?.attributes?.releaseType}`)
-
-    // Check createdDate to see when version was created
-    const createdDate = versionDetails.data?.attributes?.createdDate
-    if (createdDate) {
-      console.log(`[STEP 6] Version created: ${createdDate}`)
-    }
-
-    console.log('[STEP 6] Content rights check complete')
-    return true
-  } catch (err) {
-    console.error(`[STEP 6] Content rights check failed: ${err.message}`)
-    return false
-  }
-}
-
-// ============================================================================
-// Step 7: Verify Everything & Show What's Missing
-// ============================================================================
-
-async function verifyReadyForSubmission() {
-  console.log('\n========================================')
-  console.log('[STEP 7] Verifying submission readiness...')
-  console.log('========================================')
-
-  // Get full version details with includes
-  try {
-    const version = await apiRequest(
-      'GET',
-      `/appStoreVersions/${VERSION_ID}?include=build,appStoreVersionLocalizations,appStoreVersionSubmission`
-    )
-
-    const attrs = version.data?.attributes
-    console.log(`[STEP 7] Version: ${attrs?.versionString}`)
-    console.log(`[STEP 7] State: ${attrs?.appStoreState}`)
-    console.log(`[STEP 7] Release type: ${attrs?.releaseType}`)
-
-    // Check build
-    const buildRel = version.data?.relationships?.build?.data
-    if (buildRel) {
-      console.log(`[STEP 7] Build attached: YES (${buildRel.id})`)
-    } else {
-      console.log('[STEP 7] Build attached: NO - REQUIRED')
-    }
-
-    // Check localizations
-    if (version.included) {
-      const localizations = version.included.filter(i => i.type === 'appStoreVersionLocalizations')
-      console.log(`[STEP 7] Localizations: ${localizations.length}`)
-      for (const loc of localizations) {
-        const la = loc.attributes
-        console.log(`  ${la.locale}:`)
-        console.log(`    Description: ${la.description ? 'SET' : 'MISSING'}`)
-        console.log(`    Keywords: ${la.keywords ? 'SET' : 'MISSING'}`)
-        console.log(`    Privacy URL: ${la.privacyPolicyUrl || 'MISSING'}`)
-        console.log(`    Support URL: ${la.supportUrl || 'MISSING'}`)
-        console.log(`    What's New: ${la.whatsNew || 'not set (optional for v1.0)'}`)
-      }
-
-      // Check for submission
-      const submission = version.included.find(i => i.type === 'appStoreVersionSubmissions')
-      if (submission) {
-        console.log(`[STEP 7] Submission exists: ${submission.id}`)
-      } else {
-        console.log('[STEP 7] Submission: not yet submitted')
-      }
-    }
-
-    return version
-  } catch (err) {
-    console.error(`[STEP 7] Verification failed: ${err.message}`)
-    return null
-  }
-}
-
-// ============================================================================
-// Step 8: Submit for App Review
-// ============================================================================
-
-async function submitForReview() {
-  console.log('\n========================================')
-  console.log('[STEP 8] Submitting for App Review...')
+  console.log('[STEP 7] Setting content rights declaration...')
   console.log('========================================')
 
   const body = {
     data: {
-      type: 'appStoreVersionSubmissions',
+      type: 'apps',
+      id: ASC_APP_ID,
+      attributes: {
+        contentRightsDeclaration: 'DOES_NOT_USE_THIRD_PARTY_CONTENT',
+      },
+    },
+  }
+
+  try {
+    await apiRequest('PATCH', `/apps/${ASC_APP_ID}`, body)
+    console.log('[STEP 7] Content rights: does not use third-party content')
+    return true
+  } catch (err) {
+    console.error(`[STEP 7] Failed: ${err.message}`)
+    return false
+  }
+}
+
+// ============================================================================
+// Step 8: Set App Pricing (Free)
+// ============================================================================
+
+async function setAppPricing() {
+  console.log('\n========================================')
+  console.log('[STEP 8] Setting app pricing (FREE)...')
+  console.log('========================================')
+
+  try {
+    // Check if manual prices already exist
+    const schedule = await apiRequest('GET', `/apps/${ASC_APP_ID}/appPriceSchedule`)
+    if (schedule.data) {
+      // Try to get manual prices
+      try {
+        const prices = await apiRequest(
+          'GET',
+          `/appPriceSchedules/${ASC_APP_ID}/manualPrices`
+        )
+        if (prices.data && prices.data.length > 0) {
+          console.log('[STEP 8] Pricing already configured')
+          return true
+        }
+      } catch {
+        // No manual prices set yet
+      }
+    }
+  } catch {
+    // No schedule exists
+  }
+
+  // Get the free price point for USA
+  try {
+    const pricePoints = await apiRequest(
+      'GET',
+      `/apps/${ASC_APP_ID}/appPricePoints?filter[territory]=USA&limit=1`
+    )
+    const freePricePoint = pricePoints.data?.[0]
+
+    if (!freePricePoint) {
+      console.error('[STEP 8] Could not find free price point')
+      return false
+    }
+
+    console.log(`[STEP 8] Free price point: ${freePricePoint.id} (${freePricePoint.attributes?.customerPrice})`)
+
+    const body = {
+      data: {
+        type: 'appPriceSchedules',
+        relationships: {
+          app: {
+            data: { type: 'apps', id: ASC_APP_ID },
+          },
+          manualPrices: {
+            data: [
+              { type: 'appPrices', id: '${price1}' },
+            ],
+          },
+          baseTerritory: {
+            data: { type: 'territories', id: 'USA' },
+          },
+        },
+      },
+      included: [
+        {
+          type: 'appPrices',
+          id: '${price1}',
+          attributes: {
+            startDate: null,
+          },
+          relationships: {
+            appPricePoint: {
+              data: {
+                type: 'appPricePoints',
+                id: freePricePoint.id,
+              },
+            },
+          },
+        },
+      ],
+    }
+
+    await apiRequest('POST', '/appPriceSchedules', body)
+    console.log('[STEP 8] FREE pricing schedule created')
+    return true
+  } catch (err) {
+    console.error(`[STEP 8] Failed: ${err.message}`)
+    return false
+  }
+}
+
+// ============================================================================
+// Step 9: Create App Store Review Detail (contact info)
+// ============================================================================
+
+async function createReviewDetail() {
+  console.log('\n========================================')
+  console.log('[STEP 9] Creating App Store review detail...')
+  console.log('========================================')
+
+  // Check if review detail already exists
+  try {
+    const existing = await apiRequest(
+      'GET',
+      `/appStoreVersions/${VERSION_ID}/appStoreReviewDetail`
+    )
+    if (existing.data) {
+      console.log(`[STEP 9] Review detail already exists: ${existing.data.id}`)
+      return true
+    }
+  } catch {
+    // Does not exist yet, create it
+  }
+
+  const body = {
+    data: {
+      type: 'appStoreReviewDetails',
+      attributes: {
+        contactEmail: CONTACT_EMAIL,
+        contactFirstName: 'Robert',
+        contactLastName: 'Matray',
+        contactPhone: CONTACT_PHONE,
+        demoAccountRequired: false,
+        notes: 'Simple shopping list app. No account or login required. Just open the app and start adding items to your shopping list.',
+      },
       relationships: {
         appStoreVersion: {
           data: {
@@ -563,24 +518,275 @@ async function submitForReview() {
   }
 
   try {
-    const result = await apiRequest('POST', '/appStoreVersionSubmissions', body)
-    console.log('[STEP 8] SUBMITTED FOR REVIEW!')
-    console.log(`[STEP 8] Submission ID: ${result.data?.id}`)
+    const result = await apiRequest('POST', '/appStoreReviewDetails', body)
+    console.log(`[STEP 9] Review detail created: ${result.data.id}`)
     return true
   } catch (err) {
-    console.error(`[STEP 8] Submission failed: ${err.message}`)
-    console.log('')
-    console.log('[STEP 8] Common reasons for submission failure:')
-    console.log('  - Build not yet processed by Apple')
-    console.log('  - Missing screenshots for required device sizes')
-    console.log('  - Missing privacy policy URL')
-    console.log('  - Missing app description or keywords')
-    console.log('  - Age rating not configured')
-    console.log('  - App category not set')
-    console.log('  - Content rights not declared')
-    console.log('')
-    console.log('[STEP 8] Check App Store Connect for specific issues:')
-    console.log('  https://appstoreconnect.apple.com/apps/6759269751/appstore')
+    console.error(`[STEP 9] Failed: ${err.message}`)
+    return false
+  }
+}
+
+// ============================================================================
+// Step 10: Upload iPad Screenshots (generate from iPhone if needed)
+// ============================================================================
+
+async function uploadIpadScreenshots() {
+  console.log('\n========================================')
+  console.log('[STEP 10] Checking iPad screenshots...')
+  console.log('========================================')
+
+  // Check if iPad screenshot sets already have screenshots
+  for (const [locale, locId] of [['sk', VERSION_LOC_SK], ['en-US', VERSION_LOC_EN]]) {
+    const sets = await apiRequest(
+      'GET',
+      `/appStoreVersionLocalizations/${locId}/appScreenshotSets`
+    )
+    const ipadSet = sets.data?.find(s => s.attributes?.screenshotDisplayType === 'APP_IPAD_PRO_3GEN_129')
+
+    if (ipadSet) {
+      // Check if it has screenshots
+      const screenshots = await apiRequest(
+        'GET',
+        `/appScreenshotSets/${ipadSet.id}/appScreenshots`
+      )
+      if (screenshots.data && screenshots.data.length > 0) {
+        console.log(`[STEP 10] ${locale}: iPad screenshots already uploaded (${screenshots.data.length})`)
+        continue
+      }
+    }
+
+    // Generate iPad screenshots from iPhone ones if not uploaded
+    const ipadDir = resolve(`appstore-screenshots/${locale === 'sk' ? 'SK' : 'EN'}/ipad`)
+    const firstFile = resolve(ipadDir, '01.png')
+
+    if (!existsSync(firstFile)) {
+      console.log(`[STEP 10] ${locale}: No iPad screenshots found at ${ipadDir}`)
+      console.log('[STEP 10] Generate them first using sharp or upload manually')
+      continue
+    }
+
+    // Create screenshot set if needed
+    let setId
+    if (ipadSet) {
+      setId = ipadSet.id
+    } else {
+      const createResult = await apiRequest('POST', '/appScreenshotSets', {
+        data: {
+          type: 'appScreenshotSets',
+          attributes: { screenshotDisplayType: 'APP_IPAD_PRO_3GEN_129' },
+          relationships: {
+            appStoreVersionLocalization: {
+              data: { type: 'appStoreVersionLocalizations', id: locId },
+            },
+          },
+        },
+      })
+      setId = createResult.data.id
+      console.log(`[STEP 10] ${locale}: Created iPad screenshot set: ${setId}`)
+    }
+
+    // Upload screenshots
+    for (let i = 1; i <= 4; i++) {
+      const num = String(i).padStart(2, '0')
+      const filePath = resolve(ipadDir, `${num}.png`)
+
+      if (!existsSync(filePath)) {
+        console.log(`[STEP 10] ${locale}: File not found: ${filePath}`)
+        continue
+      }
+
+      const fileData = readFileSync(filePath)
+      const fileSize = fileData.length
+      const md5 = createHash('md5').update(fileData).digest('hex')
+      const fileName = `ipad_${locale}_${num}.png`
+
+      console.log(`[STEP 10] ${locale}: Uploading ${fileName} (${fileSize} bytes)...`)
+
+      try {
+        // Reserve
+        const reserve = await apiRequest('POST', '/appScreenshots', {
+          data: {
+            type: 'appScreenshots',
+            attributes: { fileName, fileSize },
+            relationships: {
+              appScreenshotSet: { data: { type: 'appScreenshotSets', id: setId } },
+            },
+          },
+        })
+
+        const ssId = reserve.data.id
+        const ops = reserve.data.attributes.uploadOperations
+
+        // Upload chunks
+        for (const op of ops) {
+          const chunk = fileData.subarray(op.offset, op.offset + op.length)
+          const uploadHeaders = {}
+          for (const h of op.requestHeaders) uploadHeaders[h.name] = h.value
+          const ur = await fetch(op.url, { method: op.method || 'PUT', headers: uploadHeaders, body: chunk })
+          if (!ur.ok) throw new Error(`Upload chunk failed: ${ur.status}`)
+        }
+
+        // Commit
+        await apiRequest('PATCH', `/appScreenshots/${ssId}`, {
+          data: {
+            type: 'appScreenshots',
+            id: ssId,
+            attributes: { uploaded: true, sourceFileChecksum: md5 },
+          },
+        })
+        console.log(`[STEP 10] ${locale}: Uploaded ${fileName}`)
+      } catch (err) {
+        console.error(`[STEP 10] ${locale}: Failed to upload ${fileName}: ${err.message}`)
+      }
+    }
+  }
+
+  return true
+}
+
+// ============================================================================
+// Step 11: Verify Everything & Show What's Missing
+// ============================================================================
+
+async function verifyReadyForSubmission() {
+  console.log('\n========================================')
+  console.log('[STEP 11] Verifying submission readiness...')
+  console.log('========================================')
+
+  try {
+    const version = await apiRequest(
+      'GET',
+      `/appStoreVersions/${VERSION_ID}?include=build,appStoreVersionLocalizations`
+    )
+
+    const attrs = version.data?.attributes
+    console.log(`[STEP 11] Version: ${attrs?.versionString}`)
+    console.log(`[STEP 11] State: ${attrs?.appStoreState}`)
+    console.log(`[STEP 11] Copyright: ${attrs?.copyright || 'MISSING'}`)
+
+    const buildRel = version.data?.relationships?.build?.data
+    console.log(`[STEP 11] Build attached: ${buildRel ? 'YES (' + buildRel.id + ')' : 'NO - REQUIRED'}`)
+
+    if (version.included) {
+      const localizations = version.included.filter(i => i.type === 'appStoreVersionLocalizations')
+      console.log(`[STEP 11] Localizations: ${localizations.length}`)
+      for (const loc of localizations) {
+        const la = loc.attributes
+        console.log(`  ${la.locale}:`)
+        console.log(`    Description: ${la.description ? 'SET' : 'MISSING'}`)
+        console.log(`    Keywords: ${la.keywords ? 'SET' : 'MISSING'}`)
+        console.log(`    Support URL: ${la.supportUrl || 'MISSING'}`)
+      }
+    }
+
+    // Check appInfo localizations for privacy policy
+    const appInfoLocs = await apiRequest('GET', `/appInfos/${APP_INFO_ID}/appInfoLocalizations`)
+    for (const loc of appInfoLocs.data || []) {
+      console.log(`  ${loc.attributes.locale} (appInfo): Privacy URL: ${loc.attributes.privacyPolicyUrl || 'MISSING'}`)
+    }
+
+    return true
+  } catch (err) {
+    console.error(`[STEP 11] Verification failed: ${err.message}`)
+    return false
+  }
+}
+
+// ============================================================================
+// Step 12: Submit for App Review (using reviewSubmissions)
+// ============================================================================
+
+async function submitForReview() {
+  console.log('\n========================================')
+  console.log('[STEP 12] Submitting for App Review...')
+  console.log('========================================')
+
+  try {
+    // Check for existing review submissions in READY_FOR_REVIEW state
+    const existing = await apiRequest(
+      'GET',
+      `/apps/${ASC_APP_ID}/reviewSubmissions?filter[state]=READY_FOR_REVIEW`
+    )
+
+    let reviewSubmissionId = null
+
+    if (existing.data && existing.data.length > 0) {
+      reviewSubmissionId = existing.data[0].id
+      console.log(`[STEP 12] Found existing review submission: ${reviewSubmissionId}`)
+    }
+
+    // Create a new review submission if none exists
+    if (!reviewSubmissionId) {
+      const createBody = {
+        data: {
+          type: 'reviewSubmissions',
+          attributes: {
+            platform: 'IOS',
+          },
+          relationships: {
+            app: {
+              data: { type: 'apps', id: ASC_APP_ID },
+            },
+          },
+        },
+      }
+
+      const createResult = await apiRequest('POST', '/reviewSubmissions', createBody)
+      reviewSubmissionId = createResult.data.id
+      console.log(`[STEP 12] Created review submission: ${reviewSubmissionId}`)
+    }
+
+    // Add the version as a review submission item
+    console.log('[STEP 12] Adding version as review submission item...')
+    const itemBody = {
+      data: {
+        type: 'reviewSubmissionItems',
+        relationships: {
+          reviewSubmission: {
+            data: { type: 'reviewSubmissions', id: reviewSubmissionId },
+          },
+          appStoreVersion: {
+            data: { type: 'appStoreVersions', id: VERSION_ID },
+          },
+        },
+      },
+    }
+
+    try {
+      const itemResult = await apiRequest('POST', '/reviewSubmissionItems', itemBody)
+      console.log(`[STEP 12] Version added as review item: ${itemResult.data?.id}`)
+    } catch (err) {
+      console.error(`[STEP 12] Failed to add version as review item: ${err.message}`)
+      console.log('')
+      console.log('[STEP 12] This usually means there are still missing requirements.')
+      console.log('[STEP 12] Check App Store Connect for specific issues:')
+      console.log('  https://appstoreconnect.apple.com/apps/6759269751/appstore')
+      return false
+    }
+
+    // Confirm the submission
+    console.log('[STEP 12] Confirming review submission...')
+    const submitBody = {
+      data: {
+        type: 'reviewSubmissions',
+        id: reviewSubmissionId,
+        attributes: {
+          submitted: true,
+        },
+      },
+    }
+
+    try {
+      await apiRequest('PATCH', `/reviewSubmissions/${reviewSubmissionId}`, submitBody)
+      console.log('[STEP 12] SUBMITTED FOR APP REVIEW!')
+      return true
+    } catch (err) {
+      console.error(`[STEP 12] Submit confirmation failed: ${err.message}`)
+      return false
+    }
+  } catch (err) {
+    console.error(`[STEP 12] Submission failed: ${err.message}`)
     return false
   }
 }
@@ -601,8 +807,12 @@ const results = {
   buildAttach: false,
   category: false,
   privacyPolicy: false,
+  supportUrl: false,
   ageRating: false,
   contentRights: false,
+  pricing: false,
+  reviewDetail: false,
+  ipadScreenshots: false,
   verification: false,
   submission: false,
 }
@@ -612,84 +822,77 @@ try {
   const build = await checkBuildStatus()
   results.buildCheck = build !== null
 
-  // Step 2: Attach build to version
+  // Step 2: Attach build + set copyright
   if (build) {
-    results.buildAttach = await attachBuildToVersion(build)
-  } else {
-    console.log('\n[STEP 2] SKIPPED - No valid build to attach')
+    results.buildAttach = await attachBuildAndSetCopyright(build)
   }
 
   // Step 3: Set category
-  try {
-    results.category = await setAppCategory()
-  } catch (err) {
-    console.error(`[STEP 3] Error: ${err.message}`)
-  }
+  try { results.category = await setAppCategory() } catch (err) { console.error(err.message) }
 
-  // Step 4: Set privacy policy URL
-  try {
-    results.privacyPolicy = await setPrivacyPolicyUrl()
-  } catch (err) {
-    console.error(`[STEP 4] Error: ${err.message}`)
-  }
+  // Step 4: Set privacy policy URL (on appInfoLocalizations)
+  try { results.privacyPolicy = await setPrivacyPolicyUrl() } catch (err) { console.error(err.message) }
 
-  // Step 5: Set age rating
-  try {
-    results.ageRating = await setAgeRating()
-  } catch (err) {
-    console.error(`[STEP 5] Error: ${err.message}`)
-  }
+  // Step 5: Set support URL (on version localizations)
+  try { results.supportUrl = await setSupportUrl() } catch (err) { console.error(err.message) }
 
-  // Step 6: Content rights
-  try {
-    results.contentRights = await checkContentRights()
-  } catch (err) {
-    console.error(`[STEP 6] Error: ${err.message}`)
-  }
+  // Step 6: Set age rating
+  try { results.ageRating = await setAgeRating() } catch (err) { console.error(err.message) }
 
-  // Regenerate JWT in case it's about to expire (we've been making many calls)
+  // Step 7: Set content rights
+  try { results.contentRights = await setContentRights() } catch (err) { console.error(err.message) }
+
+  // Step 8: Set pricing (FREE)
+  try { results.pricing = await setAppPricing() } catch (err) { console.error(err.message) }
+
+  // Regenerate JWT in case it's close to expiry
   token = generateJWT()
 
-  // Step 7: Verify readiness
-  const versionInfo = await verifyReadyForSubmission()
-  results.verification = versionInfo !== null
+  // Step 9: Create review detail
+  try { results.reviewDetail = await createReviewDetail() } catch (err) { console.error(err.message) }
 
-  // Step 8: Submit for review
-  const readyToSubmit = results.buildAttach && results.verification
-  if (readyToSubmit) {
-    results.submission = await submitForReview()
-  } else {
-    console.log('\n========================================')
-    console.log('[STEP 8] SKIPPED - Not ready for submission')
-    if (!results.buildAttach) {
-      console.log('  Reason: Build not attached to version')
-    }
-    if (!results.verification) {
-      console.log('  Reason: Verification step failed')
-    }
-    console.log('========================================')
-  }
+  // Step 10: Upload iPad screenshots
+  try { results.ipadScreenshots = await uploadIpadScreenshots() } catch (err) { console.error(err.message) }
+
+  // Step 11: Verify readiness
+  try { results.verification = await verifyReadyForSubmission() } catch (err) { console.error(err.message) }
+
+  // Step 12: Submit for review
+  results.submission = await submitForReview()
 
   // Final Summary
   console.log('\n==============================================')
   console.log('  SUBMISSION SUMMARY')
   console.log('==============================================')
-  console.log(`  Build check:      ${results.buildCheck ? 'PASS' : 'FAIL'}`)
-  console.log(`  Build attached:   ${results.buildAttach ? 'PASS' : 'FAIL'}`)
-  console.log(`  Category set:     ${results.category ? 'PASS' : 'FAIL'}`)
-  console.log(`  Privacy policy:   ${results.privacyPolicy ? 'PASS' : 'FAIL'}`)
-  console.log(`  Age rating:       ${results.ageRating ? 'PASS' : 'FAIL'}`)
-  console.log(`  Content rights:   ${results.contentRights ? 'PASS' : 'FAIL'}`)
-  console.log(`  Verification:     ${results.verification ? 'PASS' : 'FAIL'}`)
-  console.log(`  Submission:       ${results.submission ? 'SUBMITTED' : 'NOT SUBMITTED'}`)
+  console.log(`  Build check:       ${results.buildCheck ? 'PASS' : 'FAIL'}`)
+  console.log(`  Build + copyright: ${results.buildAttach ? 'PASS' : 'FAIL'}`)
+  console.log(`  Category:          ${results.category ? 'PASS' : 'FAIL'}`)
+  console.log(`  Privacy policy:    ${results.privacyPolicy ? 'PASS' : 'FAIL'}`)
+  console.log(`  Support URL:       ${results.supportUrl ? 'PASS' : 'FAIL'}`)
+  console.log(`  Age rating:        ${results.ageRating ? 'PASS' : 'FAIL'}`)
+  console.log(`  Content rights:    ${results.contentRights ? 'PASS' : 'FAIL'}`)
+  console.log(`  Pricing:           ${results.pricing ? 'PASS' : 'FAIL'}`)
+  console.log(`  Review detail:     ${results.reviewDetail ? 'PASS' : 'FAIL'}`)
+  console.log(`  iPad screenshots:  ${results.ipadScreenshots ? 'PASS' : 'FAIL'}`)
+  console.log(`  Verification:      ${results.verification ? 'PASS' : 'FAIL'}`)
+  console.log(`  Submission:        ${results.submission ? 'SUBMITTED' : 'NOT SUBMITTED'}`)
   console.log('')
 
   if (results.submission) {
     console.log('  App has been submitted for App Review!')
     console.log('  Monitor status at: https://appstoreconnect.apple.com/apps/6759269751/appstore')
   } else {
-    console.log('  Submission was not completed. Check the errors above and fix them.')
-    console.log('  Then re-run: node scripts/submit-appstore.mjs')
+    const failed = Object.entries(results).filter(([, v]) => !v).map(([k]) => k)
+    console.log('  Submission not completed. Failed steps: ' + failed.join(', '))
+    console.log('')
+    console.log('  MANUAL STEP REQUIRED:')
+    console.log('    App Privacy (Data Usages) cannot be set via API.')
+    console.log('    Go to: https://appstoreconnect.apple.com/apps/6759269751/privacy')
+    console.log('    1. Click "Get Started" or "Edit"')
+    console.log('    2. Select "No, we do not collect data from this app"')
+    console.log('    3. Click "Save" then "Publish"')
+    console.log('')
+    console.log('  After completing the manual step, re-run: node scripts/submit-appstore.mjs')
   }
 
   console.log('==============================================')
