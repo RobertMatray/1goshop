@@ -89,6 +89,15 @@ interface ShoppingItem {
   order: number       // Sort position
   createdAt: string   // ISO timestamp
 }
+
+interface ActiveShoppingItem {
+  id: string              // UUID v4
+  name: string            // Item name
+  quantity: number        // >= 1
+  isBought: boolean       // Bought during shopping
+  order: number           // Sort position
+  purchasedAt: string | null  // ISO timestamp when marked as bought
+}
 ```
 
 ### Gesture Design (v1.0.1)
@@ -298,9 +307,8 @@ curl -s -X POST https://api.github.com/user/repos \
 **Provisioning Profile**: f649b342-4c71-4d84-98c3-cc22a77085ba (ACTIVE, expires 2026-12-12)
 **Distribution Certificate**: 28T88DA5Q5 (shared with moja4ka-zdravie)
 
-**Latest successful build**: Build #40 (v1.0.1)
-- EAS Build ID: `014ae649-c91b-4ee0-9d41-d35c9000b00c`
-- Git tag: `v1.0.1-build40`
+**Latest successful build**: Build #42 (v1.0.1)
+- EAS Build ID: `f4d63f40-f908-4870-968a-1e99f7580dcc`
 
 **App Store Connect**:
 - **ascAppId**: `6759269751`
@@ -322,6 +330,7 @@ curl -s -X POST https://api.github.com/user/repos \
 | #26-38 | Feb 17-18 | Tutorial finger visibility fixes, language selector redesign, cloud backup, iCloud, icon proposals |
 | #39 | Feb 18 | Edit item feature, tutorial step 3 for edit, diacritics fixes in all locales |
 | #40 | Feb 18 | Fix gear icon (settings-outline), remove strikethrough on main list |
+| #42 | Feb 18 | Add purchasedAt timestamp to active shopping items (for future use) |
 
 ### Scripts (for CI/CD automation)
 
