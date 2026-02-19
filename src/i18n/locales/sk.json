@@ -51,7 +51,9 @@
     "clearTitle": "Vymazať históriu?",
     "clearMessage": "Všetky záznamy o nákupoch budú vymazané.",
     "clear": "Vymazať",
-    "cancel": "Zrušiť"
+    "cancel": "Zrušiť",
+    "deleteTitle": "Vymazať nákup?",
+    "delete": "Vymazať"
   },
   "Tutorial": {
     "step1Title": "Pridanie položky",
@@ -109,5 +111,16 @@
     "noData": "V schránke nie sú žiadne dáta na import.",
     "error": "Chyba",
     "cancel": "Zrušiť"
+  },
+  "ColorPicker": {
+    "title": "Farba aplikácie",
+    "saveColor": "Uložiť farbu",
+    "resetDefault": "Obnoviť predvolenú",
+    "savedColors": "Uložené farby",
+    "preview": "Náhľad",
+    "deleteTitle": "Vymazať uloženú farbu?",
+    "delete": "Vymazať",
+    "cancel": "Zrušiť",
+    "longPressDelete": "Dlhým stlačením vymažete"
   }
 }

@@ -5,24 +5,30 @@ import { ShoppingListScreen } from '../screens/ShoppingListScreen/ShoppingListSc
 import { SettingsScreen } from '../screens/SettingsScreen/SettingsScreen'
 import { ActiveShoppingScreen } from '../screens/ActiveShoppingScreen/ActiveShoppingScreen'
 import { ShoppingHistoryScreen } from '../screens/ShoppingHistoryScreen/ShoppingHistoryScreen'
+import { ColorPickerScreen } from '../screens/ColorPickerScreen/ColorPickerScreen'
+import { useAccentColorStore } from '../stores/AccentColorStore'
+import { defaultLightColors } from '../unistyles'
 
 export type RootStackParamList = {
   ShoppingListScreen: undefined
   SettingsScreen: undefined
   ActiveShoppingScreen: undefined
   ShoppingHistoryScreen: undefined
+  ColorPickerScreen: undefined
 }
 
 const Stack = createNativeStackNavigator<RootStackParamList>()
 
 export function AppNavigator(): React.ReactElement {
   const { t } = useTranslation()
+  const activeColor = useAccentColorStore((s) => s.activeColor)
+  const headerColor = activeColor ?? defaultLightColors.tint
 
   return (
     <Stack.Navigator
       initialRouteName="ShoppingListScreen"
       screenOptions={{
-        headerStyle: { backgroundColor: '#4CAF50' },
+        headerStyle: { backgroundColor: headerColor },
         headerTintColor: '#ffffff',
         headerTitleStyle: { fontWeight: 'bold' },
       }}
@@ -53,6 +59,13 @@ export function AppNavigator(): React.ReactElement {
         component={ShoppingHistoryScreen}
         options={{
           title: t('History.title'),
+        }}
+      />
+      <Stack.Screen
+        name="ColorPickerScreen"
+        component={ColorPickerScreen}
+        options={{
+          title: t('ColorPicker.title'),
         }}
       />
     </Stack.Navigator>

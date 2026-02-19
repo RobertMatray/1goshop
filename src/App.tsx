@@ -10,6 +10,7 @@ import { AppNavigator } from './navigation/AppNavigator'
 import { useShoppingListStore } from './stores/ShoppingListStore'
 import { useActiveShoppingStore } from './stores/ActiveShoppingStore'
 import { useThemeStore } from './stores/ThemeStore'
+import { useAccentColorStore } from './stores/AccentColorStore'
 
 export function App(): React.ReactElement {
   const [isReady, setIsReady] = useState(false)
@@ -46,6 +47,7 @@ export function App(): React.ReactElement {
         useShoppingListStore.getState().load(),
         useActiveShoppingStore.getState().load(),
         useThemeStore.getState().load(),
+        useAccentColorStore.getState().load(),
       ])
     } catch {
       // Continue even if initialization partially fails

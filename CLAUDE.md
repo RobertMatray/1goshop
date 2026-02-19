@@ -397,6 +397,72 @@ Interactive animated tutorial showing all gestures with pulsing touch indicator:
 - No Android build/deploy yet
 - iCloud sync not working (app not visible in iCloud settings - requires CloudKit entitlement)
 
+### Future Ideas (implement when user base grows)
+
+**1. Shared Shopping List via Firebase**
+- **Goal**: Allow two or more people (e.g. husband + wife) to share and sync a shopping list in real-time
+- **Technology**: Firebase Firestore (free tier sufficient for family use)
+- **How it will work**:
+  1. One user creates a "shared list" → app generates a 6-digit pairing code
+  2. Second user enters the code → both phones connect to the same Firestore document
+  3. All operations sync in real-time: add, edit, delete, quantity changes, check/uncheck items
+  4. Works offline - changes sync when back online (Firestore offline persistence)
+- **No custom backend needed** - Firebase handles everything (auth, storage, real-time sync)
+- **Monetization**: Free for 1 shared person, premium for multiple people
+- **Status**: Idea phase
+
+**2. Smart Ordering by Store Layout (strongest premium feature)**
+- **Goal**: Automatically reorder shopping list items based on the order the user typically buys them
+- **How it works**: App learns from `purchasedAt` timestamps during active shopping. After 3-4 trips, it knows that "Fruit" is always bought before "Dairy" before "Bread". Next shopping trip, items auto-sort to match the store walk path.
+- **Already have**: `purchasedAt` timestamps in ActiveShoppingItem - foundation is laid
+- **Why it's valuable**: Unique feature most competitors lack, saves real time, personalized per user/store, hard to copy
+- **Monetization**: Premium-only feature - strongest selling point for subscription
+
+**3. Shopping Predictions & Reminders**
+- **Goal**: Remind user to buy items based on purchase history patterns
+- **How it works**: Track purchase frequency (e.g. milk every 5 days). After enough history, suggest "You usually buy milk around this time"
+- **Challenges**: Needs months of data, accuracy can be low, annoying if wrong
+- **Monetization**: Premium feature, lower priority than smart ordering
+
+**4. Store Product Catalogs**
+- **Goal**: Show real store products/prices when adding items
+- **Challenges**: No public APIs from retailers, data is regional, prices change weekly, maintaining product database is a full-time job. Existing services (Prospecto, Kupi.sk) have teams for this.
+- **Realistic approach**: B2B model where retailers pay for product placement. Requires large user base first.
+- **Status**: Long-term idea, not feasible without significant user base
+
+**Monetization Strategy (Freemium):**
+
+| Free | Premium (subscription) |
+|------|----------------------|
+| Basic shopping list | Smart store ordering |
+| Share with 1 person | Share with multiple |
+| Basic history | Statistics & predictions |
+| | Multiple lists |
+| | No ads |
+
+### Language Expansion Plan
+
+**Current (7):** SK, EN, DE, HU, UK, CS, ZH
+
+**Priority 1 - High ROI (add next):**
+- **ES** (Spanish) - Spain + Latin America (~150M iOS users)
+- **FR** (French) - France + francophone Africa + Canada (~80M iOS)
+- **PT** (Portuguese) - Brazil, 5th largest mobile market (~40M iOS)
+
+**Priority 2 - European:**
+- **PL** (Polish) - large nearby market (~15M iOS)
+- **IT** (Italian) - Italy (~25M iOS)
+
+**Priority 3 - Asian high-value:**
+- **JA** (Japanese) - very high iOS penetration (~70M iOS)
+- **KO** (Korean) - South Korea, high spending (~25M iOS)
+
+**Priority 4 - Additional:**
+- **TR** (Turkish) - growing market (~20M iOS)
+- **NL** (Dutch) - Netherlands + Belgium, high purchasing power
+
+**Note:** EN + ES + FR + PT + DE covers ~80% of global iOS market. Shopping list translations are simple (~100 strings), can be done via AI translation in one session.
+
 ### Known Limitations
 - Apple API key has Developer access - cannot create App Store Connect apps via API (manual creation required)
 - App Privacy cannot be set via REST API - must be done manually in App Store Connect

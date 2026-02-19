@@ -3,6 +3,7 @@ import { View, Text, FlatList, Alert, Pressable } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { StyleSheet } from 'react-native-unistyles'
 import { useTranslation } from 'react-i18next'
+import { Ionicons } from '@expo/vector-icons'
 import { useActiveShoppingStore } from '../../stores/ActiveShoppingStore'
 import type { ShoppingSession } from '../../types/shopping'
 
@@ -11,6 +12,7 @@ export function ShoppingHistoryScreen(): React.ReactElement {
   const insets = useSafeAreaInsets()
   const history = useActiveShoppingStore((s) => s.history)
   const loadHistory = useActiveShoppingStore((s) => s.loadHistory)
+  const removeSession = useActiveShoppingStore((s) => s.removeSession)
   const clearHistory = useActiveShoppingStore((s) => s.clearHistory)
 
   useEffect(() => {
@@ -54,7 +56,9 @@ export function ShoppingHistoryScreen(): React.ReactElement {
           <FlatList
             data={history}
             keyExtractor={(item) => item.id}
-            renderItem={({ item }) => <HistoryItem session={item} lang={i18n.language} t={t} />}
+            renderItem={({ item }) => (
+              <HistoryItem session={item} lang={i18n.language} t={t} onDelete={handleDeleteSession} />
+            )}
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
           />
@@ -70,6 +74,21 @@ export function ShoppingHistoryScreen(): React.ReactElement {
       )}
     </View>
   )
+
+  function handleDeleteSession(id: string, dateStr: string): void {
+    Alert.alert(
+      t('History.deleteTitle'),
+      dateStr,
+      [
+        { text: t('History.cancel'), style: 'cancel' },
+        {
+          text: t('History.delete'),
+          style: 'destructive',
+          onPress: () => removeSession(id),
+        },
+      ],
+    )
+  }
 
   function handleClearHistory(): void {
     Alert.alert(
@@ -91,9 +110,10 @@ interface HistoryItemProps {
   session: ShoppingSession
   lang: string
   t: (key: string, options?: Record<string, unknown>) => string
+  onDelete: (id: string, dateStr: string) => void
 }
 
-function HistoryItem({ session, lang, t }: HistoryItemProps): React.ReactElement {
+function HistoryItem({ session, lang, t, onDelete }: HistoryItemProps): React.ReactElement {
   const boughtCount = session.items.filter((i) => i.isBought).length
   const totalCount = session.items.length
 
@@ -104,10 +124,15 @@ function HistoryItem({ session, lang, t }: HistoryItemProps): React.ReactElement
   return (
     <View style={styles.historyCard}>
       <View style={styles.historyHeader}>
-        <Text style={styles.historyDate}>{dateStr}</Text>
-        <Text style={styles.historyStats}>
-          {t('History.boughtOf', { bought: boughtCount, total: totalCount })}
-        </Text>
+        <View style={styles.historyHeaderLeft}>
+          <Text style={styles.historyDate}>{dateStr}</Text>
+          <Text style={styles.historyStats}>
+            {t('History.boughtOf', { bought: boughtCount, total: totalCount })}
+          </Text>
+        </View>
+        <Pressable onPress={() => onDelete(session.id, dateStr)} hitSlop={8}>
+          <Ionicons name="trash-outline" size={18} color={styles.deleteIcon.color} />
+        </Pressable>
       </View>
       <View style={styles.historyItems}>
         {session.items.map((item) => (
@@ -212,6 +237,16 @@ const styles = StyleSheet.create((theme) => ({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 8,
+    gap: 8,
+  },
+  historyHeaderLeft: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  deleteIcon: {
+    color: theme.colors.textSecondary,
   },
   historyDate: {
     fontSize: theme.typography.fontSizeS,

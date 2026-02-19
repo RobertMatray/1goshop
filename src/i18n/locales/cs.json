@@ -51,7 +51,9 @@
     "clearTitle": "Smazat historii?",
     "clearMessage": "Všechny záznamy o nákupech budou smazány.",
     "clear": "Smazat",
-    "cancel": "Zrušit"
+    "cancel": "Zrušit",
+    "deleteTitle": "Smazat nákup?",
+    "delete": "Smazat"
   },
   "Tutorial": {
     "step1Title": "Přidání položky",
@@ -109,5 +111,16 @@
     "noData": "Ve schránce nejsou žádná data k importu.",
     "error": "Chyba",
     "cancel": "Zrušit"
+  },
+  "ColorPicker": {
+    "title": "Barva aplikace",
+    "saveColor": "Uložit barvu",
+    "resetDefault": "Obnovit výchozí",
+    "savedColors": "Uložené barvy",
+    "preview": "Náhled",
+    "deleteTitle": "Smazat uloženou barvu?",
+    "delete": "Smazat",
+    "cancel": "Zrušit",
+    "longPressDelete": "Dlouhým stisknutím smažete"
   }
 }

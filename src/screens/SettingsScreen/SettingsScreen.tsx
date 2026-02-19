@@ -6,7 +6,9 @@ import { useNavigation } from '@react-navigation/native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import type { RootStackParamList } from '../../navigation/AppNavigator'
 import { useThemeStore, type ThemeMode } from '../../stores/ThemeStore'
+import { useAccentColorStore } from '../../stores/AccentColorStore'
 import { createAndShareBackup, restoreFromFile } from '../../services/BackupService'
+import { defaultLightColors } from '../../unistyles'
 import type { SupportedLanguage } from '../../i18n/i18n'
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'SettingsScreen'>
@@ -15,6 +17,7 @@ export function SettingsScreen(): React.ReactElement {
   const { t, i18n } = useTranslation()
   const navigation = useNavigation<NavigationProp>()
   const { themeMode, setTheme } = useThemeStore()
+  const activeColor = useAccentColorStore((s) => s.activeColor)
 
   const currentLang = i18n.language as SupportedLanguage
 
@@ -74,6 +77,21 @@ export function SettingsScreen(): React.ReactElement {
           ))}
         </View>
       </View>
+
+      <Pressable style={styles.section} onPress={() => navigation.navigate('ColorPickerScreen')}>
+        <View style={styles.historyRow}>
+          <View style={styles.accentColorTitleRow}>
+            <Text style={[styles.sectionTitle, styles.noMargin]}>{t('ColorPicker.title')}</Text>
+            <View
+              style={[
+                styles.accentColorDot,
+                { backgroundColor: activeColor ?? defaultLightColors.tint },
+              ]}
+            />
+          </View>
+          <Text style={styles.historyArrow}>{'\u203A'}</Text>
+        </View>
+      </Pressable>
 
       <Pressable style={styles.section} onPress={() => navigation.navigate('ShoppingHistoryScreen')}>
         <View style={styles.historyRow}>
@@ -215,6 +233,21 @@ const styles = StyleSheet.create((theme) => ({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  accentColorTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  noMargin: {
+    marginBottom: 0,
+  },
+  accentColorDot: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: theme.colors.surfaceBorder,
   },
   historyArrow: {
     fontSize: 24,

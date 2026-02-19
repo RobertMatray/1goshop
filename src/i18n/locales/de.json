@@ -49,7 +49,9 @@
     "clearTitle": "Historie löschen?",
     "clearMessage": "Alle Einkaufsaufzeichnungen werden gelöscht.",
     "clear": "Löschen",
-    "cancel": "Abbrechen"
+    "cancel": "Abbrechen",
+    "deleteTitle": "Einkauf löschen?",
+    "delete": "Löschen"
   },
   "Tutorial": {
     "step1Title": "Artikel hinzufügen",
@@ -107,5 +109,16 @@
     "noData": "Keine Daten in der Zwischenablage gefunden.",
     "error": "Fehler",
     "cancel": "Abbrechen"
+  },
+  "ColorPicker": {
+    "title": "Akzentfarbe",
+    "saveColor": "Farbe speichern",
+    "resetDefault": "Standard wiederherstellen",
+    "savedColors": "Gespeicherte Farben",
+    "preview": "Vorschau",
+    "deleteTitle": "Gespeicherte Farbe löschen?",
+    "delete": "Löschen",
+    "cancel": "Abbrechen",
+    "longPressDelete": "Zum Löschen lange drücken"
   }
 }

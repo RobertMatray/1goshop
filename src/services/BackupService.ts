@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { File, Paths } from 'expo-file-system'
 import * as Sharing from 'expo-sharing'
 
-const BACKUP_KEYS = ['@shopping_list', '@active_shopping', '@shopping_history', '@app_theme'] as const
+const BACKUP_KEYS = ['@shopping_list', '@active_shopping', '@shopping_history', '@app_theme', '@accent_color', '@saved_colors'] as const
 
 export interface BackupData {
   version: 1

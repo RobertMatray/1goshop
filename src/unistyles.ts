@@ -15,6 +15,27 @@ const shared = {
   },
 }
 
+export const defaultLightColors: AccentColors = {
+  tint: '#4CAF50',
+  tintDark: '#388E3C',
+  checked: '#a5d6a7',
+  quantityBg: '#e8f5e9',
+}
+
+export const defaultDarkColors: AccentColors = {
+  tint: '#66BB6A',
+  tintDark: '#43A047',
+  checked: '#2e4a2e',
+  quantityBg: '#1b3a1b',
+}
+
+interface AccentColors {
+  tint: string
+  tintDark: string
+  checked: string
+  quantityBg: string
+}
+
 const lightTheme = {
   colors: {
     text: '#1a1a1a',
@@ -23,12 +44,12 @@ const lightTheme = {
     background: '#f5f5f5',
     surface: '#ffffff',
     surfaceBorder: '#e0e0e0',
-    tint: '#4CAF50',
-    tintDark: '#388E3C',
+    tint: defaultLightColors.tint,
+    tintDark: defaultLightColors.tintDark,
     danger: '#ef5350',
     dangerLight: '#ffcdd2',
-    checked: '#a5d6a7',
-    quantityBg: '#e8f5e9',
+    checked: defaultLightColors.checked,
+    quantityBg: defaultLightColors.quantityBg,
   },
   isLight: true,
   ...shared,
@@ -44,12 +65,12 @@ const darkTheme: Theme = {
     background: '#121212',
     surface: '#1e1e1e',
     surfaceBorder: '#333333',
-    tint: '#66BB6A',
-    tintDark: '#43A047',
+    tint: defaultDarkColors.tint,
+    tintDark: defaultDarkColors.tintDark,
     danger: '#ef5350',
     dangerLight: '#4a1c1c',
-    checked: '#2e4a2e',
-    quantityBg: '#1b3a1b',
+    checked: defaultDarkColors.checked,
+    quantityBg: defaultDarkColors.quantityBg,
   },
   isLight: false,
   ...shared,

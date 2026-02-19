@@ -47,7 +47,9 @@
     "clearTitle": "清除历史？",
     "clearMessage": "所有购物记录将被删除。",
     "clear": "清除",
-    "cancel": "取消"
+    "cancel": "取消",
+    "deleteTitle": "删除购物记录？",
+    "delete": "删除"
   },
   "Tutorial": {
     "step1Title": "添加商品",
@@ -105,5 +107,16 @@
     "noData": "剪贴板中没有可导入的数据。",
     "error": "错误",
     "cancel": "取消"
+  },
+  "ColorPicker": {
+    "title": "主题色",
+    "saveColor": "保存颜色",
+    "resetDefault": "恢复默认",
+    "savedColors": "已保存颜色",
+    "preview": "预览",
+    "deleteTitle": "删除已保存的颜色？",
+    "delete": "删除",
+    "cancel": "取消",
+    "longPressDelete": "长按删除"
   }
 }

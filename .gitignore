@@ -39,3 +39,11 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Scripts temp files
+scripts/.puppeteer-user-data/
+scripts/*.png
+nul
+
+# Icon proposals (design iterations)
+icon-proposals/

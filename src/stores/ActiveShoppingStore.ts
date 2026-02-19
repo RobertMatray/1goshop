@@ -18,6 +18,7 @@ export interface ActiveShoppingStoreState {
   toggleBought: (id: string) => void
   toggleShowBought: () => void
   finishShopping: () => Promise<void>
+  removeSession: (id: string) => Promise<void>
   clearHistory: () => Promise<void>
 }
 
@@ -118,6 +119,12 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
     // Clear active session
     set({ session: null, showBought: true })
     await AsyncStorage.removeItem(SESSION_KEY).catch(() => {})
+  },
+
+  removeSession: async (id: string) => {
+    const updated = get().history.filter((s) => s.id !== id)
+    set({ history: updated })
+    await AsyncStorage.setItem(HISTORY_KEY, JSON.stringify(updated)).catch(() => {})
   },
 
   clearHistory: async () => {

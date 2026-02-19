@@ -49,7 +49,9 @@
     "clearTitle": "Clear history?",
     "clearMessage": "All shopping records will be deleted.",
     "clear": "Clear",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "deleteTitle": "Delete shopping trip?",
+    "delete": "Delete"
   },
   "Tutorial": {
     "step1Title": "Add Item",
@@ -107,5 +109,16 @@
     "noData": "No data found in clipboard for import.",
     "error": "Error",
     "cancel": "Cancel"
+  },
+  "ColorPicker": {
+    "title": "Accent Color",
+    "saveColor": "Save Color",
+    "resetDefault": "Reset to Default",
+    "savedColors": "Saved Colors",
+    "preview": "Preview",
+    "deleteTitle": "Delete saved color?",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "longPressDelete": "Long press to delete"
   }
 }

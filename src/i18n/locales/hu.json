@@ -49,7 +49,9 @@
     "clearTitle": "Előzmény törlése?",
     "clearMessage": "Minden bevásárlási rekord törlődik.",
     "clear": "Törlés",
-    "cancel": "Mégse"
+    "cancel": "Mégse",
+    "deleteTitle": "Bevásárlás törlése?",
+    "delete": "Törlés"
   },
   "Tutorial": {
     "step1Title": "Tétel hozzáadása",
@@ -107,5 +109,16 @@
     "noData": "Nincs adat a vágólapon az importáláshoz.",
     "error": "Hiba",
     "cancel": "Mégse"
+  },
+  "ColorPicker": {
+    "title": "Kiemelő szín",
+    "saveColor": "Szín mentése",
+    "resetDefault": "Alapértelmezés visszaállítása",
+    "savedColors": "Mentett színek",
+    "preview": "Előnézet",
+    "deleteTitle": "Mentett szín törlése?",
+    "delete": "Törlés",
+    "cancel": "Mégse",
+    "longPressDelete": "Hosszú nyomás a törléshez"
   }
 }
