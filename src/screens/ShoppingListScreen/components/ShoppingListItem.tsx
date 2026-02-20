@@ -335,6 +335,7 @@ const styles = StyleSheet.create((theme) => ({
   },
   itemNameChecked: {
     color: theme.colors.textSecondary,
+    fontWeight: 'bold',
   },
   quantityBadge: {
     backgroundColor: theme.colors.quantityBg,
