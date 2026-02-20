@@ -124,5 +124,14 @@
     "delete": "Smazat",
     "cancel": "Zrušit",
     "longPressDelete": "Dlouhým stisknutím smažete"
+  },
+  "ClipboardList": {
+    "export": "Kopírovat seznam",
+    "import": "Vložit seznam",
+    "exportSuccess": "{{count}} položek zkopírováno do schránky",
+    "exportEmpty": "Seznam je prázdný",
+    "importSuccess": "Přidáno: {{added}}, přeskočeno (duplikáty): {{skipped}}",
+    "importEmpty": "Ve schránce není žádný text",
+    "importNoNew": "Všechny položky ze schránky již v seznamu jsou"
   }
 }

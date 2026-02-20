@@ -122,5 +122,14 @@
     "delete": "Delete",
     "cancel": "Cancel",
     "longPressDelete": "Long press to delete"
+  },
+  "ClipboardList": {
+    "export": "Copy list",
+    "import": "Paste list",
+    "exportSuccess": "{{count}} items copied to clipboard",
+    "exportEmpty": "List is empty",
+    "importSuccess": "Added: {{added}}, skipped (duplicates): {{skipped}}",
+    "importEmpty": "No text found in clipboard",
+    "importNoNew": "All items from clipboard already exist in the list"
   }
 }

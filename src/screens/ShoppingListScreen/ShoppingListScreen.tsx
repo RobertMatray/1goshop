@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react'
-import { View, Text, Pressable } from 'react-native'
+import { View, Text, Pressable, Alert } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import DraggableFlatList, { type RenderItemParams } from 'react-native-draggable-flatlist'
@@ -15,6 +15,7 @@ import { AddItemInput } from './components/AddItemInput'
 import { EmptyListPlaceholder } from './components/EmptyListPlaceholder'
 import { TutorialOverlay } from './components/TutorialOverlay'
 import type { ShoppingItem } from '../../types/shopping'
+import { exportToClipboard, importFromClipboard } from '../../services/ListClipboardService'
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'ShoppingListScreen'>
 
@@ -107,6 +108,20 @@ export function ShoppingListScreen(): React.ReactElement {
             <Text style={styles.startShoppingText}>{t('ActiveShopping.startShopping')}</Text>
           </Pressable>
         )}
+        <View style={styles.clipboardRow}>
+          <Pressable style={styles.clipboardButton} onPress={handleImport}>
+            <Ionicons name="clipboard-outline" size={16} color={styles.clipboardButtonText.color} />
+            <Text style={styles.clipboardButtonText}>{t('ClipboardList.import')}</Text>
+          </Pressable>
+          <Pressable
+            style={[styles.clipboardButton, items.length === 0 && styles.clipboardButtonDisabled]}
+            onPress={handleExport}
+            disabled={items.length === 0}
+          >
+            <Ionicons name="copy-outline" size={16} color={styles.clipboardButtonText.color} />
+            <Text style={styles.clipboardButtonText}>{t('ClipboardList.export')}</Text>
+          </Pressable>
+        </View>
         <Pressable style={styles.hintsRow} onPress={() => setShowTutorial(true)}>
           <Text style={styles.hintText}>{t('ShoppingList.swipeRightHint')}</Text>
           <Text style={styles.hintSeparator}>•</Text>
@@ -128,6 +143,37 @@ export function ShoppingListScreen(): React.ReactElement {
   function handleStartShopping(): void {
     startShopping(items)
     navigation.navigate('ActiveShoppingScreen')
+  }
+
+  function handleExport(): void {
+    exportToClipboard(items).then((count) => {
+      if (count === 0) {
+        Alert.alert(t('ClipboardList.export'), t('ClipboardList.exportEmpty'))
+      } else {
+        Alert.alert(t('ClipboardList.export'), t('ClipboardList.exportSuccess', { count }))
+      }
+    })
+  }
+
+  function handleImport(): void {
+    const addItem = useShoppingListStore.getState().addItem
+    importFromClipboard(items).then((result) => {
+      if (result.empty) {
+        Alert.alert(t('ClipboardList.import'), t('ClipboardList.importEmpty'))
+        return
+      }
+      if (result.added.length === 0) {
+        Alert.alert(t('ClipboardList.import'), t('ClipboardList.importNoNew'))
+        return
+      }
+      for (const name of result.added) {
+        addItem(name)
+      }
+      Alert.alert(
+        t('ClipboardList.import'),
+        t('ClipboardList.importSuccess', { added: result.added.length, skipped: result.skipped.length }),
+      )
+    })
   }
 }
 
@@ -174,6 +220,29 @@ const styles = StyleSheet.create((theme) => ({
     color: '#ffffff',
     fontSize: theme.typography.fontSizeM,
     fontWeight: 'bold',
+  },
+  clipboardRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 8,
+  },
+  clipboardButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 8,
+    borderRadius: theme.sizes.radiusSm,
+    borderWidth: 1,
+    borderColor: theme.colors.surfaceBorder,
+  },
+  clipboardButtonDisabled: {
+    opacity: 0.3,
+  },
+  clipboardButtonText: {
+    fontSize: theme.typography.fontSizeS,
+    color: theme.colors.textSecondary,
   },
   hintsRow: {
     flexDirection: 'row',

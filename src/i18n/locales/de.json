@@ -122,5 +122,14 @@
     "delete": "Löschen",
     "cancel": "Abbrechen",
     "longPressDelete": "Zum Löschen lange drücken"
+  },
+  "ClipboardList": {
+    "export": "Liste kopieren",
+    "import": "Liste einfügen",
+    "exportSuccess": "{{count}} Artikel in die Zwischenablage kopiert",
+    "exportEmpty": "Die Liste ist leer",
+    "importSuccess": "Hinzugefügt: {{added}}, übersprungen (Duplikate): {{skipped}}",
+    "importEmpty": "Kein Text in der Zwischenablage gefunden",
+    "importNoNew": "Alle Artikel aus der Zwischenablage sind bereits in der Liste"
   }
 }
