@@ -15,6 +15,7 @@ import { AddItemInput } from './components/AddItemInput'
 import { EmptyListPlaceholder } from './components/EmptyListPlaceholder'
 import { TutorialOverlay } from './components/TutorialOverlay'
 import type { ShoppingItem } from '../../types/shopping'
+import * as Clipboard from 'expo-clipboard'
 import { exportToClipboard, importFromClipboard, findExistingItemId } from '../../services/ListClipboardService'
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'ShoppingListScreen'>
@@ -122,6 +123,9 @@ export function ShoppingListScreen(): React.ReactElement {
             <Text style={styles.clipboardButtonText}>{t('ClipboardList.export')}</Text>
           </Pressable>
         </View>
+        <Pressable style={styles.clipboardButton} onPress={handleDebugClipboard}>
+          <Text style={styles.clipboardButtonText}>DEBUG Clipboard</Text>
+        </Pressable>
         <Pressable style={styles.hintsRow} onPress={() => setShowTutorial(true)}>
           <Text style={styles.hintText}>{t('ShoppingList.swipeRightHint')}</Text>
           <Text style={styles.hintSeparator}>•</Text>
@@ -184,6 +188,26 @@ export function ShoppingListScreen(): React.ReactElement {
       }
       Alert.alert(t('ClipboardList.import'), parts.join(', '))
     })
+  }
+
+  async function handleDebugClipboard(): Promise<void> {
+    const text = await Clipboard.getStringAsync()
+    if (!text) {
+      Alert.alert('DEBUG', 'Clipboard is empty')
+      return
+    }
+    const lines = text.split(/\r\n|\r|\n/)
+    const debugLines = lines.slice(0, 5).map((line) => {
+      const codes = [...line].map((ch) => {
+        const code = ch.codePointAt(0)
+        if (code !== undefined && code > 127) {
+          return `[U+${code.toString(16).toUpperCase().padStart(4, '0')}]`
+        }
+        return ch
+      }).join('')
+      return codes
+    })
+    Alert.alert('DEBUG Clipboard', debugLines.join('\n'))
   }
 }
 
