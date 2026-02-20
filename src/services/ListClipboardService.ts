@@ -38,9 +38,12 @@ export function parseListText(text: string): string[] {
       if (!line) continue
     }
 
-    // Remove checkbox prefixes: ☐ ☑ ✓ ✗ ☒ [] [x] [X] [ ] [✓] [✗] and similar
-    line = line.replace(/^[\u2610\u2611\u2713\u2717\u2612]\s*/, '')
-    line = line.replace(/^\[[ xX✓✗]?\]\s*/, '')
+    // Remove checkbox prefixes from various sources (Apple Notes, markdown, etc.)
+    // Unicode checkboxes: ☐ ☑ ✓ ✗ ☒ ✔ ✘ ▢ ▣ ◻ ◼ ☑️ ✅ ❌ ⬜ ⬛
+    line = line.replace(/^[\u2610\u2611\u2612\u2713\u2714\u2717\u2718\u25A2\u25A3\u25FB\u25FC]\s*/, '')
+    line = line.replace(/^[\u2705\u274C\u2B1C\u2B1B]\s*/, '')
+    // Bracket checkboxes: [] [ ] [x] [X] [✓] [✗] [v] [-] [+] and any content in brackets
+    line = line.replace(/^\[.{0,2}\]\s*/, '')
 
     // Remove numbered prefixes: 1. 1) 1: 1-
     line = line.replace(/^\d+[.):\-]\s*/, '')

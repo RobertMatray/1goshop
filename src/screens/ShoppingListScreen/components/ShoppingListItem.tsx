@@ -153,7 +153,11 @@ export function ShoppingListItem({ item, drag, isActive }: Props): React.ReactEl
               </View>
 
               <Text
-                style={[styles.itemName, item.isChecked && styles.itemNameChecked]}
+                style={[
+                  styles.itemName,
+                  item.isChecked && styles.itemNameChecked,
+                  item.isChecked && { fontWeight: 'bold' as const },
+                ]}
                 numberOfLines={1}
               >
                 {item.name}
