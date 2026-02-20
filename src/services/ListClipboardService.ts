@@ -38,17 +38,8 @@ export function parseListText(text: string): string[] {
       if (!line) continue
     }
 
-    // Remove checkbox prefixes from various sources (Apple Notes, markdown, etc.)
-    // Unicode checkboxes: ☐ ☑ ✓ ✗ ☒ ✔ ✘ ▢ ▣ ◻ ◼ ☑️ ✅ ❌ ⬜ ⬛
-    line = line.replace(/^[\u2610\u2611\u2612\u2713\u2714\u2717\u2718\u25A2\u25A3\u25FB\u25FC]\s*/, '')
-    line = line.replace(/^[\u2705\u274C\u2B1C\u2B1B]\s*/, '')
-    // Bracket checkboxes: any [...] at start of line (Apple Notes, markdown, etc.)
-    // Also handle fullwidth brackets ［ ］ and other Unicode bracket variants
-    line = line.replace(/^[\[［\uFF3B].{0,3}[\]］\uFF3D]\s*/, '')
-    // Partial bracket remnants: x] X] v] ] ✓] etc. (when [ was split/missing)
-    line = line.replace(/^[xXvV \u2713\u2714\u2717\u2718]{0,2}[\]］\uFF3D]\s*/, '')
-    // Fallback: remove any remaining leading bracket-like patterns
-    line = line.replace(/^\(.\)\s*/, '')
+    // Combined bullet + checkbox: "- [ ] item", "- [x] item", "* [x] item", etc.
+    line = line.replace(/^[-•*‣▸▹►◦○●]\s*\[.{0,2}\]\s*/, '')
 
     // Remove numbered prefixes: 1. 1) 1: 1-
     line = line.replace(/^\d+[.):\-]\s*/, '')
@@ -56,9 +47,15 @@ export function parseListText(text: string): string[] {
     // Remove bullet prefixes: - • * ‣ ▸ ▹ ► ◦ ○ ●
     line = line.replace(/^[-•*‣▸▹►◦○●]\s*/, '')
 
-    // Final cleanup: remove any remaining leading non-letter/non-digit characters
-    // This catches any checkbox/bullet format we haven't explicitly handled
-    line = line.replace(/^[^\p{L}\p{N}]+/u, '')
+    // Unicode checkboxes: ☐ ☑ ✓ ✗ ☒ ✔ ✘ ▢ ▣ ◻ ◼ ☑️ ✅ ❌ ⬜ ⬛
+    line = line.replace(/^[\u2610\u2611\u2612\u2713\u2714\u2717\u2718\u25A2\u25A3\u25FB\u25FC]\s*/, '')
+    line = line.replace(/^[\u2705\u274C\u2B1C\u2B1B]\s*/, '')
+
+    // Bracket checkboxes: [x] [ ] [X] [v] etc.
+    line = line.replace(/^\[.{0,2}\]\s*/, '')
+
+    // Fallback: remove any remaining leading bracket-like patterns
+    line = line.replace(/^\(.\)\s*/, '')
 
     line = line.trim()
     if (!line) continue
