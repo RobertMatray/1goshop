@@ -16,6 +16,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     buildNumber: '1',
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false,
+      RCTAsyncStorageExcludeFromBackup: false,
     },
   },
   android: {
