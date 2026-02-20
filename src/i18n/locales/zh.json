@@ -126,7 +126,8 @@
     "import": "粘贴列表",
     "exportSuccess": "已复制 {{count}} 个项目到剪贴板",
     "exportEmpty": "列表为空",
-    "importSuccess": "已添加: {{added}}, 已跳过（重复）: {{skipped}}",
+    "importAdded": "已添加: {{count}}",
+    "importUpdated": "已更新: {{count}}",
     "importEmpty": "剪贴板中没有文本",
     "importNoNew": "剪贴板中的所有项目已在列表中"
   }

@@ -130,7 +130,8 @@
     "import": "Вставити список",
     "exportSuccess": "{{count}} товарів скопійовано до буфера обміну",
     "exportEmpty": "Список порожній",
-    "importSuccess": "Додано: {{added}}, пропущено (дублікати): {{skipped}}",
+    "importAdded": "Додано: {{count}}",
+    "importUpdated": "Оновлено: {{count}}",
     "importEmpty": "У буфері обміну немає тексту",
     "importNoNew": "Усі товари з буфера обміну вже є у списку"
   }

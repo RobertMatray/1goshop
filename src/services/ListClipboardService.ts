@@ -38,9 +38,9 @@ export function parseListText(text: string): string[] {
       if (!line) continue
     }
 
-    // Remove checkbox prefixes: ☐ ☑ ✓ ✗ [ ] [x] [X] [✓] [✗]
+    // Remove checkbox prefixes: ☐ ☑ ✓ ✗ ☒ [] [x] [X] [ ] [✓] [✗] and similar
     line = line.replace(/^[\u2610\u2611\u2713\u2717\u2612]\s*/, '')
-    line = line.replace(/^\[[ xX✓✗]\]\s*/, '')
+    line = line.replace(/^\[[ xX✓✗]?\]\s*/, '')
 
     // Remove numbered prefixes: 1. 1) 1: 1-
     line = line.replace(/^\d+[.):\-]\s*/, '')
@@ -64,17 +64,14 @@ export function parseListText(text: string): string[] {
 
 /**
  * Export shopping list items to clipboard as a text list.
- * Format: one item per line, with quantity suffix if > 1.
+ * Format: one item per line (names only, no quantities).
  * Returns the number of items exported.
  */
 export async function exportToClipboard(items: ShoppingItem[]): Promise<number> {
   if (items.length === 0) return 0
 
   const sorted = [...items].sort((a, b) => a.order - b.order)
-  const lines = sorted.map((item) => {
-    if (item.quantity > 1) return `${item.name} x${item.quantity}`
-    return item.name
-  })
+  const lines = sorted.map((item) => item.name)
 
   await Clipboard.setStringAsync(lines.join('\n'))
   return lines.length
@@ -82,38 +79,53 @@ export async function exportToClipboard(items: ShoppingItem[]): Promise<number> 
 
 /**
  * Import shopping list items from clipboard.
- * Parses the clipboard text, filters out items that already exist
+ * Parses the clipboard text, compares against existing items
  * (case-insensitive, diacritics-insensitive comparison).
- * Returns the names of added and skipped items.
+ * Duplicates are updated (name replaced with imported version).
+ * Returns the names of added and updated items.
  */
 export async function importFromClipboard(
   existingItems: ShoppingItem[],
-): Promise<{ added: string[]; skipped: string[]; empty: boolean }> {
+): Promise<{ added: string[]; updated: string[]; empty: boolean }> {
   const text = await Clipboard.getStringAsync()
 
   if (!text || !text.trim()) {
-    return { added: [], skipped: [], empty: true }
+    return { added: [], updated: [], empty: true }
   }
 
   const parsed = parseListText(text)
 
-  // Build set of existing item names (normalized)
-  const existingNames = new Set(
-    existingItems.map((item) => removeDiacritics(item.name).toLowerCase()),
-  )
+  // Build map of existing item names (normalized key → item id)
+  const existingMap = new Map<string, string>()
+  for (const item of existingItems) {
+    existingMap.set(removeDiacritics(item.name).toLowerCase(), item.id)
+  }
 
   const added: string[] = []
-  const skipped: string[] = []
+  const updated: string[] = []
+  const seen = new Set<string>()
 
   for (const name of parsed) {
     const normalized = removeDiacritics(name).toLowerCase()
-    if (existingNames.has(normalized)) {
-      skipped.push(name)
+    if (seen.has(normalized)) continue
+    seen.add(normalized)
+
+    if (existingMap.has(normalized)) {
+      updated.push(name)
     } else {
       added.push(name)
-      existingNames.add(normalized)
     }
   }
 
-  return { added, skipped, empty: false }
+  return { added, updated, empty: false }
+}
+
+/**
+ * Find the existing item ID that matches a name (diacritics-insensitive).
+ */
+export function findExistingItemId(name: string, existingItems: ShoppingItem[]): string | undefined {
+  const normalized = removeDiacritics(name).toLowerCase()
+  return existingItems.find(
+    (item) => removeDiacritics(item.name).toLowerCase() === normalized,
+  )?.id
 }

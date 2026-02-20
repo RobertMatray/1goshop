@@ -128,7 +128,8 @@
     "import": "Liste einfügen",
     "exportSuccess": "{{count}} Artikel in die Zwischenablage kopiert",
     "exportEmpty": "Die Liste ist leer",
-    "importSuccess": "Hinzugefügt: {{added}}, übersprungen (Duplikate): {{skipped}}",
+    "importAdded": "Hinzugefügt: {{count}}",
+    "importUpdated": "Aktualisiert: {{count}}",
     "importEmpty": "Kein Text in der Zwischenablage gefunden",
     "importNoNew": "Alle Artikel aus der Zwischenablage sind bereits in der Liste"
   }

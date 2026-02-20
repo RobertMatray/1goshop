@@ -128,7 +128,8 @@
     "import": "Paste list",
     "exportSuccess": "{{count}} items copied to clipboard",
     "exportEmpty": "List is empty",
-    "importSuccess": "Added: {{added}}, skipped (duplicates): {{skipped}}",
+    "importAdded": "Added: {{count}}",
+    "importUpdated": "Updated: {{count}}",
     "importEmpty": "No text found in clipboard",
     "importNoNew": "All items from clipboard already exist in the list"
   }

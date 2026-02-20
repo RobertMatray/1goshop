@@ -130,7 +130,8 @@
     "import": "Vložiť zoznam",
     "exportSuccess": "{{count}} položiek skopírovaných do schránky",
     "exportEmpty": "Zoznam je prázdny",
-    "importSuccess": "Pridané: {{added}}, preskočené (duplicity): {{skipped}}",
+    "importAdded": "Pridaných: {{count}}",
+    "importUpdated": "Aktualizovaných: {{count}}",
     "importEmpty": "V schránke nie je žiadny text",
     "importNoNew": "Všetky položky zo schránky už v zozname sú"
   }

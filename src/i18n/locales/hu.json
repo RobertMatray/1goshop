@@ -128,7 +128,8 @@
     "import": "Lista beillesztése",
     "exportSuccess": "{{count}} tétel másolva a vágólapra",
     "exportEmpty": "A lista üres",
-    "importSuccess": "Hozzáadva: {{added}}, kihagyva (duplikátumok): {{skipped}}",
+    "importAdded": "Hozzáadva: {{count}}",
+    "importUpdated": "Frissítve: {{count}}",
     "importEmpty": "Nem található szöveg a vágólapon",
     "importNoNew": "A vágólap összes tétele már szerepel a listában"
   }
