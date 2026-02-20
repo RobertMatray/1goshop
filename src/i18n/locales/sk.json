@@ -23,7 +23,9 @@
     "checkedCount": "{{count}} kúpených",
     "markedForShopping_one": "{{count}} označená na nákup",
     "markedForShopping_few": "{{count}} označené na nákup",
-    "markedForShopping_other": "{{count}} označených na nákup"
+    "markedForShopping_other": "{{count}} označených na nákup",
+    "filteredCount": "{{filtered}} z {{total}} položiek",
+    "noFilterResults": "Žiadne zhodné položky"
   },
   "ActiveShopping": {
     "title": "Nákup",

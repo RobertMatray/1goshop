@@ -23,7 +23,9 @@
     "checkedCount": "{{count}} відмічено",
     "markedForShopping_one": "{{count}} позначено для покупки",
     "markedForShopping_few": "{{count}} позначено для покупки",
-    "markedForShopping_other": "{{count}} позначено для покупки"
+    "markedForShopping_other": "{{count}} позначено для покупки",
+    "filteredCount": "{{filtered}} з {{total}} товарів",
+    "noFilterResults": "Немає відповідних товарів"
   },
   "ActiveShopping": {
     "title": "Покупки",

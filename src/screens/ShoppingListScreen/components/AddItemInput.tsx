@@ -1,29 +1,44 @@
-import React, { useState } from 'react'
+import React, { useRef } from 'react'
 import { View, TextInput, Pressable, Text } from 'react-native'
+import { Ionicons } from '@expo/vector-icons'
 import { StyleSheet } from 'react-native-unistyles'
 import { useTranslation } from 'react-i18next'
 import { useShoppingListStore } from '../../../stores/ShoppingListStore'
 
-export function AddItemInput(): React.ReactElement {
-  const [text, setText] = useState('')
+interface Props {
+  filterText: string
+  onFilterTextChange: (text: string) => void
+  onClearFilter: () => void
+}
+
+export function AddItemInput({ filterText, onFilterTextChange, onClearFilter }: Props): React.ReactElement {
+  const inputRef = useRef<TextInput>(null)
   const addItem = useShoppingListStore((s) => s.addItem)
   const { t } = useTranslation()
 
   return (
     <View style={styles.container}>
-      <TextInput
-        style={styles.input}
-        value={text}
-        onChangeText={setText}
-        placeholder={t('ShoppingList.addPlaceholder')}
-        placeholderTextColor={styles.placeholder.color}
-        onSubmitEditing={handleSubmit}
-        returnKeyType="done"
-      />
+      <View style={styles.inputWrapper}>
+        <TextInput
+          ref={inputRef}
+          style={styles.input}
+          value={filterText}
+          onChangeText={onFilterTextChange}
+          placeholder={t('ShoppingList.addPlaceholder')}
+          placeholderTextColor={styles.placeholder.color}
+          onSubmitEditing={handleSubmit}
+          returnKeyType="done"
+        />
+        {filterText.length > 0 && (
+          <Pressable onPress={handleClear} style={styles.clearButton} hitSlop={8}>
+            <Ionicons name="close-circle" size={20} color={styles.clearIcon.color} />
+          </Pressable>
+        )}
+      </View>
       <Pressable
-        style={[styles.button, !text.trim() && styles.buttonDisabled]}
+        style={[styles.button, !filterText.trim() && styles.buttonDisabled]}
         onPress={handleSubmit}
-        disabled={!text.trim()}
+        disabled={!filterText.trim()}
       >
         <Text style={styles.buttonText}>+</Text>
       </Pressable>
@@ -31,9 +46,15 @@ export function AddItemInput(): React.ReactElement {
   )
 
   function handleSubmit(): void {
-    if (!text.trim()) return
-    addItem(text)
-    setText('')
+    if (!filterText.trim()) return
+    addItem(filterText)
+    onClearFilter()
+    inputRef.current?.focus()
+  }
+
+  function handleClear(): void {
+    onClearFilter()
+    inputRef.current?.focus()
   }
 }
 
@@ -43,18 +64,31 @@ const styles = StyleSheet.create((theme) => ({
     padding: theme.sizes.screenPadding,
     gap: 8,
   },
-  input: {
+  inputWrapper: {
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: theme.colors.surface,
     borderRadius: theme.sizes.radiusSm,
+    borderWidth: 1,
+    borderColor: theme.colors.surfaceBorder,
+  },
+  input: {
+    flex: 1,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: theme.typography.fontSizeM,
     color: theme.colors.text,
-    borderWidth: 1,
-    borderColor: theme.colors.surfaceBorder,
   },
   placeholder: {
+    color: theme.colors.textSecondary,
+  },
+  clearButton: {
+    paddingHorizontal: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  clearIcon: {
     color: theme.colors.textSecondary,
   },
   button: {

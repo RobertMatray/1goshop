@@ -19,7 +19,9 @@
     "longPressHint": "长按拖动排序",
     "itemCount_other": "{{count}} 件商品",
     "checkedCount": "{{count}} 已选",
-    "markedForShopping_other": "{{count}} 件已标记购买"
+    "markedForShopping_other": "{{count}} 件已标记购买",
+    "filteredCount": "显示 {{filtered}} / {{total}} 件商品",
+    "noFilterResults": "没有匹配的商品"
   },
   "ActiveShopping": {
     "title": "购物中",

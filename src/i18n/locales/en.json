@@ -21,7 +21,9 @@
     "itemCount_other": "{{count}} items",
     "checkedCount": "{{count}} checked",
     "markedForShopping_one": "{{count}} marked for shopping",
-    "markedForShopping_other": "{{count}} marked for shopping"
+    "markedForShopping_other": "{{count}} marked for shopping",
+    "filteredCount": "{{filtered}} of {{total}} items",
+    "noFilterResults": "No matching items"
   },
   "ActiveShopping": {
     "title": "Shopping",

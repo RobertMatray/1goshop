@@ -47,3 +47,6 @@ nul
 
 # Icon proposals (design iterations)
 icon-proposals/
+
+# Google Play service account key (contains private key)
+internals/google-play/service-account.json

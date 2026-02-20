@@ -21,7 +21,9 @@
     "itemCount_other": "{{count}} Artikel",
     "checkedCount": "{{count}} markiert",
     "markedForShopping_one": "{{count}} zum Einkaufen markiert",
-    "markedForShopping_other": "{{count}} zum Einkaufen markiert"
+    "markedForShopping_other": "{{count}} zum Einkaufen markiert",
+    "filteredCount": "{{filtered}} von {{total}} Artikeln",
+    "noFilterResults": "Keine passenden Artikel"
   },
   "ActiveShopping": {
     "title": "Einkaufen",

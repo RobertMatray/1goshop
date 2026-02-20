@@ -21,7 +21,9 @@
     "itemCount_other": "{{count}} tétel",
     "checkedCount": "{{count}} kijelölve",
     "markedForShopping_one": "{{count}} bevásárlásra jelölve",
-    "markedForShopping_other": "{{count}} bevásárlásra jelölve"
+    "markedForShopping_other": "{{count}} bevásárlásra jelölve",
+    "filteredCount": "{{filtered}} / {{total}} tétel",
+    "noFilterResults": "Nincs egyező tétel"
   },
   "ActiveShopping": {
     "title": "Bevásárlás",

@@ -23,6 +23,7 @@ export function ShoppingListScreen(): React.ReactElement {
   const navigation = useNavigation<NavigationProp>()
   const insets = useSafeAreaInsets()
   const [showTutorial, setShowTutorial] = useState(false)
+  const [filterText, setFilterText] = useState('')
   const items = useShoppingListStore((s) => s.items)
   const startShopping = useActiveShoppingStore((s) => s.startShopping)
 
@@ -30,13 +31,21 @@ export function ShoppingListScreen(): React.ReactElement {
     return [...items].sort((a, b) => a.order - b.order)
   }, [items])
 
+  const isFiltering = filterText.trim().length > 0
+
+  const filteredItems = useMemo(() => {
+    if (!isFiltering) return sortedItems
+    const needle = filterText.trim().toLowerCase()
+    return sortedItems.filter((item) => item.name.toLowerCase().includes(needle))
+  }, [sortedItems, filterText, isFiltering])
+
   const checkedCount = useMemo(() => items.filter((i) => i.isChecked).length, [items])
 
   const renderItem = useCallback(
     ({ item, drag, isActive }: RenderItemParams<ShoppingItem>) => (
-      <ShoppingListItem item={item} drag={drag} isActive={isActive} />
+      <ShoppingListItem item={item} drag={isFiltering ? undefined : drag} isActive={isActive} />
     ),
-    [],
+    [isFiltering],
   )
 
   const keyExtractor = useCallback((item: ShoppingItem) => item.id, [])
@@ -60,16 +69,23 @@ export function ShoppingListScreen(): React.ReactElement {
 
   return (
     <View style={styles.container}>
-      <AddItemInput />
+      <AddItemInput filterText={filterText} onFilterTextChange={setFilterText} onClearFilter={handleClearFilter} />
       <View style={styles.listWrapper}>
-        {sortedItems.length === 0 ? (
-          <EmptyListPlaceholder />
+        {filteredItems.length === 0 ? (
+          isFiltering ? (
+            <View style={styles.noResultsContainer}>
+              <Text style={styles.noResultsText}>{t('ShoppingList.noFilterResults')}</Text>
+            </View>
+          ) : (
+            <EmptyListPlaceholder />
+          )
         ) : (
           <DraggableFlatList
-            data={sortedItems}
+            data={filteredItems}
             keyExtractor={keyExtractor}
             renderItem={renderItem}
             onDragEnd={handleDragEnd}
+            activationDistance={isFiltering ? 999999 : 0}
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
             autoscrollThreshold={80}
@@ -80,7 +96,9 @@ export function ShoppingListScreen(): React.ReactElement {
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 8) }]}>
         {items.length > 0 && (
           <Text style={styles.footerText}>
-            {t('ShoppingList.itemCount', { count: items.length })}
+            {isFiltering
+              ? t('ShoppingList.filteredCount', { filtered: filteredItems.length, total: items.length })
+              : t('ShoppingList.itemCount', { count: items.length })}
             {checkedCount > 0 && ` · ${t('ShoppingList.markedForShopping', { count: checkedCount })}`}
           </Text>
         )}
@@ -103,6 +121,10 @@ export function ShoppingListScreen(): React.ReactElement {
     </View>
   )
 
+  function handleClearFilter(): void {
+    setFilterText('')
+  }
+
   function handleStartShopping(): void {
     startShopping(items)
     navigation.navigate('ActiveShoppingScreen')
@@ -119,6 +141,15 @@ const styles = StyleSheet.create((theme) => ({
   },
   listContent: {
     paddingBottom: 16,
+  },
+  noResultsContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  noResultsText: {
+    fontSize: theme.typography.fontSizeM,
+    color: theme.colors.textSecondary,
   },
   footer: {
     paddingHorizontal: theme.sizes.screenPadding,

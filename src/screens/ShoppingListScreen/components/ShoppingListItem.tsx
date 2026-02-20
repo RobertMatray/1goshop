@@ -166,14 +166,16 @@ export function ShoppingListItem({ item, drag, isActive }: Props): React.ReactEl
               )}
             </View>
 
-            <Pressable
-              onLongPress={onDragStart}
-              delayLongPress={200}
-              style={styles.dragHandleArea}
-              hitSlop={8}
-            >
-              <Text style={styles.dragHandle}>☰</Text>
-            </Pressable>
+            {drag !== undefined && (
+              <Pressable
+                onLongPress={onDragStart}
+                delayLongPress={200}
+                style={styles.dragHandleArea}
+                hitSlop={8}
+              >
+                <Text style={styles.dragHandle}>☰</Text>
+              </Pressable>
+            )}
           </Animated.View>
         </GestureDetector>
       </View>
