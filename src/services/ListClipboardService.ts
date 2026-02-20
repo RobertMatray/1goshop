@@ -45,6 +45,8 @@ export function parseListText(text: string): string[] {
     // Bracket checkboxes: any [...] at start of line (Apple Notes, markdown, etc.)
     // Also handle fullwidth brackets ［ ］ and other Unicode bracket variants
     line = line.replace(/^[\[［\uFF3B].{0,3}[\]］\uFF3D]\s*/, '')
+    // Partial bracket remnants: x] X] v] ] ✓] etc. (when [ was split/missing)
+    line = line.replace(/^[xXvV \u2713\u2714\u2717\u2718]{0,2}[\]］\uFF3D]\s*/, '')
     // Fallback: remove any remaining leading bracket-like patterns
     line = line.replace(/^\(.\)\s*/, '')
 
