@@ -123,8 +123,8 @@ export function ShoppingListScreen(): React.ReactElement {
             <Text style={styles.clipboardButtonText}>{t('ClipboardList.export')}</Text>
           </Pressable>
         </View>
-        <Pressable style={styles.clipboardButton} onPress={handleDebugClipboard}>
-          <Text style={styles.clipboardButtonText}>DEBUG Clipboard</Text>
+        <Pressable style={styles.debugButton} onPress={handleDebugClipboard}>
+          <Text style={styles.debugButtonText}>DEBUG Clipboard</Text>
         </Pressable>
         <Pressable style={styles.hintsRow} onPress={() => setShowTutorial(true)}>
           <Text style={styles.hintText}>{t('ShoppingList.swipeRightHint')}</Text>
@@ -299,5 +299,17 @@ const styles = StyleSheet.create((theme) => ({
     fontSize: 11,
     color: theme.colors.tint,
     fontWeight: '600',
+  },
+  debugButton: {
+    backgroundColor: '#FF6B00',
+    borderRadius: theme.sizes.radiusSm,
+    paddingVertical: 10,
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  debugButtonText: {
+    color: '#ffffff',
+    fontSize: theme.typography.fontSizeM,
+    fontWeight: 'bold',
   },
 }))
