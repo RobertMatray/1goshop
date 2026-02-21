@@ -20,7 +20,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     },
   },
   android: {
-    package: 'com.robertmatray.onegoshop',
+    package: 'com.realise.onegoshop',
     versionCode: 1,
     allowBackup: true,
     adaptiveIcon: {
