@@ -14,16 +14,16 @@ const ISSUER_ID = '69a6de87-7e92-47e3-e053-5b8c7c11a4d1'
 const BASE_URL = 'https://api.appstoreconnect.apple.com/v1'
 
 const ASC_APP_ID = '6759269751'
-const VERSION_ID = '139155f5-3177-4e12-9199-23b3667a56cb'
+const VERSION_ID = '99a1cd3e-547d-4f77-81d1-6795e61adb35'
 const APP_INFO_ID = 'f4a3f725-3cb5-413e-9417-eadc5272420f'
 
 // AppInfo Localization IDs (for privacy policy URL)
 const APP_INFO_LOC_SK = 'e5877e16-aff9-4066-99d5-74dec1b640fa'
 const APP_INFO_LOC_EN = '58f45bec-4211-4a72-9da1-3539130db3a7'
 
-// Version Localization IDs (for supportUrl)
-const VERSION_LOC_SK = '6fa5b847-f055-4d9c-936e-82fcbb934489'
-const VERSION_LOC_EN = '27df603e-0b50-4b03-a2d2-f8f526135a59'
+// Version Localization IDs (for supportUrl) - v1.1.0
+const VERSION_LOC_SK = 'f01cb3c8-6080-4a1f-95d1-a8cf431fd9c3'
+const VERSION_LOC_EN = 'a3ef7538-e32f-4e4c-a044-f9e4c5951724'
 
 const PRIVACY_POLICY_URL = 'https://robertmatray.github.io/1goshop/privacy-policy.html'
 const SUPPORT_URL = 'https://robertmatray.github.io/1goshop/'
