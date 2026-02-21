@@ -310,6 +310,13 @@ curl -s -X POST https://api.github.com/user/repos \
 - purchasedAt timestamp tracked for each item during active shopping (for future analytics)
 - TypeScript strict mode passes
 
+**v1.1.0 features:**
+- Accent color picker (ColorPickerScreen) with 20 preset colors and custom color selection via HSL wheel
+- Clipboard import/export in footer (supports Apple Notes checklists, Google Sheets, Excel, numbered/bulleted lists)
+- iCloud backup enabled (RCTAsyncStorageExcludeFromBackup: false)
+- Search/filter in shopping list (filter text in AddItemInput component)
+- Bold text for checked items on main list
+
 ### Build & Deploy Status
 
 **EAS Project**: `f6744446-31a1-40f5-abe9-77e7dc41a501`
@@ -317,8 +324,8 @@ curl -s -X POST https://api.github.com/user/repos \
 **Provisioning Profile**: f649b342-4c71-4d84-98c3-cc22a77085ba (ACTIVE, expires 2026-12-12)
 **Distribution Certificate**: 28T88DA5Q5 (shared with moja4ka-zdravie)
 
-**Latest successful build**: Build #47 (v1.0.1)
-- EAS Build ID: `60fb1bf8-0d8b-4fc3-8780-a9e9a28cf2d4`
+**Latest successful build**: Build #66 (v1.1.0)
+- EAS Build ID: `a21935ab-a107-4a50-8fe2-23a2e9889496`
 
 **App Store Connect**:
 - **ascAppId**: `6759269751`
@@ -346,6 +353,11 @@ curl -s -X POST https://api.github.com/user/repos \
 | #45 | Feb 18 | Center cart icon visually (10px shift down) |
 | #46 | Feb 18 | Rewrite export to share file, import via file picker |
 | #47 | Feb 18 | Recenter cart icon (15px shift), submitted to App Store Review |
+| #48-58 | Feb 19-20 | Color picker, accent color store, settings redesign, list search/filter |
+| #59-61 | Feb 20 | Clipboard import/export, bold checked items, iCloud backup fix |
+| #62-64 | Feb 21 | Debug clipboard button, fix Apple Notes import (- [x] format) |
+| #65 | Feb 21 | Remove debug button, clean parser |
+| #66 | Feb 21 | v1.1.0 - App Store release (color settings, import/export, iCloud backup, search) |
 
 ### Scripts (for CI/CD automation)
 
