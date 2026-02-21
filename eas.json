@@ -22,6 +22,9 @@
       },
       "ios": {
         "credentialsSource": "remote"
+      },
+      "android": {
+        "credentialsSource": "local"
       }
     }
   },
