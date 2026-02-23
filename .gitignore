@@ -51,3 +51,6 @@ icon-proposals/
 # Google Play service account key (contains private key)
 internals/google-play/service-account.json
 1goshop-production.aab
+
+# Google Play AAB builds
+internals/google-play/*.aab

@@ -1,0 +1,37 @@
+======================================================================
+ TERRITORY AVAILABILITY REPORT - 1GoShop
+ Total territories: 175
+======================================================================
+
+  AVAILABLE (106):
+    USA, GBR, CAN, NOR, CHE, AUS, NZL, JPN, HKG, SGP, CHN, KOR, IND, MEX, TWN
+    VNM, ZAF, MYS, PHL, THA, IDN, PAK, SAU, TUR, ARE, CHL, NPL, PAN, LKA, ISR
+    UKR, KWT, CRI, QAT, SRB, COL, VEN, BRA, GTM, ARG, SLV, PER, DOM, ECU, HND
+    JAM, NIC, PRY, URY, MAC, EGY, KAZ, ARM, BWA, CIV, JOR, KEN, MKD, SEN, TUN
+    UGA, BHS, BRB, TTO, GUY, SUR, BLZ, BOL, ISL, BHR, NGA, OMN, DZA, AGO, UZB
+    AZE, MMR, TZA, GHA, CMR, ALB, KHM, FJI, GMB, KGZ, LBR, MWI, FSM, MNG, MOZ
+    NAM, PLW, PNG, SLE, SLB, TJK, ZWE, NRU, TON, VUT, BIH, GEO, MNE, MAR, RWA
+    ZMB
+
+  TRADER STATUS REQUIRED (27):
+    FRA, DEU, AUT, BEL, FIN, GRC, IRL, ITA, LUX, NLD, PRT, ESP, SWE, DNK, POL
+    HUN, ROU, CZE, HRV, SVK, SVN, EST, LVA, LTU, MLT, BGR, CYP
+
+  DISABLED (0):
+
+  PROCESSING TO NOT AVAILABLE (42):
+    SWZ, STP, VCT, TCA, MDV, YEM, ATG, IRQ, RUS, MUS, LCA, TKM, BEN, SYC, LBY
+    LAO, MSR, COD, MRT, NER, BFA, MLI, CPV, XKS, BRN, AIA, BLR, LBN, VGB, COG
+    MDA, BTN, MDG, TCD, GNB, BMU, CYM, GAB, KNA, GRD, AFG, DMA
+
+======================================================================
+ CORRECTNESS CHECK
+======================================================================
+  Desired territories: 140
+  Enabled (available + trader status): 133
+  Disabled/Processing: 42
+  Wrongly enabled (should be disabled): 0
+  Wrongly disabled (should be enabled): 0
+
+  RESULT: ALL CORRECT
+======================================================================
