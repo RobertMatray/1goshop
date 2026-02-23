@@ -33,7 +33,7 @@ npm run typecheck   # Same as verify
 - **react-native-gesture-handler** + **react-native-reanimated** for gestures
 - **react-native-unistyles** for styling (light/dark theme)
 - **AsyncStorage** for persistence
-- **i18next** for i18n (7 languages: SK, EN, DE, HU, UK, CS, ZH)
+- **i18next** for i18n (12 languages: SK, EN, DE, HU, UK, CS, ZH, ES, FR, IT, PL, PT)
 - **React Navigation** (native stack, 4 screens)
 - **@expo/vector-icons** (Ionicons) for icons
 - **expo-file-system** + **expo-sharing** for file-based backup export
@@ -71,9 +71,10 @@ src/
   services/
     BackupService.ts           # Export/import via Share sheet
   i18n/
-    i18n.ts                    # i18next setup (7 languages)
+    i18n.ts                    # i18next setup (12 languages)
     locales/
       sk.json, en.json, de.json, hu.json, uk.json, cs.json, zh.json
+      es.json, fr.json, it.json, pl.json, pt.json
   types/
     shopping.ts                # ShoppingItem interface
     expo-vector-icons.d.ts     # Type declarations for @expo/vector-icons
@@ -172,7 +173,7 @@ The item row is divided into **left half** and **right half**. The gesture actio
 
 ### Bundle IDs
 - **iOS**: `com.robertmatray.onegoshop`
-- **Android**: `com.robertmatray.onegoshop`
+- **Android**: `com.realise.onegoshop`
 - **Apple Bundle ID resource ID**: `L6PPTCB3X6` (registered in Apple Developer Portal)
 
 ### Apple Developer Account
@@ -287,7 +288,7 @@ curl -s -X POST https://api.github.com/user/repos \
   - GitHub: https://github.com/robertmatray/superapp-ai-poc
   - Same Apple Developer account, same EAS credentials pattern
 
-## Current Status (v1.0.1 - February 18, 2026)
+## Current Status (v1.2.0 - February 23, 2026)
 
 ### Implemented (all working on TestFlight)
 - Shopping list CRUD (add, remove, edit, toggle checked, quantity +1/-1, reorder)
@@ -303,7 +304,8 @@ curl -s -X POST https://api.github.com/user/repos \
 - AsyncStorage persistence with order reindexing on load
 - Backup/restore via file sharing (export creates .json file shared via native share sheet, import picks .json file via system file picker)
 - Light/dark theme with adaptive system theme
-- 7 language translations (SK, EN, DE, HU, UK, CS, ZH) with proper diacritics
+- 12 language translations (SK, EN, DE, HU, UK, CS, ZH, ES, FR, IT, PL, PT) with proper diacritics
+- New items auto-marked for shopping (isChecked: true by default)
 - Settings screen (language grid, theme toggle, history link, backup/restore)
 - Settings gear icon (Ionicons settings-outline, 24px, white)
 - Haptic feedback on all gestures
@@ -324,8 +326,11 @@ curl -s -X POST https://api.github.com/user/repos \
 **Provisioning Profile**: f649b342-4c71-4d84-98c3-cc22a77085ba (ACTIVE, expires 2026-12-12)
 **Distribution Certificate**: 28T88DA5Q5 (shared with moja4ka-zdravie)
 
-**Latest successful build**: Build #66 (v1.1.0)
-- EAS Build ID: `a21935ab-a107-4a50-8fe2-23a2e9889496`
+**Latest successful iOS build**: Build #68 (v1.2.0)
+- EAS Build ID: check EAS dashboard
+
+**Latest successful Android build**: Build (v1.2.0, versionCode 6)
+- AAB: `internals/google-play/app.aab` (not in git, 58MB)
 
 **App Store Connect**:
 - **ascAppId**: `6759269751`
@@ -358,6 +363,9 @@ curl -s -X POST https://api.github.com/user/repos \
 | #62-64 | Feb 21 | Debug clipboard button, fix Apple Notes import (- [x] format) |
 | #65 | Feb 21 | Remove debug button, clean parser |
 | #66 | Feb 21 | v1.1.0 - App Store release (color settings, import/export, iCloud backup, search) |
+| #67 | Feb 22 | v1.1.0 build (submit failed - version already on App Store) |
+| #68 | Feb 22 | v1.2.0 - iOS TestFlight (5 new languages, auto-check new items) |
+| Android | Feb 22 | v1.2.0 (versionCode 6) - Android AAB for Google Play |
 
 ### Scripts (for CI/CD automation)
 
@@ -368,13 +376,15 @@ curl -s -X POST https://api.github.com/user/repos \
 - `scripts/upload-appstore.mjs` - Upload screenshots + metadata to App Store Connect (SK + EN)
 - `scripts/submit-appstore.mjs` - Complete App Store submission (build, category, pricing, age rating, review)
 - `scripts/upscale-screenshots.mjs` - Upscale screenshots to 6.7" and 6.5" sizes
+- `scripts/publish-google-play.mjs` - Upload AAB, store listings (12 langs), screenshots to Google Play via API
 
 ### App Screens
 
 1. **ShoppingListScreen** (main) - Master list of all items. Tap to mark for shopping. Swipe gestures for edit/delete/quantity. Footer shows count + "Start Shopping" button when items are checked. Tutorial overlay accessible from footer.
 2. **ActiveShoppingScreen** - Active shopping session. Shows only checked items. Tap to mark as bought (strikethrough). Finish button saves to history.
 3. **ShoppingHistoryScreen** - Past shopping sessions with statistics.
-4. **SettingsScreen** - Language (7 langs with flags), theme (auto/light/dark), history link, backup/restore.
+4. **SettingsScreen** - Language (12 langs with flags), theme (auto/light/dark), history link, backup/restore.
+5. **ColorPickerScreen** - Accent color picker with 20 presets + custom HSL wheel.
 
 ### Tutorial Overlay (9 steps)
 
@@ -404,9 +414,32 @@ Interactive animated tutorial showing all gestures with pulsing touch indicator:
 - **App Store screenshots source**: `appstore-screenshots/` (originals + upscaled)
 - **Git tag**: `v1.0.1`
 
+### Google Play Store (Android)
+
+- **Google Play Console**: Organization account (Realise)
+- **Android package**: `com.realise.onegoshop`
+- **Google Cloud Project**: `goshop-488315`
+- **Service Account**: `play-publish@goshop-488315.iam.gserviceaccount.com`
+- **Service Account Key**: `internals/google-play/service-account.json` (gitignored)
+- **Publish Script**: `scripts/publish-google-play.mjs` (uploads AAB, store listings in 12 languages, screenshots)
+- **Store Listing**: 12 languages (en-US, sk, de-DE, hu-HU, uk, cs-CZ, zh-CN, es-ES, fr-FR, it-IT, pl-PL, pt-PT)
+- **Store Assets**: `internals/google-play/icon-512.png`, `internals/google-play/feature-graphic.png`
+- **Privacy Policy**: https://robertmatray.github.io/1goshop/privacy-policy.html
+- **Content Rating**: IARC - Everyone / PEGI 3 (no objectionable content)
+- **Data Safety**: No data collected
+- **Target Audience**: 13+
+- **Countries**: 176 countries + rest of world
+- **Production Status**: v1.2.0 (versionCode 6) submitted for Google review (February 23, 2026)
+- **Git tag**: `v1.2.0`
+
+### App Store (iOS)
+
+- **App Store Connect**: https://appstoreconnect.apple.com/apps/6759269751
+- **Status**: v1.1.0 on App Store, v1.2.0 on TestFlight (Build #68)
+- **Git tag**: `v1.2.0`
+
 ### Not Yet Done
 - No splash screen customization
-- No Android build/deploy yet
 - iCloud sync not working (app not visible in iCloud settings - requires CloudKit entitlement)
 
 ### Future Ideas (implement when user base grows)
@@ -454,26 +487,19 @@ Interactive animated tutorial showing all gestures with pulsing touch indicator:
 
 ### Language Expansion Plan
 
-**Current (7):** SK, EN, DE, HU, UK, CS, ZH
+**Current (12):** SK, EN, DE, HU, UK, CS, ZH, ES, FR, IT, PL, PT
 
-**Priority 1 - High ROI (add next):**
-- **ES** (Spanish) - Spain + Latin America (~150M iOS users)
-- **FR** (French) - France + francophone Africa + Canada (~80M iOS)
-- **PT** (Portuguese) - Brazil, 5th largest mobile market (~40M iOS)
+**Pluralization rules:**
+- SK, CS, PL: 3 forms (`_one`, `_few`, `_other`)
+- All others: 2 forms (`_one`, `_other`)
 
-**Priority 2 - European:**
-- **PL** (Polish) - large nearby market (~15M iOS)
-- **IT** (Italian) - Italy (~25M iOS)
+**Added in v1.2.0:** ES, FR, IT, PL, PT
 
-**Priority 3 - Asian high-value:**
+**Potential next:**
 - **JA** (Japanese) - very high iOS penetration (~70M iOS)
 - **KO** (Korean) - South Korea, high spending (~25M iOS)
-
-**Priority 4 - Additional:**
 - **TR** (Turkish) - growing market (~20M iOS)
 - **NL** (Dutch) - Netherlands + Belgium, high purchasing power
-
-**Note:** EN + ES + FR + PT + DE covers ~80% of global iOS market. Shopping list translations are simple (~100 strings), can be done via AI translation in one session.
 
 ### Known Limitations
 - Apple API key has Developer access - cannot create App Store Connect apps via API (manual creation required)
