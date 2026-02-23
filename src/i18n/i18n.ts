@@ -8,8 +8,13 @@ import hu from './locales/hu.json'
 import uk from './locales/uk.json'
 import cs from './locales/cs.json'
 import zh from './locales/zh.json'
+import es from './locales/es.json'
+import fr from './locales/fr.json'
+import it from './locales/it.json'
+import pl from './locales/pl.json'
+import pt from './locales/pt.json'
 
-const supportedLanguages = ['sk', 'en', 'de', 'hu', 'uk', 'cs', 'zh'] as const
+const supportedLanguages = ['sk', 'en', 'de', 'hu', 'uk', 'cs', 'zh', 'es', 'fr', 'it', 'pl', 'pt'] as const
 export type SupportedLanguage = (typeof supportedLanguages)[number]
 
 function isSupportedLanguage(lang: string): lang is SupportedLanguage {
@@ -31,6 +36,11 @@ export async function initI18n(): Promise<void> {
       uk: { translation: uk },
       cs: { translation: cs },
       zh: { translation: zh },
+      es: { translation: es },
+      fr: { translation: fr },
+      it: { translation: it },
+      pl: { translation: pl },
+      pt: { translation: pt },
     },
     interpolation: { escapeValue: false },
     debug: false,

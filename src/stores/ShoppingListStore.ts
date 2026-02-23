@@ -53,7 +53,7 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
       id: randomUUID(),
       name: trimmed,
       quantity: 1,
-      isChecked: false,
+      isChecked: true,
       order: items.length,
       createdAt: new Date().toISOString(),
     }

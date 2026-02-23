@@ -35,6 +35,11 @@ export function SettingsScreen(): React.ReactElement {
     { flag: '\uD83C\uDDFA\uD83C\uDDE6', label: 'Ukrainska', value: 'uk' },
     { flag: '\uD83C\uDDE8\uD83C\uDDFF', label: 'Cesky', value: 'cs' },
     { flag: '\uD83C\uDDE8\uD83C\uDDF3', label: 'Zhongwen', value: 'zh' },
+    { flag: '\uD83C\uDDEA\uD83C\uDDF8', label: 'Espa\u00f1ol', value: 'es' },
+    { flag: '\uD83C\uDDEB\uD83C\uDDF7', label: 'Fran\u00e7ais', value: 'fr' },
+    { flag: '\uD83C\uDDEE\uD83C\uDDF9', label: 'Italiano', value: 'it' },
+    { flag: '\uD83C\uDDF5\uD83C\uDDF1', label: 'Polski', value: 'pl' },
+    { flag: '\uD83C\uDDF5\uD83C\uDDF9', label: 'Portugu\u00eas', value: 'pt' },
   ]
 
   return (
@@ -103,7 +108,7 @@ export function SettingsScreen(): React.ReactElement {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>{t('Settings.about')}</Text>
-        <Text style={styles.aboutText}>1GoShop v1.0.0</Text>
+        <Text style={styles.aboutText}>1GoShop v1.2.0</Text>
         <Text style={styles.hintText}>{t('ShoppingList.swipeRightHint')}</Text>
         <Text style={styles.hintText}>{t('ShoppingList.swipeLeftHint')}</Text>
         <Text style={styles.hintText}>{t('ShoppingList.longPressHint')}</Text>
