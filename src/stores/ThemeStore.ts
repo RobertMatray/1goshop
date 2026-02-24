@@ -25,7 +25,8 @@ export const useThemeStore = create<ThemeStoreState>((set) => ({
       } else {
         set({ isLoaded: true })
       }
-    } catch {
+    } catch (error) {
+      console.warn('[ThemeStore] Failed to load theme:', error)
       set({ isLoaded: true })
     }
   },
@@ -35,7 +36,9 @@ export const useThemeStore = create<ThemeStoreState>((set) => ({
       await AsyncStorage.setItem(THEME_STORAGE_KEY, themeMode)
       set({ themeMode })
       applyTheme(themeMode)
-    } catch {}
+    } catch (error) {
+      console.warn('[ThemeStore] Failed to save theme:', error)
+    }
   },
 }))
 

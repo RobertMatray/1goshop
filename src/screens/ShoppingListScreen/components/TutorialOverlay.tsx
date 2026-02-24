@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { View, Text, Pressable, Modal, useWindowDimensions, Animated as RNAnimated } from 'react-native'
+import { View, Text, Pressable, Modal, Animated as RNAnimated } from 'react-native'
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -26,7 +26,6 @@ const TOTAL_STEPS = 9
 export function TutorialOverlay({ visible, onClose }: Props): React.ReactElement | null {
   const { t } = useTranslation()
   const insets = useSafeAreaInsets()
-  const { width: screenWidth } = useWindowDimensions()
   const [step, setStep] = useState(0)
 
   useEffect(() => {
@@ -86,7 +85,7 @@ export function TutorialOverlay({ visible, onClose }: Props): React.ReactElement
               style={styles.stepContent}
             >
               <View style={styles.animationArea}>
-                <StepAnimation step={step} screenWidth={screenWidth} t={t} />
+                <StepAnimation step={step} t={t} />
               </View>
 
               <Text style={styles.stepTitle}>{stepTitles[step]}</Text>
@@ -128,7 +127,7 @@ export function TutorialOverlay({ visible, onClose }: Props): React.ReactElement
   )
 }
 
-function StepAnimation({ step, screenWidth, t }: { step: number; screenWidth: number; t: (key: string) => string }): React.ReactElement {
+function StepAnimation({ step, t }: { step: number; t: (key: string) => string }): React.ReactElement {
   switch (step) {
     case 0:
       return <AddItemAnimation t={t} />

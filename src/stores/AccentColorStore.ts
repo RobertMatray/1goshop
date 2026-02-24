@@ -40,7 +40,8 @@ export const useAccentColorStore = create<AccentColorStoreState>((set, get) => (
       if (colorsStr) {
         try {
           savedColors = JSON.parse(colorsStr) as SavedColor[]
-        } catch {
+        } catch (error) {
+          console.warn('[AccentColorStore] Failed to parse saved colors:', error)
           savedColors = []
         }
       }
@@ -51,7 +52,8 @@ export const useAccentColorStore = create<AccentColorStoreState>((set, get) => (
       if (activeColor) {
         applyAccentColor(activeColor)
       }
-    } catch {
+    } catch (error) {
+      console.warn('[AccentColorStore] Failed to load accent color:', error)
       set({ isLoaded: true })
     }
   },

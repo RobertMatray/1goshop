@@ -32,13 +32,14 @@ export function ShoppingListScreen(): React.ReactElement {
     return [...items].sort((a, b) => a.order - b.order)
   }, [items])
 
-  const isFiltering = filterText.trim().length > 0
+  const trimmedFilter = useMemo(() => filterText.trim(), [filterText])
+  const isFiltering = trimmedFilter.length > 0
 
   const filteredItems = useMemo(() => {
     if (!isFiltering) return sortedItems
-    const needle = filterText.trim().toLowerCase()
+    const needle = trimmedFilter.toLowerCase()
     return sortedItems.filter((item) => item.name.toLowerCase().includes(needle))
-  }, [sortedItems, filterText, isFiltering])
+  }, [sortedItems, trimmedFilter, isFiltering])
 
   const checkedCount = useMemo(() => items.filter((i) => i.isChecked).length, [items])
 

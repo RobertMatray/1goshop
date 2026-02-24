@@ -37,7 +37,8 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
       } else {
         set({ isLoaded: true })
       }
-    } catch {
+    } catch (error) {
+      console.warn('[ActiveShoppingStore] Failed to load session:', error)
       set({ isLoaded: true })
     }
   },
@@ -47,10 +48,10 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
       const historyRaw = await AsyncStorage.getItem(HISTORY_KEY)
       if (historyRaw) {
         const history = JSON.parse(historyRaw) as ShoppingSession[]
-        set({ history: history.sort((a, b) => (b.finishedAt ?? '').localeCompare(a.finishedAt ?? '')) })
+        set({ history: [...history].sort((a, b) => (b.finishedAt ?? '').localeCompare(a.finishedAt ?? '')) })
       }
-    } catch {
-      // Ignore
+    } catch (error) {
+      console.warn('[ActiveShoppingStore] Failed to load history:', error)
     }
   },
 
@@ -112,8 +113,8 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
       const history = historyRaw ? (JSON.parse(historyRaw) as ShoppingSession[]) : []
       history.push(finishedSession)
       await AsyncStorage.setItem(HISTORY_KEY, JSON.stringify(history))
-    } catch {
-      // History save failed, continue anyway
+    } catch (error) {
+      console.warn('[ActiveShoppingStore] Failed to save history:', error)
     }
 
     // Clear active session

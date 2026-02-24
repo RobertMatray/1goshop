@@ -39,7 +39,8 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
       } else {
         set({ isLoaded: true })
       }
-    } catch {
+    } catch (error) {
+      console.warn('[ShoppingListStore] Failed to load items:', error)
       set({ isLoaded: true })
     }
   },
