@@ -7,6 +7,7 @@ import { useNavigation } from '@react-navigation/native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import type { RootStackParamList } from '../../navigation/AppNavigator'
 import { useActiveShoppingStore } from '../../stores/ActiveShoppingStore'
+import { useShoppingListStore } from '../../stores/ShoppingListStore'
 import { ActiveShoppingItem } from './components/ActiveShoppingItem'
 import type { ActiveShoppingItem as ActiveShoppingItemType } from '../../types/shopping'
 
@@ -22,6 +23,7 @@ export function ActiveShoppingScreen(): React.ReactElement {
   const toggleBought = useActiveShoppingStore((s) => s.toggleBought)
   const toggleShowBought = useActiveShoppingStore((s) => s.toggleShowBought)
   const finishShopping = useActiveShoppingStore((s) => s.finishShopping)
+  const uncheckBoughtItems = useShoppingListStore((s) => s.uncheckItems)
 
   const allItems = useMemo(() => {
     if (!session) return []
@@ -95,6 +97,10 @@ export function ActiveShoppingScreen(): React.ReactElement {
         {
           text: t('ActiveShopping.finish'),
           onPress: async () => {
+            const boughtIds = session?.items.filter((i) => i.isBought).map((i) => i.id) ?? []
+            if (boughtIds.length > 0) {
+              uncheckBoughtItems(boughtIds)
+            }
             await finishShopping()
             navigation.goBack()
           },

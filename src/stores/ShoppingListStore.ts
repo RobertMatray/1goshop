@@ -18,6 +18,7 @@ export interface ShoppingListStoreState {
   decrementQuantity: (id: string) => void
   reorderItems: (fromIndex: number, toIndex: number) => void
   setItems: (items: ShoppingItem[]) => void
+  uncheckItems: (ids: string[]) => void
   clearChecked: () => void
   clearAll: () => void
 }
@@ -119,6 +120,15 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
   setItems: (items: ShoppingItem[]) => {
     set({ items })
     persist(items)
+  },
+
+  uncheckItems: (ids: string[]) => {
+    const idSet = new Set(ids)
+    const updated = get().items.map((item) =>
+      idSet.has(item.id) ? { ...item, isChecked: false } : item,
+    )
+    set({ items: updated })
+    persist(updated)
   },
 
   clearChecked: () => {

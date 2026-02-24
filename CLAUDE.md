@@ -118,8 +118,9 @@ The item row is divided into **left half** and **right half**. The gesture actio
 | Swipe LEFT (>30px) | Left half | Delete with confirmation | Red bg with trash (aligned right) |
 | Swipe RIGHT (>30px) | Left half | Edit item name (Alert.prompt) | Blue bg with pencil (aligned left) |
 | Swipe RIGHT (>30px) | Right half | +1 quantity | Green bg with "+1" (aligned left) |
-| Swipe LEFT (>30px) | Right half | -1 quantity | Orange bg with "-1" (aligned right) |
+| Swipe LEFT (>30px) | Right half | -1 quantity (if qty=1: delete confirmation) | Orange bg with "-1" (aligned right) |
 | Tap | Anywhere | Toggle checked/unchecked | Checkmark (no strikethrough on main list) |
+| Long press (500ms) | Anywhere on item | Edit item name (Alert.prompt) | Haptic feedback |
 | Long press ☰ icon | Drag handle | Reorder (drag up/down) | Item lifts, others shift |
 
 **Note**: Checked items on main list are marked for shopping (no strikethrough). Strikethrough is only in ActiveShoppingScreen for bought items.
@@ -140,6 +141,7 @@ The item row is divided into **left half** and **right half**. The gesture actio
   - `items: ShoppingItem[]` - all items
   - CRUD: addItem, removeItem, editItem, toggleChecked, incrementQuantity, decrementQuantity
   - setItems (for drag reorder), reorderItems(fromIndex, toIndex)
+  - uncheckItems(ids) - uncheck specific items by ID array (used after finishing shopping)
   - clearChecked, clearAll
   - Persistence via `persist()` helper function (fire-and-forget)
   - On load: items sorted by order and reindexed (0,1,2...) to fix any gaps
@@ -148,6 +150,7 @@ The item row is divided into **left half** and **right half**. The gesture actio
   - startShopping(items) - creates session from checked items (purchasedAt: null)
   - toggleBought(id) - marks item as bought with `purchasedAt` timestamp (ISO), clears on untoggle
   - finishShopping() - saves session to history with finishedAt timestamp
+  - On finish: bought items are unchecked in ShoppingListStore (so they don't appear pre-selected next time)
   - Session and history persisted in AsyncStorage (`@active_shopping`, `@shopping_history`)
 
 - **ThemeStore**: auto/light/dark with AsyncStorage
@@ -288,15 +291,16 @@ curl -s -X POST https://api.github.com/user/repos \
   - GitHub: https://github.com/robertmatray/superapp-ai-poc
   - Same Apple Developer account, same EAS credentials pattern
 
-## Current Status (v1.2.0 - February 23, 2026)
+## Current Status (v1.2.0 - February 24, 2026)
 
 ### Implemented (all working on TestFlight)
 - Shopping list CRUD (add, remove, edit, toggle checked, quantity +1/-1, reorder)
-- Gesture controls: left half swipe (left=delete, right=edit), right half swipe (right=+1, left=-1), tap (toggle), long press drag handle (reorder)
-- Edit item via Alert.prompt (left half swipe right, blue background)
+- Gesture controls: left half swipe (left=delete, right=edit), right half swipe (right=+1, left=-1), tap (toggle), long press (edit), long press drag handle (reorder)
+- Edit item via Alert.prompt (left half swipe right OR long press 500ms)
+- Decrement on quantity=1 shows delete confirmation (same as swipe-left delete)
 - DraggableFlatList with auto-scroll during drag (both directions)
 - Checked items stay in place (no auto-sorting, no strikethrough on main list)
-- Active shopping mode: start shopping with checked items, mark as bought (strikethrough only here)
+- Active shopping mode: start shopping with checked items, mark as bought (strikethrough only here), bought items unchecked on finish
 - Shopping history with statistics
 - Interactive 9-step tutorial overlay with pulsing touch indicator animations
 - Footer with item count, marked-for-shopping count, "Start shopping" button, gesture hints
@@ -326,7 +330,7 @@ curl -s -X POST https://api.github.com/user/repos \
 **Provisioning Profile**: f649b342-4c71-4d84-98c3-cc22a77085ba (ACTIVE, expires 2026-12-12)
 **Distribution Certificate**: 28T88DA5Q5 (shared with moja4ka-zdravie)
 
-**Latest successful iOS build**: Build #68 (v1.2.0)
+**Latest successful iOS build**: Build #70 (v1.2.0)
 - EAS Build ID: check EAS dashboard
 
 **Latest successful Android build**: Build (v1.2.0, versionCode 6)
@@ -365,6 +369,8 @@ curl -s -X POST https://api.github.com/user/repos \
 | #66 | Feb 21 | v1.1.0 - App Store release (color settings, import/export, iCloud backup, search) |
 | #67 | Feb 22 | v1.1.0 build (submit failed - version already on App Store) |
 | #68 | Feb 22 | v1.2.0 - iOS TestFlight (5 new languages, auto-check new items) |
+| #69 | Feb 24 | Code review cleanup (remove unused deps, fix anti-patterns) |
+| #70 | Feb 24 | UX improvements: uncheck bought items after shopping, decrement-to-delete, long press to edit |
 | Android | Feb 22 | v1.2.0 (versionCode 6) - Android AAB for Google Play |
 
 ### Scripts (for CI/CD automation)

@@ -80,7 +80,13 @@ export function ShoppingListItem({ item, drag, isActive }: Props): React.ReactEl
     runOnJS(onToggleChecked)()
   })
 
-  const composedGesture = Gesture.Exclusive(panGesture, tapGesture)
+  const longPressGesture = Gesture.LongPress()
+    .minDuration(500)
+    .onStart(() => {
+      runOnJS(onEditItem)()
+    })
+
+  const composedGesture = Gesture.Exclusive(panGesture, longPressGesture, tapGesture)
 
   const animatedItemStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.value }],
@@ -199,7 +205,10 @@ export function ShoppingListItem({ item, drag, isActive }: Props): React.ReactEl
   }
 
   function onDecrementQuantity(): void {
-    if (item.quantity <= 1) return
+    if (item.quantity <= 1) {
+      onConfirmDelete()
+      return
+    }
     decrementQuantity(item.id)
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
   }
