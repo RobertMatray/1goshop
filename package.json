@@ -45,6 +45,7 @@
   },
   "devDependencies": {
     "@types/react": "~19.1.0",
+    "docx": "^9.6.0",
     "googleapis": "^171.4.0",
     "puppeteer": "^24.37.4",
     "sharp": "^0.34.5",
