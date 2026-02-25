@@ -179,6 +179,6 @@ const styles = StyleSheet.create((theme) => ({
   finishButtonText: {
     fontSize: theme.typography.fontSizeS,
     fontWeight: 'bold',
-    color: '#ffffff',
+    color: theme.colors.textOnTint,
   },
 }))

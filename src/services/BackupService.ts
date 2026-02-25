@@ -54,18 +54,21 @@ export async function restoreFromFile(): Promise<boolean> {
   }
 }
 
-export function restoreBackup(jsonString: string): boolean {
+export async function restoreBackup(jsonString: string): Promise<boolean> {
   try {
     const backup = JSON.parse(jsonString) as BackupData
     if (!backup.version || !backup.data) {
       return false
     }
-    for (const [key, value] of Object.entries(backup.data)) {
-      if (value !== null) {
-        void AsyncStorage.setItem(key, value)
-      } else {
-        void AsyncStorage.removeItem(key)
-      }
+    const results = await Promise.allSettled(
+      Object.entries(backup.data).map(([key, value]) =>
+        value !== null ? AsyncStorage.setItem(key, value) : AsyncStorage.removeItem(key),
+      ),
+    )
+    const failures = results.filter((r) => r.status === 'rejected')
+    if (failures.length > 0) {
+      console.warn('[BackupService] Partial restore failure:', failures)
+      return false
     }
     return true
   } catch (error) {

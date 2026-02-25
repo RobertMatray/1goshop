@@ -100,7 +100,7 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
 
   decrementQuantity: (id: string) => {
     const updated = get().items.map((item) =>
-      item.id === id && item.quantity > 1 ? { ...item, quantity: item.quantity - 1 } : item,
+      item.id === id ? { ...item, quantity: Math.max(1, item.quantity - 1) } : item,
     )
     set({ items: updated })
     persist(updated)

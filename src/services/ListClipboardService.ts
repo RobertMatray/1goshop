@@ -21,15 +21,18 @@ export function removeDiacritics(text: string): string {
  * - Skips empty lines and whitespace-only lines
  * - Deduplicates within the parsed list
  */
+const MAX_PARSE_LINES = 1000
+const MAX_LINE_LENGTH = 500
+
 export function parseListText(text: string): string[] {
-  // Split by any line ending
-  const lines = text.split(/\r\n|\r|\n/)
+  // Split by any line ending, limit to prevent clipboard bombs
+  const lines = text.split(/\r\n|\r|\n/).slice(0, MAX_PARSE_LINES)
 
   const seen = new Set<string>()
   const result: string[] = []
 
   for (const rawLine of lines) {
-    let line = rawLine.trim()
+    let line = rawLine.slice(0, MAX_LINE_LENGTH).trim()
     if (!line) continue
 
     // Tab-separated: take only the first column

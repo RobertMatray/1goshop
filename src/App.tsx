@@ -41,16 +41,16 @@ export function App(): React.ReactElement {
   )
 
   async function initialize(): Promise<void> {
-    try {
-      await Promise.all([
-        initI18n(),
-        useShoppingListStore.getState().load(),
-        useActiveShoppingStore.getState().load(),
-        useThemeStore.getState().load(),
-        useAccentColorStore.getState().load(),
-      ])
-    } catch (error) {
-      console.warn('[App] Initialization partially failed:', error)
+    const results = await Promise.allSettled([
+      initI18n(),
+      useShoppingListStore.getState().load(),
+      useActiveShoppingStore.getState().load(),
+      useThemeStore.getState().load(),
+      useAccentColorStore.getState().load(),
+    ])
+    const failures = results.filter((r) => r.status === 'rejected')
+    if (failures.length > 0) {
+      console.warn('[App] Initialization partially failed:', failures)
     }
     setIsReady(true)
   }

@@ -156,8 +156,14 @@ function HistoryItem({ session, lang, t, onDelete }: HistoryItemProps): React.Re
   )
 }
 
+const LOCALE_MAP: Record<string, string> = {
+  sk: 'sk-SK', en: 'en-US', de: 'de-DE', hu: 'hu-HU',
+  uk: 'uk-UA', cs: 'cs-CZ', zh: 'zh-CN', es: 'es-ES',
+  fr: 'fr-FR', it: 'it-IT', pl: 'pl-PL', pt: 'pt-PT',
+}
+
 function formatDate(date: Date, lang: string): string {
-  const locale = lang === 'sk' ? 'sk-SK' : 'en-US'
+  const locale = LOCALE_MAP[lang] ?? 'en-US'
   return date.toLocaleDateString(locale, {
     day: 'numeric',
     month: 'long',
@@ -302,7 +308,7 @@ const styles = StyleSheet.create((theme) => ({
     alignItems: 'center',
   },
   clearButtonText: {
-    color: '#ffffff',
+    color: theme.colors.textOnTint,
     fontSize: theme.typography.fontSizeS,
     fontWeight: 'bold',
   },

@@ -229,7 +229,7 @@ const styles = StyleSheet.create((theme) => ({
     marginBottom: 8,
   },
   startShoppingText: {
-    color: '#ffffff',
+    color: theme.colors.textOnTint,
     fontSize: theme.typography.fontSizeM,
     fontWeight: 'bold',
   },

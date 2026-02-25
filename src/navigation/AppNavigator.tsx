@@ -6,8 +6,8 @@ import { SettingsScreen } from '../screens/SettingsScreen/SettingsScreen'
 import { ActiveShoppingScreen } from '../screens/ActiveShoppingScreen/ActiveShoppingScreen'
 import { ShoppingHistoryScreen } from '../screens/ShoppingHistoryScreen/ShoppingHistoryScreen'
 import { ColorPickerScreen } from '../screens/ColorPickerScreen/ColorPickerScreen'
+import { StyleSheet } from 'react-native-unistyles'
 import { useAccentColorStore } from '../stores/AccentColorStore'
-import { defaultLightColors } from '../unistyles'
 
 export type RootStackParamList = {
   ShoppingListScreen: undefined
@@ -22,14 +22,14 @@ const Stack = createNativeStackNavigator<RootStackParamList>()
 export function AppNavigator(): React.ReactElement {
   const { t } = useTranslation()
   const activeColor = useAccentColorStore((s) => s.activeColor)
-  const headerColor = activeColor ?? defaultLightColors.tint
+  const headerColor = activeColor ?? (navStyles.headerFallback.backgroundColor as string)
 
   return (
     <Stack.Navigator
       initialRouteName="ShoppingListScreen"
       screenOptions={{
         headerStyle: { backgroundColor: headerColor },
-        headerTintColor: '#ffffff',
+        headerTintColor: navStyles.headerTint.color as string,
         headerTitleStyle: { fontWeight: 'bold' },
       }}
     >
@@ -71,3 +71,12 @@ export function AppNavigator(): React.ReactElement {
     </Stack.Navigator>
   )
 }
+
+const navStyles = StyleSheet.create((theme) => ({
+  headerFallback: {
+    backgroundColor: theme.colors.tint,
+  },
+  headerTint: {
+    color: theme.colors.textOnTint,
+  },
+}))

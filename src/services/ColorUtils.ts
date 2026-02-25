@@ -17,6 +17,11 @@ interface HSL {
 }
 
 export function hexToHsl(hex: string): HSL {
+  if (!/^#[0-9A-Fa-f]{6}$/.test(hex)) {
+    console.warn('[ColorUtils] Invalid hex color:', hex)
+    return { h: 0, s: 0, l: 50 }
+  }
+
   const r = parseInt(hex.slice(1, 3), 16) / 255
   const g = parseInt(hex.slice(3, 5), 16) / 255
   const b = parseInt(hex.slice(5, 7), 16) / 255

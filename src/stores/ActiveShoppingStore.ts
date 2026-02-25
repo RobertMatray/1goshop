@@ -10,6 +10,7 @@ export interface ActiveShoppingStoreState {
   session: ShoppingSession | null
   showBought: boolean
   isLoaded: boolean
+  isFinishing: boolean
   history: ShoppingSession[]
 
   load: () => Promise<void>
@@ -26,6 +27,7 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
   session: null,
   showBought: true,
   isLoaded: false,
+  isFinishing: false,
   history: [],
 
   load: async () => {
@@ -99,8 +101,10 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
   },
 
   finishShopping: async () => {
-    const { session } = get()
-    if (!session) return
+    const { session, isFinishing } = get()
+    if (!session || isFinishing) return
+
+    set({ isFinishing: true })
 
     const finishedSession: ShoppingSession = {
       ...session,
@@ -118,7 +122,7 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
     }
 
     // Clear active session
-    set({ session: null, showBought: true })
+    set({ session: null, showBought: true, isFinishing: false })
     await AsyncStorage.removeItem(SESSION_KEY).catch((e) => console.warn('[ActiveShoppingStore] Failed to clear session:', e))
   },
 

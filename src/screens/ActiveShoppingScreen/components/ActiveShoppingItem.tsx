@@ -9,7 +9,7 @@ interface Props {
   onToggleBought: (id: string) => void
 }
 
-export function ActiveShoppingItem({ item, onToggleBought }: Props): React.ReactElement {
+export const ActiveShoppingItem = React.memo(function ActiveShoppingItem({ item, onToggleBought }: Props): React.ReactElement {
   return (
     <Pressable style={styles.outerContainer} onPress={handlePress}>
       <View style={[styles.itemContainer, item.isBought && styles.itemBought]}>
@@ -37,7 +37,7 @@ export function ActiveShoppingItem({ item, onToggleBought }: Props): React.React
     onToggleBought(item.id)
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
   }
-}
+})
 
 const styles = StyleSheet.create((theme) => ({
   outerContainer: {
