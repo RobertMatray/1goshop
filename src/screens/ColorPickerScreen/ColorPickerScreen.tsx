@@ -4,7 +4,7 @@ import { StyleSheet } from 'react-native-unistyles'
 import { useTranslation } from 'react-i18next'
 import ColorPicker, { HueSlider, SaturationSlider } from 'reanimated-color-picker'
 import { useAccentColorStore } from '../../stores/AccentColorStore'
-import { deriveThemeColors } from '../../services/ColorUtils'
+import { deriveThemeColors, hexToHsl } from '../../services/ColorUtils'
 import { defaultLightColors } from '../../unistyles'
 import { Ionicons } from '@expo/vector-icons'
 
@@ -14,6 +14,7 @@ export function ColorPickerScreen(): React.ReactElement {
     useAccentColorStore()
   const [previewColor, setPreviewColor] = useState(activeColor ?? defaultLightColors.tint)
   const previewDerived = deriveThemeColors(previewColor)
+  const textOnPreview = getTextOnColor(previewDerived.light.tint)
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
@@ -39,7 +40,7 @@ export function ColorPickerScreen(): React.ReactElement {
         <Text style={styles.sectionTitle}>{t('ColorPicker.preview')}</Text>
         <View style={styles.previewContainer}>
           <View style={[styles.previewHeader, { backgroundColor: previewDerived.light.tint }]}>
-            <Text style={styles.previewHeaderText}>1GoShop</Text>
+            <Text style={[styles.previewHeaderText, { color: textOnPreview }]}>1GoShop</Text>
           </View>
 
           <View style={styles.previewItem}>
@@ -59,7 +60,7 @@ export function ColorPickerScreen(): React.ReactElement {
                 { borderColor: previewDerived.light.tint, backgroundColor: previewDerived.light.tint },
               ]}
             >
-              <Ionicons name="checkmark" size={14} color="#ffffff" />
+              <Ionicons name="checkmark" size={14} color={textOnPreview} />
             </View>
             <Text style={styles.previewItemText}>{t('Tutorial.exampleItem2')}</Text>
             <View style={[styles.previewBadge, { backgroundColor: previewDerived.light.quantityBg }]}>
@@ -70,7 +71,7 @@ export function ColorPickerScreen(): React.ReactElement {
           <View
             style={[styles.previewButton, { backgroundColor: previewDerived.light.tint }]}
           >
-            <Text style={styles.previewButtonText}>{t('ActiveShopping.startShopping')}</Text>
+            <Text style={[styles.previewButtonText, { color: textOnPreview }]}>{t('ActiveShopping.startShopping')}</Text>
           </View>
         </View>
       </View>
@@ -98,7 +99,7 @@ export function ColorPickerScreen(): React.ReactElement {
                   ]}
                 >
                   {activeColor?.toLowerCase() === color.hex.toLowerCase() && (
-                    <Ionicons name="checkmark" size={18} color="#ffffff" />
+                    <Ionicons name="checkmark" size={18} color={textOnPreview} />
                   )}
                 </View>
               </Pressable>
@@ -145,6 +146,11 @@ export function ColorPickerScreen(): React.ReactElement {
       },
     ])
   }
+}
+
+function getTextOnColor(hex: string): string {
+  const { l } = hexToHsl(hex)
+  return l > 55 ? '#000000' : '#ffffff'
 }
 
 const styles = StyleSheet.create((theme) => ({
@@ -214,7 +220,6 @@ const styles = StyleSheet.create((theme) => ({
     alignItems: 'center',
   },
   previewHeaderText: {
-    color: '#ffffff',
     fontWeight: 'bold',
     fontSize: theme.typography.fontSizeM,
   },
@@ -258,7 +263,6 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: theme.sizes.radiusSm,
   },
   previewButtonText: {
-    color: '#ffffff',
     fontWeight: 'bold',
     fontSize: theme.typography.fontSizeM,
   },

@@ -63,7 +63,7 @@ export function ShoppingListScreen(): React.ReactElement {
     navigation.setOptions({
       headerRight: () => (
         <Pressable onPress={() => navigation.navigate('SettingsScreen')} hitSlop={12} style={{ marginRight: 12, padding: 4 }}>
-          <Ionicons name="settings-outline" size={24} color="#ffffff" />
+          <Ionicons name="settings-outline" size={24} color={styles.startShoppingText.color as string} />
         </Pressable>
       ),
     })

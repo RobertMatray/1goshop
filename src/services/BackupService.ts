@@ -75,8 +75,23 @@ export async function restoreBackup(jsonString: string): Promise<boolean> {
       console.warn('[BackupService] Invalid backup structure')
       return false
     }
+    // Only restore known keys, validate JSON values for keys that store JSON
+    const JSON_KEYS = new Set(['@shopping_list', '@active_shopping', '@shopping_history', '@saved_colors'])
+    const entries = Object.entries(backup.data).filter(
+      ([key]) => (BACKUP_KEYS as readonly string[]).includes(key),
+    )
+    for (const [key, value] of entries) {
+      if (value !== null && JSON_KEYS.has(key)) {
+        try {
+          JSON.parse(value)
+        } catch {
+          console.warn('[BackupService] Invalid JSON for key:', key)
+          return false
+        }
+      }
+    }
     const results = await Promise.allSettled(
-      Object.entries(backup.data).map(([key, value]) =>
+      entries.map(([key, value]) =>
         value !== null ? AsyncStorage.setItem(key, value) : AsyncStorage.removeItem(key),
       ),
     )
