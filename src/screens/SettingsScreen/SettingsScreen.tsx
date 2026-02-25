@@ -9,6 +9,7 @@ import { useThemeStore, type ThemeMode } from '../../stores/ThemeStore'
 import { useAccentColorStore } from '../../stores/AccentColorStore'
 import { useShoppingListStore } from '../../stores/ShoppingListStore'
 import { useActiveShoppingStore } from '../../stores/ActiveShoppingStore'
+import { useListsMetaStore } from '../../stores/ListsMetaStore'
 import { createAndShareBackup, restoreFromFile } from '../../services/BackupService'
 import { defaultLightColors } from '../../unistyles'
 import type { SupportedLanguage } from '../../i18n/i18n'
@@ -100,7 +101,7 @@ export function SettingsScreen(): React.ReactElement {
         </View>
       </Pressable>
 
-      <Pressable style={styles.section} onPress={() => navigation.navigate('ShoppingHistoryScreen')}>
+      <Pressable style={styles.section} onPress={handleNavigateToHistory}>
         <View style={styles.historyRow}>
           <Text style={styles.sectionTitle}>{t('History.title')}</Text>
           <Text style={styles.historyArrow}>{'\u203A'}</Text>
@@ -131,6 +132,13 @@ export function SettingsScreen(): React.ReactElement {
     </ScrollView>
   )
 
+  function handleNavigateToHistory(): void {
+    const listId = useListsMetaStore.getState().selectedListId
+    if (listId) {
+      navigation.navigate('ShoppingHistoryScreen', { listId })
+    }
+  }
+
   function handleChangeLanguage(lang: SupportedLanguage): void {
     i18n.changeLanguage(lang)
   }
@@ -148,11 +156,19 @@ export function SettingsScreen(): React.ReactElement {
       const success = await restoreFromFile()
       if (success) {
         await Promise.allSettled([
+          useListsMetaStore.getState().load(),
           useShoppingListStore.getState().load(),
           useActiveShoppingStore.getState().load(),
           useThemeStore.getState().load(),
           useAccentColorStore.getState().load(),
         ])
+        const { selectedListId } = useListsMetaStore.getState()
+        if (selectedListId) {
+          await Promise.allSettled([
+            useShoppingListStore.getState().switchToList(selectedListId),
+            useActiveShoppingStore.getState().switchToList(selectedListId),
+          ])
+        }
         Alert.alert(t('Backup.importDoneTitle'), t('Backup.importDoneMessage'))
       } else {
         Alert.alert(t('Backup.error'), t('Backup.importError'))

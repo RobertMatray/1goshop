@@ -10,10 +10,10 @@ import { StyleSheet } from 'react-native-unistyles'
 import { useAccentColorStore } from '../stores/AccentColorStore'
 
 export type RootStackParamList = {
-  ShoppingListScreen: undefined
+  ShoppingListScreen: { listId: string } | undefined
   SettingsScreen: undefined
-  ActiveShoppingScreen: undefined
-  ShoppingHistoryScreen: undefined
+  ActiveShoppingScreen: { listId: string }
+  ShoppingHistoryScreen: { listId: string }
   ColorPickerScreen: undefined
 }
 

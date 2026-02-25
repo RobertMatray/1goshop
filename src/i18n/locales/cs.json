@@ -134,5 +134,15 @@
     "importUpdated": "Aktualizováno: {{count}}",
     "importEmpty": "Ve schránce není žádný text",
     "importNoNew": "Všechny položky ze schránky již v seznamu jsou"
+  },
+  "Lists": {
+    "defaultListName": "Nákupní seznam",
+    "newList": "Nový seznam",
+    "renameList": "Přejmenovat seznam",
+    "deleteList": "Smazat seznam",
+    "deleteListConfirm": "Opravdu chcete smazat \"{{name}}\"?",
+    "listNamePlaceholder": "Název seznamu",
+    "shared": "Sdílený",
+    "lastList": "Nelze smazat poslední seznam"
   }
 }

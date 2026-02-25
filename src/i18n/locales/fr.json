@@ -132,5 +132,15 @@
     "importUpdated": "Mis à jour : {{count}}",
     "importEmpty": "Aucun texte trouvé dans le presse-papiers",
     "importNoNew": "Tous les articles du presse-papiers sont déjà dans la liste"
+  },
+  "Lists": {
+    "defaultListName": "Liste de courses",
+    "newList": "Nouvelle liste",
+    "renameList": "Renommer la liste",
+    "deleteList": "Supprimer la liste",
+    "deleteListConfirm": "Voulez-vous vraiment supprimer \"{{name}}\" ?",
+    "listNamePlaceholder": "Nom de la liste",
+    "shared": "Partagée",
+    "lastList": "Impossible de supprimer la dernière liste"
   }
 }

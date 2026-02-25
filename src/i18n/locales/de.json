@@ -132,5 +132,15 @@
     "importUpdated": "Aktualisiert: {{count}}",
     "importEmpty": "Kein Text in der Zwischenablage gefunden",
     "importNoNew": "Alle Artikel aus der Zwischenablage sind bereits in der Liste"
+  },
+  "Lists": {
+    "defaultListName": "Einkaufsliste",
+    "newList": "Neue Liste",
+    "renameList": "Liste umbenennen",
+    "deleteList": "Liste löschen",
+    "deleteListConfirm": "Möchten Sie \"{{name}}\" wirklich löschen?",
+    "listNamePlaceholder": "Listenname",
+    "shared": "Geteilt",
+    "lastList": "Die letzte Liste kann nicht gelöscht werden"
   }
 }

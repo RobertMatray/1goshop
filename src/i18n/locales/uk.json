@@ -134,5 +134,15 @@
     "importUpdated": "Оновлено: {{count}}",
     "importEmpty": "У буфері обміну немає тексту",
     "importNoNew": "Усі товари з буфера обміну вже є у списку"
+  },
+  "Lists": {
+    "defaultListName": "Список покупок",
+    "newList": "Новий список",
+    "renameList": "Перейменувати список",
+    "deleteList": "Видалити список",
+    "deleteListConfirm": "Ви дійсно хочете видалити \"{{name}}\"?",
+    "listNamePlaceholder": "Назва списку",
+    "shared": "Спільний",
+    "lastList": "Не можна видалити останній список"
   }
 }

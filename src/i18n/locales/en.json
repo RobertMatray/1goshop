@@ -132,5 +132,15 @@
     "importUpdated": "Updated: {{count}}",
     "importEmpty": "No text found in clipboard",
     "importNoNew": "All items from clipboard already exist in the list"
+  },
+  "Lists": {
+    "defaultListName": "Shopping list",
+    "newList": "New list",
+    "renameList": "Rename list",
+    "deleteList": "Delete list",
+    "deleteListConfirm": "Are you sure you want to delete \"{{name}}\"?",
+    "listNamePlaceholder": "List name",
+    "shared": "Shared",
+    "lastList": "You cannot delete the last list"
   }
 }

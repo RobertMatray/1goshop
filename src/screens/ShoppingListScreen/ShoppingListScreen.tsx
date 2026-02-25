@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react'
-import { View, Text, Pressable, Alert } from 'react-native'
+import { View, Text, Pressable, Alert, Modal, FlatList, Platform } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import DraggableFlatList, { type RenderItemParams } from 'react-native-draggable-flatlist'
@@ -10,11 +10,12 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import type { RootStackParamList } from '../../navigation/AppNavigator'
 import { useShoppingListStore } from '../../stores/ShoppingListStore'
 import { useActiveShoppingStore } from '../../stores/ActiveShoppingStore'
+import { useListsMetaStore } from '../../stores/ListsMetaStore'
 import { ShoppingListItem } from './components/ShoppingListItem'
 import { AddItemInput } from './components/AddItemInput'
 import { EmptyListPlaceholder } from './components/EmptyListPlaceholder'
 import { TutorialOverlay } from './components/TutorialOverlay'
-import type { ShoppingItem } from '../../types/shopping'
+import type { ShoppingItem, ShoppingListMeta } from '../../types/shopping'
 import { exportToClipboard, importFromClipboard, findExistingItemId } from '../../services/ListClipboardService'
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'ShoppingListScreen'>
@@ -25,8 +26,12 @@ export function ShoppingListScreen(): React.ReactElement {
   const insets = useSafeAreaInsets()
   const [showTutorial, setShowTutorial] = useState(false)
   const [filterText, setFilterText] = useState('')
+  const [showListPicker, setShowListPicker] = useState(false)
   const items = useShoppingListStore((s) => s.items)
   const startShopping = useActiveShoppingStore((s) => s.startShopping)
+  const lists = useListsMetaStore((s) => s.lists)
+  const selectedListId = useListsMetaStore((s) => s.selectedListId)
+  const selectedList = useMemo(() => lists.find((l) => l.id === selectedListId), [lists, selectedListId])
 
   const sortedItems = useMemo(() => {
     return [...items].sort((a, b) => a.order - b.order)
@@ -61,13 +66,26 @@ export function ShoppingListScreen(): React.ReactElement {
 
   React.useLayoutEffect(() => {
     navigation.setOptions({
-      headerRight: () => (
-        <Pressable onPress={() => navigation.navigate('SettingsScreen')} hitSlop={12} style={{ marginRight: 12, padding: 4 }}>
-          <Ionicons name="settings-outline" size={24} color={styles.startShoppingText.color as string} />
+      headerTitle: () => (
+        <Pressable onPress={() => setShowListPicker(true)} style={styles.headerTitleButton}>
+          <Text style={styles.headerTitleText} numberOfLines={1}>
+            {selectedList?.name ?? t('ShoppingList.title')}
+          </Text>
+          <Ionicons name="chevron-down" size={16} color={styles.headerTitleText.color as string} />
         </Pressable>
       ),
+      headerRight: () => (
+        <View style={styles.headerRightRow}>
+          <Pressable onPress={handleAddList} hitSlop={12} style={styles.headerButton}>
+            <Ionicons name="add" size={26} color={styles.startShoppingText.color as string} />
+          </Pressable>
+          <Pressable onPress={() => navigation.navigate('SettingsScreen')} hitSlop={12} style={styles.headerButton}>
+            <Ionicons name="settings-outline" size={24} color={styles.startShoppingText.color as string} />
+          </Pressable>
+        </View>
+      ),
     })
-  }, [navigation])
+  }, [navigation, selectedList?.name, t])
 
   return (
     <View style={styles.container}>
@@ -134,6 +152,17 @@ export function ShoppingListScreen(): React.ReactElement {
         </Pressable>
       </View>
       <TutorialOverlay visible={showTutorial} onClose={() => setShowTutorial(false)} />
+      <ListPickerModal
+        visible={showListPicker}
+        lists={lists}
+        selectedListId={selectedListId}
+        onSelect={handleSelectList}
+        onRename={handleRenameList}
+        onDelete={handleDeleteList}
+        onAdd={handleAddList}
+        onClose={() => setShowListPicker(false)}
+        t={t}
+      />
     </View>
   )
 
@@ -142,8 +171,9 @@ export function ShoppingListScreen(): React.ReactElement {
   }
 
   function handleStartShopping(): void {
+    if (!selectedListId) return
     startShopping(items)
-    navigation.navigate('ActiveShoppingScreen')
+    navigation.navigate('ActiveShoppingScreen', { listId: selectedListId })
   }
 
   function handleExport(): void {
@@ -187,6 +217,156 @@ export function ShoppingListScreen(): React.ReactElement {
     })
   }
 
+  async function handleSelectList(listId: string): Promise<void> {
+    setShowListPicker(false)
+    useListsMetaStore.getState().selectList(listId)
+    await Promise.allSettled([
+      useShoppingListStore.getState().switchToList(listId),
+      useActiveShoppingStore.getState().switchToList(listId),
+    ])
+  }
+
+  function handleAddList(): void {
+    setShowListPicker(false)
+    if (Platform.OS === 'web') {
+      const name = window.prompt(t('Lists.newList'), '')
+      if (name?.trim()) {
+        const newId = useListsMetaStore.getState().createList(name)
+        handleSelectList(newId)
+      }
+      return
+    }
+    Alert.prompt(
+      t('Lists.newList'),
+      undefined,
+      [
+        { text: t('ShoppingList.cancel'), style: 'cancel' },
+        {
+          text: t('ShoppingList.save'),
+          onPress: (value: string | undefined) => {
+            if (value?.trim()) {
+              const newId = useListsMetaStore.getState().createList(value)
+              handleSelectList(newId)
+            }
+          },
+        },
+      ],
+      'plain-text',
+      '',
+      undefined,
+    )
+  }
+
+  function handleRenameList(id: string, currentName: string): void {
+    if (Platform.OS === 'web') {
+      const name = window.prompt(t('Lists.renameList'), currentName)
+      if (name?.trim()) {
+        useListsMetaStore.getState().renameList(id, name)
+      }
+      return
+    }
+    Alert.prompt(
+      t('Lists.renameList'),
+      undefined,
+      [
+        { text: t('ShoppingList.cancel'), style: 'cancel' },
+        {
+          text: t('ShoppingList.save'),
+          onPress: (value: string | undefined) => {
+            if (value?.trim()) {
+              useListsMetaStore.getState().renameList(id, value)
+            }
+          },
+        },
+      ],
+      'plain-text',
+      currentName,
+      undefined,
+    )
+  }
+
+  function handleDeleteList(id: string, name: string): void {
+    const { lists: currentLists } = useListsMetaStore.getState()
+    if (currentLists.length <= 1) {
+      Alert.alert(t('Lists.deleteList'), t('Lists.lastList'))
+      return
+    }
+    Alert.alert(
+      t('Lists.deleteList'),
+      t('Lists.deleteListConfirm', { name }),
+      [
+        { text: t('ShoppingList.cancel'), style: 'cancel' },
+        {
+          text: t('ShoppingList.delete'),
+          style: 'destructive',
+          onPress: async () => {
+            const wasSelected = selectedListId === id
+            await useListsMetaStore.getState().deleteList(id)
+            if (wasSelected) {
+              const { selectedListId: newId } = useListsMetaStore.getState()
+              if (newId) {
+                await handleSelectList(newId)
+              }
+            }
+          },
+        },
+      ],
+    )
+  }
+}
+
+interface ListPickerModalProps {
+  visible: boolean
+  lists: ShoppingListMeta[]
+  selectedListId: string | null
+  onSelect: (id: string) => void
+  onRename: (id: string, name: string) => void
+  onDelete: (id: string, name: string) => void
+  onAdd: () => void
+  onClose: () => void
+  t: (key: string, options?: Record<string, unknown>) => string
+}
+
+function ListPickerModal({ visible, lists, selectedListId, onSelect, onRename, onDelete, onAdd, onClose, t }: ListPickerModalProps): React.ReactElement {
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <Pressable style={pickerStyles.overlay} onPress={onClose}>
+        <Pressable style={pickerStyles.container} onPress={() => {}}>
+          <Text style={pickerStyles.title}>{t('ShoppingList.title')}</Text>
+          <FlatList
+            data={lists}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <Pressable
+                style={[pickerStyles.listItem, item.id === selectedListId && pickerStyles.listItemSelected]}
+                onPress={() => onSelect(item.id)}
+                onLongPress={() => onRename(item.id, item.name)}
+              >
+                <View style={pickerStyles.listItemContent}>
+                  <Text style={[pickerStyles.listItemName, item.id === selectedListId && pickerStyles.listItemNameSelected]} numberOfLines={1}>
+                    {item.name}
+                  </Text>
+                  {item.isShared && (
+                    <Ionicons name="people-outline" size={14} color={pickerStyles.sharedIcon.color as string} />
+                  )}
+                </View>
+                {lists.length > 1 && (
+                  <Pressable onPress={() => onDelete(item.id, item.name)} hitSlop={8} style={pickerStyles.deleteButton}>
+                    <Ionicons name="trash-outline" size={16} color={pickerStyles.deleteIcon.color as string} />
+                  </Pressable>
+                )}
+              </Pressable>
+            )}
+            style={pickerStyles.list}
+          />
+          <Pressable style={pickerStyles.addButton} onPress={onAdd}>
+            <Ionicons name="add-circle-outline" size={20} color={pickerStyles.addButtonText.color as string} />
+            <Text style={pickerStyles.addButtonText}>{t('Lists.newList')}</Text>
+          </Pressable>
+        </Pressable>
+      </Pressable>
+    </Modal>
+  )
 }
 
 const styles = StyleSheet.create((theme) => ({
@@ -275,6 +455,104 @@ const styles = StyleSheet.create((theme) => ({
   },
   tutorialLink: {
     fontSize: 11,
+    color: theme.colors.tint,
+    fontWeight: '600',
+  },
+  headerTitleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  headerTitleText: {
+    color: theme.colors.textOnTint,
+    fontSize: theme.typography.fontSizeL,
+    fontWeight: 'bold',
+    maxWidth: 200,
+  },
+  headerRightRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  headerButton: {
+    padding: 4,
+  },
+}))
+
+const pickerStyles = StyleSheet.create((theme) => ({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
+  },
+  container: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.sizes.radiusLg,
+    padding: 16,
+    width: '100%',
+    maxWidth: 360,
+    maxHeight: '70%',
+  },
+  title: {
+    fontSize: theme.typography.fontSizeL,
+    fontWeight: 'bold',
+    color: theme.colors.text,
+    marginBottom: 12,
+  },
+  list: {
+    flexGrow: 0,
+  },
+  listItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: theme.sizes.radiusSm,
+    marginBottom: 4,
+  },
+  listItemSelected: {
+    backgroundColor: theme.colors.tint + '20',
+  },
+  listItemContent: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  listItemName: {
+    fontSize: theme.typography.fontSizeM,
+    color: theme.colors.text,
+    flexShrink: 1,
+  },
+  listItemNameSelected: {
+    fontWeight: 'bold',
+    color: theme.colors.tint,
+  },
+  sharedIcon: {
+    color: theme.colors.tint,
+  },
+  deleteButton: {
+    padding: 4,
+    marginLeft: 8,
+  },
+  deleteIcon: {
+    color: theme.colors.textSecondary,
+  },
+  addButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    marginTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.surfaceBorder,
+  },
+  addButtonText: {
+    fontSize: theme.typography.fontSizeM,
     color: theme.colors.tint,
     fontWeight: '600',
   },

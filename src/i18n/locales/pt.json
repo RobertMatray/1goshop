@@ -132,5 +132,15 @@
     "importUpdated": "Atualizados: {{count}}",
     "importEmpty": "Nenhum texto encontrado na área de transferência",
     "importNoNew": "Todos os itens da área de transferência já estão na lista"
+  },
+  "Lists": {
+    "defaultListName": "Lista de compras",
+    "newList": "Nova lista",
+    "renameList": "Renomear lista",
+    "deleteList": "Apagar lista",
+    "deleteListConfirm": "Tem certeza que deseja apagar \"{{name}}\"?",
+    "listNamePlaceholder": "Nome da lista",
+    "shared": "Partilhada",
+    "lastList": "Não é possível apagar a última lista"
   }
 }

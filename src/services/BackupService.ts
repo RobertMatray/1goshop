@@ -1,22 +1,45 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { File, Paths } from 'expo-file-system'
 import * as Sharing from 'expo-sharing'
+import type { ListsMetaData } from '../types/shopping'
 
-const BACKUP_KEYS = ['@shopping_list', '@active_shopping', '@shopping_history', '@app_theme', '@accent_color', '@saved_colors'] as const
+const SETTINGS_KEYS = ['@app_theme', '@accent_color', '@saved_colors'] as const
 
 export interface BackupData {
-  version: 1
+  version: 1 | 2
   timestamp: string
   data: Record<string, string | null>
 }
 
+async function getBackupKeys(): Promise<string[]> {
+  const keys: string[] = [...SETTINGS_KEYS]
+
+  const metaRaw = await AsyncStorage.getItem('@lists_meta')
+  if (metaRaw) {
+    keys.push('@lists_meta')
+    try {
+      const meta = JSON.parse(metaRaw) as ListsMetaData
+      for (const list of meta.lists) {
+        keys.push(`@list_${list.id}_items`)
+        keys.push(`@list_${list.id}_session`)
+        keys.push(`@list_${list.id}_history`)
+      }
+    } catch {
+      console.warn('[BackupService] Failed to parse lists meta for backup')
+    }
+  }
+
+  return keys
+}
+
 export async function createAndShareBackup(): Promise<void> {
+  const backupKeys = await getBackupKeys()
   const data: Record<string, string | null> = {}
-  for (const key of BACKUP_KEYS) {
+  for (const key of backupKeys) {
     data[key] = await AsyncStorage.getItem(key)
   }
   const backup: BackupData = {
-    version: 1,
+    version: 2,
     timestamp: new Date().toISOString(),
     data,
   }
@@ -59,7 +82,7 @@ const MAX_BACKUP_SIZE = 10 * 1024 * 1024 // 10MB
 function isValidBackupData(data: unknown): data is BackupData {
   if (typeof data !== 'object' || data === null) return false
   const obj = data as Record<string, unknown>
-  if (obj.version !== 1) return false
+  if (obj.version !== 1 && obj.version !== 2) return false
   if (typeof obj.data !== 'object' || obj.data === null) return false
   return true
 }
@@ -75,13 +98,11 @@ export async function restoreBackup(jsonString: string): Promise<boolean> {
       console.warn('[BackupService] Invalid backup structure')
       return false
     }
-    // Only restore known keys, validate JSON values for keys that store JSON
-    const JSON_KEYS = new Set(['@shopping_list', '@active_shopping', '@shopping_history', '@saved_colors'])
-    const entries = Object.entries(backup.data).filter(
-      ([key]) => (BACKUP_KEYS as readonly string[]).includes(key),
-    )
+
+    // Validate JSON values for keys that store JSON
+    const entries = Object.entries(backup.data)
     for (const [key, value] of entries) {
-      if (value !== null && JSON_KEYS.has(key)) {
+      if (value !== null && key.startsWith('@')) {
         try {
           JSON.parse(value)
         } catch {
@@ -90,6 +111,7 @@ export async function restoreBackup(jsonString: string): Promise<boolean> {
         }
       }
     }
+
     const results = await Promise.allSettled(
       entries.map(([key, value]) =>
         value !== null ? AsyncStorage.setItem(key, value) : AsyncStorage.removeItem(key),
@@ -100,6 +122,8 @@ export async function restoreBackup(jsonString: string): Promise<boolean> {
       console.warn('[BackupService] Partial restore failure:', failures)
       return false
     }
+
+    // If restoring a v1 backup (old single-list format), migration will handle conversion on next load
     return true
   } catch (error) {
     console.warn('[BackupService] Failed to restore backup:', error)

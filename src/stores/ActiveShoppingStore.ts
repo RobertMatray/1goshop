@@ -4,17 +4,16 @@ import { randomUUID } from 'expo-crypto'
 import type { ShoppingItem, ActiveShoppingItem, ShoppingSession } from '../types/shopping'
 import { debouncedPersist } from '../services/debouncedPersist'
 
-const SESSION_KEY = '@active_shopping'
-const HISTORY_KEY = '@shopping_history'
-
 export interface ActiveShoppingStoreState {
   session: ShoppingSession | null
   showBought: boolean
   isLoaded: boolean
   isFinishing: boolean
   history: ShoppingSession[]
+  currentListId: string | null
 
   load: () => Promise<void>
+  switchToList: (listId: string) => Promise<void>
   loadHistory: () => Promise<void>
   startShopping: (items: ShoppingItem[]) => void
   toggleBought: (id: string) => void
@@ -30,40 +29,50 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
   isLoaded: false,
   isFinishing: false,
   history: [],
+  currentListId: null,
 
   load: async () => {
+    set({ isLoaded: true })
+  },
+
+  switchToList: async (listId: string) => {
+    const sessionKey = `@list_${listId}_session`
     try {
-      const saved = await AsyncStorage.getItem(SESSION_KEY)
+      const saved = await AsyncStorage.getItem(sessionKey)
       if (saved) {
         const parsed: unknown = JSON.parse(saved)
         if (typeof parsed !== 'object' || parsed === null || !('id' in parsed)) {
-          console.warn('[ActiveShoppingStore] Invalid session data, clearing')
-          await AsyncStorage.removeItem(SESSION_KEY)
-          set({ isLoaded: true })
+          console.warn('[ActiveShoppingStore] Invalid session data for list', listId)
+          set({ session: null, currentListId: listId, isLoaded: true })
           return
         }
-        set({ session: parsed as ShoppingSession, isLoaded: true })
+        set({ session: parsed as ShoppingSession, currentListId: listId, isLoaded: true })
       } else {
-        set({ isLoaded: true })
+        set({ session: null, currentListId: listId, isLoaded: true })
       }
     } catch (error) {
-      console.warn('[ActiveShoppingStore] Failed to load session:', error)
-      set({ isLoaded: true })
+      console.warn('[ActiveShoppingStore] Failed to load session for list:', listId, error)
+      set({ session: null, currentListId: listId, isLoaded: true })
     }
   },
 
   loadHistory: async () => {
+    const { currentListId } = get()
+    if (!currentListId) return
+    const historyKey = `@list_${currentListId}_history`
     try {
-      const historyRaw = await AsyncStorage.getItem(HISTORY_KEY)
+      const historyRaw = await AsyncStorage.getItem(historyKey)
       if (historyRaw) {
         const parsed: unknown = JSON.parse(historyRaw)
         if (!Array.isArray(parsed)) {
           console.warn('[ActiveShoppingStore] Invalid history data, clearing')
-          await AsyncStorage.removeItem(HISTORY_KEY)
+          await AsyncStorage.removeItem(historyKey)
           return
         }
         const history = parsed as ShoppingSession[]
         set({ history: [...history].sort((a, b) => (b.finishedAt ?? '').localeCompare(a.finishedAt ?? '')) })
+      } else {
+        set({ history: [] })
       }
     } catch (error) {
       console.warn('[ActiveShoppingStore] Failed to load history:', error)
@@ -92,7 +101,7 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
     }
 
     set({ session, showBought: true })
-    persistSession(session)
+    persistSession(session, get().currentListId)
   },
 
   toggleBought: (id: string) => {
@@ -106,7 +115,7 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
     )
     const updatedSession = { ...session, items: updatedItems }
     set({ session: updatedSession })
-    persistSession(updatedSession)
+    persistSession(updatedSession, get().currentListId)
   },
 
   toggleShowBought: () => {
@@ -114,10 +123,13 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
   },
 
   finishShopping: async () => {
-    const { session, isFinishing } = get()
-    if (!session || isFinishing) return
+    const { session, isFinishing, currentListId } = get()
+    if (!session || isFinishing || !currentListId) return
 
     set({ isFinishing: true })
+
+    const historyKey = `@list_${currentListId}_history`
+    const sessionKey = `@list_${currentListId}_session`
 
     try {
       const finishedSession: ShoppingSession = {
@@ -125,13 +137,13 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
         finishedAt: new Date().toISOString(),
       }
 
-      const historyRaw = await AsyncStorage.getItem(HISTORY_KEY)
+      const historyRaw = await AsyncStorage.getItem(historyKey)
       const history = historyRaw ? (JSON.parse(historyRaw) as ShoppingSession[]) : []
       history.push(finishedSession)
-      await AsyncStorage.setItem(HISTORY_KEY, JSON.stringify(history))
+      await AsyncStorage.setItem(historyKey, JSON.stringify(history))
 
       set({ session: null, showBought: true })
-      await AsyncStorage.removeItem(SESSION_KEY)
+      await AsyncStorage.removeItem(sessionKey)
     } catch (error) {
       console.warn('[ActiveShoppingStore] Failed to finish shopping:', error)
     } finally {
@@ -140,17 +152,24 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
   },
 
   removeSession: async (id: string) => {
+    const { currentListId } = get()
+    if (!currentListId) return
+    const historyKey = `@list_${currentListId}_history`
     const updated = get().history.filter((s) => s.id !== id)
     set({ history: updated })
-    await AsyncStorage.setItem(HISTORY_KEY, JSON.stringify(updated)).catch((e) => console.warn('[ActiveShoppingStore] Failed to persist history:', e))
+    await AsyncStorage.setItem(historyKey, JSON.stringify(updated)).catch((e) => console.warn('[ActiveShoppingStore] Failed to persist history:', e))
   },
 
   clearHistory: async () => {
+    const { currentListId } = get()
+    if (!currentListId) return
+    const historyKey = `@list_${currentListId}_history`
     set({ history: [] })
-    await AsyncStorage.removeItem(HISTORY_KEY).catch((e) => console.warn('[ActiveShoppingStore] Failed to clear history:', e))
+    await AsyncStorage.removeItem(historyKey).catch((e) => console.warn('[ActiveShoppingStore] Failed to clear history:', e))
   },
 }))
 
-function persistSession(session: ShoppingSession): void {
-  debouncedPersist(SESSION_KEY, session)
+function persistSession(session: ShoppingSession, listId: string | null): void {
+  if (!listId) return
+  debouncedPersist(`@list_${listId}_session`, session)
 }

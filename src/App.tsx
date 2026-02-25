@@ -12,6 +12,8 @@ import { useShoppingListStore } from './stores/ShoppingListStore'
 import { useActiveShoppingStore } from './stores/ActiveShoppingStore'
 import { useThemeStore } from './stores/ThemeStore'
 import { useAccentColorStore } from './stores/AccentColorStore'
+import { useListsMetaStore } from './stores/ListsMetaStore'
+import { migrateToMultiList } from './services/MigrationService'
 
 export function App(): React.ReactElement {
   const [isReady, setIsReady] = useState(false)
@@ -44,8 +46,15 @@ export function App(): React.ReactElement {
   )
 
   async function initialize(): Promise<void> {
+    // i18n must init first so migration can use translated default list name
+    await initI18n().catch((e) => console.warn('[App] i18n init failed:', e))
+
+    // Migration must run before stores load
+    await migrateToMultiList()
+
+    // Load lists meta first, then switch to selected list
     const results = await Promise.allSettled([
-      initI18n(),
+      useListsMetaStore.getState().load(),
       useShoppingListStore.getState().load(),
       useActiveShoppingStore.getState().load(),
       useThemeStore.getState().load(),
@@ -55,6 +64,16 @@ export function App(): React.ReactElement {
     if (failures.length > 0) {
       console.warn('[App] Initialization partially failed:', failures)
     }
+
+    // Switch stores to the selected list
+    const { selectedListId } = useListsMetaStore.getState()
+    if (selectedListId) {
+      await Promise.allSettled([
+        useShoppingListStore.getState().switchToList(selectedListId),
+        useActiveShoppingStore.getState().switchToList(selectedListId),
+      ])
+    }
+
     setIsReady(true)
   }
 }

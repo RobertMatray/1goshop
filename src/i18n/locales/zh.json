@@ -130,5 +130,15 @@
     "importUpdated": "已更新: {{count}}",
     "importEmpty": "剪贴板中没有文本",
     "importNoNew": "剪贴板中的所有项目已在列表中"
+  },
+  "Lists": {
+    "defaultListName": "购物清单",
+    "newList": "新建清单",
+    "renameList": "重命名清单",
+    "deleteList": "删除清单",
+    "deleteListConfirm": "确定要删除\"{{name}}\"吗？",
+    "listNamePlaceholder": "清单名称",
+    "shared": "共享",
+    "lastList": "无法删除最后一个清单"
   }
 }

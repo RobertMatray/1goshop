@@ -132,5 +132,15 @@
     "importUpdated": "Frissítve: {{count}}",
     "importEmpty": "Nem található szöveg a vágólapon",
     "importNoNew": "A vágólap összes tétele már szerepel a listában"
+  },
+  "Lists": {
+    "defaultListName": "Bevásárlólista",
+    "newList": "Új lista",
+    "renameList": "Lista átnevezése",
+    "deleteList": "Lista törlése",
+    "deleteListConfirm": "Biztosan törölni szeretnéd a(z) \"{{name}}\" listát?",
+    "listNamePlaceholder": "Lista neve",
+    "shared": "Megosztott",
+    "lastList": "Az utolsó listát nem lehet törölni"
   }
 }

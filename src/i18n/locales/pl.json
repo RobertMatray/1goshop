@@ -134,5 +134,15 @@
     "importUpdated": "Zaktualizowanych: {{count}}",
     "importEmpty": "Nie znaleziono tekstu w schowku",
     "importNoNew": "Wszystkie produkty ze schowka już są na liście"
+  },
+  "Lists": {
+    "defaultListName": "Lista zakupów",
+    "newList": "Nowa lista",
+    "renameList": "Zmień nazwę listy",
+    "deleteList": "Usuń listę",
+    "deleteListConfirm": "Czy na pewno chcesz usunąć \"{{name}}\"?",
+    "listNamePlaceholder": "Nazwa listy",
+    "shared": "Udostępniona",
+    "lastList": "Nie można usunąć ostatniej listy"
   }
 }

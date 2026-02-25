@@ -132,5 +132,15 @@
     "importUpdated": "Aggiornati: {{count}}",
     "importEmpty": "Nessun testo trovato negli appunti",
     "importNoNew": "Tutti gli articoli dagli appunti sono già nella lista"
+  },
+  "Lists": {
+    "defaultListName": "Lista della spesa",
+    "newList": "Nuova lista",
+    "renameList": "Rinomina lista",
+    "deleteList": "Elimina lista",
+    "deleteListConfirm": "Sei sicuro di voler eliminare \"{{name}}\"?",
+    "listNamePlaceholder": "Nome della lista",
+    "shared": "Condivisa",
+    "lastList": "Non è possibile eliminare l'ultima lista"
   }
 }

@@ -132,5 +132,15 @@
     "importUpdated": "Actualizados: {{count}}",
     "importEmpty": "No se encontró texto en el portapapeles",
     "importNoNew": "Todos los artículos del portapapeles ya están en la lista"
+  },
+  "Lists": {
+    "defaultListName": "Lista de compras",
+    "newList": "Nueva lista",
+    "renameList": "Renombrar lista",
+    "deleteList": "Eliminar lista",
+    "deleteListConfirm": "¿Seguro que quieres eliminar \"{{name}}\"?",
+    "listNamePlaceholder": "Nombre de la lista",
+    "shared": "Compartida",
+    "lastList": "No se puede eliminar la última lista"
   }
 }
