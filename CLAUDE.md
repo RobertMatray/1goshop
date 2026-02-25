@@ -363,6 +363,7 @@ curl -s -X POST https://api.github.com/user/repos \
 |-----------|-----|----------|------|--------|--------|
 | 0 (baseline) | v1.2.0-pre-iterative-review | - | - | - | Starting point |
 | 1 | commit 29d6c3a | 3→0 | 3→0 | 5→0 | Fixed: ErrorBoundary, debounced persist, backup reload, try/finally, item name limit, backup validation |
+| 2 | commit 445e8e2 | 0 | 2→0 | 7→0 | Fixed: hardcoded colors (settings icon, ColorPicker preview), backup JSON validation |
 
 ### Build History
 | Build | Date | Changes |
