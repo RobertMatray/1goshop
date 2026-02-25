@@ -48,7 +48,8 @@ export async function restoreFromFile(): Promise<boolean> {
   try {
     const content = await pickedFile.text()
     return restoreBackup(content)
-  } catch {
+  } catch (error) {
+    console.warn('[BackupService] Failed to read backup file:', error)
     return false
   }
 }
@@ -67,7 +68,8 @@ export function restoreBackup(jsonString: string): boolean {
       }
     }
     return true
-  } catch {
+  } catch (error) {
+    console.warn('[BackupService] Failed to restore backup:', error)
     return false
   }
 }

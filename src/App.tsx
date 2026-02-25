@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { ActivityIndicator, View } from 'react-native'
+import { ActivityIndicator, StyleSheet, View } from 'react-native'
 import { NavigationContainer } from '@react-navigation/native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
@@ -21,7 +21,7 @@ export function App(): React.ReactElement {
 
   if (!isReady) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <View style={appStyles.loadingContainer}>
         <ActivityIndicator size="large" color="#4CAF50" />
       </View>
     )
@@ -29,7 +29,7 @@ export function App(): React.ReactElement {
 
   return (
     <SafeAreaProvider>
-      <GestureHandlerRootView style={{ flex: 1 }}>
+      <GestureHandlerRootView style={appStyles.flex}>
         <I18nextProvider i18n={i18n}>
           <NavigationContainer>
             <AppNavigator />
@@ -49,9 +49,20 @@ export function App(): React.ReactElement {
         useThemeStore.getState().load(),
         useAccentColorStore.getState().load(),
       ])
-    } catch {
-      // Continue even if initialization partially fails
+    } catch (error) {
+      console.warn('[App] Initialization partially failed:', error)
     }
     setIsReady(true)
   }
 }
+
+const appStyles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  flex: {
+    flex: 1,
+  },
+})

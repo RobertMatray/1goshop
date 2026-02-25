@@ -1,5 +1,5 @@
-import React, { useCallback } from 'react'
-import { View, Text, Alert, Pressable, LayoutChangeEvent } from 'react-native'
+import React from 'react'
+import { View, Text, Alert, Pressable } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import Animated, {
   useSharedValue,
@@ -35,9 +35,9 @@ export function ShoppingListItem({ item, drag, isActive }: Props): React.ReactEl
   const removeItem = useShoppingListStore((s) => s.removeItem)
   const toggleChecked = useShoppingListStore((s) => s.toggleChecked)
 
-  const onLayout = useCallback((event: LayoutChangeEvent) => {
+  function onLayout(event: { nativeEvent: { layout: { width: number } } }): void {
     itemWidth.value = event.nativeEvent.layout.width
-  }, [itemWidth])
+  }
 
   const panGesture = Gesture.Pan()
     .activeOffsetX([-8, 8])
@@ -290,7 +290,7 @@ const styles = StyleSheet.create((theme) => ({
     justifyContent: 'flex-start',
   },
   bgMinus: {
-    backgroundColor: '#FF9800',
+    backgroundColor: theme.colors.swipeMinus,
     justifyContent: 'flex-end',
   },
   bgDelete: {
@@ -298,7 +298,7 @@ const styles = StyleSheet.create((theme) => ({
     justifyContent: 'flex-end',
   },
   bgEdit: {
-    backgroundColor: '#2196F3',
+    backgroundColor: theme.colors.swipeEdit,
     justifyContent: 'flex-start',
   },
   actionText: {

@@ -119,21 +119,21 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
 
     // Clear active session
     set({ session: null, showBought: true })
-    await AsyncStorage.removeItem(SESSION_KEY).catch(() => {})
+    await AsyncStorage.removeItem(SESSION_KEY).catch((e) => console.warn('[ActiveShoppingStore] Failed to clear session:', e))
   },
 
   removeSession: async (id: string) => {
     const updated = get().history.filter((s) => s.id !== id)
     set({ history: updated })
-    await AsyncStorage.setItem(HISTORY_KEY, JSON.stringify(updated)).catch(() => {})
+    await AsyncStorage.setItem(HISTORY_KEY, JSON.stringify(updated)).catch((e) => console.warn('[ActiveShoppingStore] Failed to persist history:', e))
   },
 
   clearHistory: async () => {
     set({ history: [] })
-    await AsyncStorage.removeItem(HISTORY_KEY).catch(() => {})
+    await AsyncStorage.removeItem(HISTORY_KEY).catch((e) => console.warn('[ActiveShoppingStore] Failed to clear history:', e))
   },
 }))
 
 function persistSession(session: ShoppingSession): void {
-  AsyncStorage.setItem(SESSION_KEY, JSON.stringify(session)).catch(() => {})
+  AsyncStorage.setItem(SESSION_KEY, JSON.stringify(session)).catch((e) => console.warn('[ActiveShoppingStore] Failed to persist session:', e))
 }
