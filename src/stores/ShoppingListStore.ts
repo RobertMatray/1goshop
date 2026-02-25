@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { randomUUID } from 'expo-crypto'
 import type { ShoppingItem } from '../types/shopping'
+import { debouncedPersist } from '../services/debouncedPersist'
 
 const STORAGE_KEY = '@shopping_list'
 
@@ -146,5 +147,5 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
 }))
 
 function persist(items: ShoppingItem[]): void {
-  AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(items)).catch((e) => console.warn('[ShoppingListStore] Failed to persist items:', e))
+  debouncedPersist(STORAGE_KEY, items)
 }

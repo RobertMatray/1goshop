@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { randomUUID } from 'expo-crypto'
 import { deriveThemeColors } from '../services/ColorUtils'
 import { defaultLightColors, defaultDarkColors } from '../unistyles'
+import { debouncedPersist } from '../services/debouncedPersist'
 
 const ACCENT_COLOR_KEY = '@accent_color'
 const SAVED_COLORS_KEY = '@saved_colors'
@@ -95,7 +96,7 @@ export const useAccentColorStore = create<AccentColorStoreState>((set, get) => (
 }))
 
 function persistSavedColors(colors: SavedColor[]): void {
-  void AsyncStorage.setItem(SAVED_COLORS_KEY, JSON.stringify(colors))
+  debouncedPersist(SAVED_COLORS_KEY, colors)
 }
 
 function applyAccentColor(hex: string): void {

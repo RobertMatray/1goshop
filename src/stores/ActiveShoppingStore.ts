@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { randomUUID } from 'expo-crypto'
 import type { ShoppingItem, ActiveShoppingItem, ShoppingSession } from '../types/shopping'
+import { debouncedPersist } from '../services/debouncedPersist'
 
 const SESSION_KEY = '@active_shopping'
 const HISTORY_KEY = '@shopping_history'
@@ -106,24 +107,24 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
 
     set({ isFinishing: true })
 
-    const finishedSession: ShoppingSession = {
-      ...session,
-      finishedAt: new Date().toISOString(),
-    }
-
-    // Save to history
     try {
+      const finishedSession: ShoppingSession = {
+        ...session,
+        finishedAt: new Date().toISOString(),
+      }
+
       const historyRaw = await AsyncStorage.getItem(HISTORY_KEY)
       const history = historyRaw ? (JSON.parse(historyRaw) as ShoppingSession[]) : []
       history.push(finishedSession)
       await AsyncStorage.setItem(HISTORY_KEY, JSON.stringify(history))
-    } catch (error) {
-      console.warn('[ActiveShoppingStore] Failed to save history:', error)
-    }
 
-    // Clear active session
-    set({ session: null, showBought: true, isFinishing: false })
-    await AsyncStorage.removeItem(SESSION_KEY).catch((e) => console.warn('[ActiveShoppingStore] Failed to clear session:', e))
+      set({ session: null, showBought: true })
+      await AsyncStorage.removeItem(SESSION_KEY)
+    } catch (error) {
+      console.warn('[ActiveShoppingStore] Failed to finish shopping:', error)
+    } finally {
+      set({ isFinishing: false })
+    }
   },
 
   removeSession: async (id: string) => {
@@ -139,5 +140,5 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
 }))
 
 function persistSession(session: ShoppingSession): void {
-  AsyncStorage.setItem(SESSION_KEY, JSON.stringify(session)).catch((e) => console.warn('[ActiveShoppingStore] Failed to persist session:', e))
+  debouncedPersist(SESSION_KEY, session)
 }

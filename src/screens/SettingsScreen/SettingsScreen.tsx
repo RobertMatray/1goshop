@@ -7,6 +7,8 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import type { RootStackParamList } from '../../navigation/AppNavigator'
 import { useThemeStore, type ThemeMode } from '../../stores/ThemeStore'
 import { useAccentColorStore } from '../../stores/AccentColorStore'
+import { useShoppingListStore } from '../../stores/ShoppingListStore'
+import { useActiveShoppingStore } from '../../stores/ActiveShoppingStore'
 import { createAndShareBackup, restoreFromFile } from '../../services/BackupService'
 import { defaultLightColors } from '../../unistyles'
 import type { SupportedLanguage } from '../../i18n/i18n'
@@ -145,6 +147,12 @@ export function SettingsScreen(): React.ReactElement {
     try {
       const success = await restoreFromFile()
       if (success) {
+        await Promise.allSettled([
+          useShoppingListStore.getState().load(),
+          useActiveShoppingStore.getState().load(),
+          useThemeStore.getState().load(),
+          useAccentColorStore.getState().load(),
+        ])
         Alert.alert(t('Backup.importDoneTitle'), t('Backup.importDoneMessage'))
       } else {
         Alert.alert(t('Backup.error'), t('Backup.importError'))

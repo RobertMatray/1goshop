@@ -7,6 +7,7 @@ import { I18nextProvider } from 'react-i18next'
 import { SystemBars } from 'react-native-edge-to-edge'
 import i18n, { initI18n } from './i18n/i18n'
 import { AppNavigator } from './navigation/AppNavigator'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import { useShoppingListStore } from './stores/ShoppingListStore'
 import { useActiveShoppingStore } from './stores/ActiveShoppingStore'
 import { useThemeStore } from './stores/ThemeStore'
@@ -29,14 +30,16 @@ export function App(): React.ReactElement {
 
   return (
     <SafeAreaProvider>
-      <GestureHandlerRootView style={appStyles.flex}>
-        <I18nextProvider i18n={i18n}>
-          <NavigationContainer>
-            <AppNavigator />
-          </NavigationContainer>
-        </I18nextProvider>
-        <SystemBars style="auto" />
-      </GestureHandlerRootView>
+      <ErrorBoundary>
+        <GestureHandlerRootView style={appStyles.flex}>
+          <I18nextProvider i18n={i18n}>
+            <NavigationContainer>
+              <AppNavigator />
+            </NavigationContainer>
+          </I18nextProvider>
+          <SystemBars style="auto" />
+        </GestureHandlerRootView>
+      </ErrorBoundary>
     </SafeAreaProvider>
   )
 

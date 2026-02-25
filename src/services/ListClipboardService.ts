@@ -23,6 +23,7 @@ export function removeDiacritics(text: string): string {
  */
 const MAX_PARSE_LINES = 1000
 const MAX_LINE_LENGTH = 500
+const MAX_ITEM_NAME_LENGTH = 100
 
 export function parseListText(text: string): string[] {
   // Split by any line ending, limit to prevent clipboard bombs
@@ -62,6 +63,11 @@ export function parseListText(text: string): string[] {
 
     line = line.trim()
     if (!line) continue
+
+    // Truncate long item names
+    if (line.length > MAX_ITEM_NAME_LENGTH) {
+      line = line.slice(0, MAX_ITEM_NAME_LENGTH)
+    }
 
     // Deduplicate within parsed text (case-insensitive, without diacritics)
     const key = removeDiacritics(line).toLowerCase()

@@ -54,10 +54,25 @@ export async function restoreFromFile(): Promise<boolean> {
   }
 }
 
+const MAX_BACKUP_SIZE = 10 * 1024 * 1024 // 10MB
+
+function isValidBackupData(data: unknown): data is BackupData {
+  if (typeof data !== 'object' || data === null) return false
+  const obj = data as Record<string, unknown>
+  if (obj.version !== 1) return false
+  if (typeof obj.data !== 'object' || obj.data === null) return false
+  return true
+}
+
 export async function restoreBackup(jsonString: string): Promise<boolean> {
   try {
-    const backup = JSON.parse(jsonString) as BackupData
-    if (!backup.version || !backup.data) {
+    if (jsonString.length > MAX_BACKUP_SIZE) {
+      console.warn('[BackupService] Backup too large:', jsonString.length)
+      return false
+    }
+    const backup: unknown = JSON.parse(jsonString)
+    if (!isValidBackupData(backup)) {
+      console.warn('[BackupService] Invalid backup structure')
       return false
     }
     const results = await Promise.allSettled(
