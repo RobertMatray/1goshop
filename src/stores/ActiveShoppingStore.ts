@@ -35,8 +35,14 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
     try {
       const saved = await AsyncStorage.getItem(SESSION_KEY)
       if (saved) {
-        const session = JSON.parse(saved) as ShoppingSession
-        set({ session, isLoaded: true })
+        const parsed: unknown = JSON.parse(saved)
+        if (typeof parsed !== 'object' || parsed === null || !('id' in parsed)) {
+          console.warn('[ActiveShoppingStore] Invalid session data, clearing')
+          await AsyncStorage.removeItem(SESSION_KEY)
+          set({ isLoaded: true })
+          return
+        }
+        set({ session: parsed as ShoppingSession, isLoaded: true })
       } else {
         set({ isLoaded: true })
       }
@@ -50,7 +56,13 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
     try {
       const historyRaw = await AsyncStorage.getItem(HISTORY_KEY)
       if (historyRaw) {
-        const history = JSON.parse(historyRaw) as ShoppingSession[]
+        const parsed: unknown = JSON.parse(historyRaw)
+        if (!Array.isArray(parsed)) {
+          console.warn('[ActiveShoppingStore] Invalid history data, clearing')
+          await AsyncStorage.removeItem(HISTORY_KEY)
+          return
+        }
+        const history = parsed as ShoppingSession[]
         set({ history: [...history].sort((a, b) => (b.finishedAt ?? '').localeCompare(a.finishedAt ?? '')) })
       }
     } catch (error) {

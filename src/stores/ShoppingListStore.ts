@@ -32,8 +32,14 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
     try {
       const saved = await AsyncStorage.getItem(STORAGE_KEY)
       if (saved) {
-        const parsed = JSON.parse(saved) as ShoppingItem[]
-        const items = parsed
+        const parsed: unknown = JSON.parse(saved)
+        if (!Array.isArray(parsed)) {
+          console.warn('[ShoppingListStore] Invalid data structure, clearing')
+          await AsyncStorage.removeItem(STORAGE_KEY)
+          set({ isLoaded: true })
+          return
+        }
+        const items = (parsed as ShoppingItem[])
           .sort((a, b) => a.order - b.order)
           .map((item, i) => ({ ...item, order: i }))
         set({ items, isLoaded: true })
