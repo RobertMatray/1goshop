@@ -146,5 +146,5 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
 }))
 
 function persist(items: ShoppingItem[]): void {
-  AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(items)).catch(() => {})
+  AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(items)).catch((e) => console.warn('[ShoppingListStore] Failed to persist items:', e))
 }

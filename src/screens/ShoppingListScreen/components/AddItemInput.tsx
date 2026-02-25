@@ -15,6 +15,7 @@ export function AddItemInput({ filterText, onFilterTextChange, onClearFilter }: 
   const inputRef = useRef<TextInput>(null)
   const addItem = useShoppingListStore((s) => s.addItem)
   const { t } = useTranslation()
+  const hasText = filterText.trim().length > 0
 
   return (
     <View style={styles.container}>
@@ -36,9 +37,9 @@ export function AddItemInput({ filterText, onFilterTextChange, onClearFilter }: 
         )}
       </View>
       <Pressable
-        style={[styles.button, !filterText.trim() && styles.buttonDisabled]}
+        style={[styles.button, !hasText && styles.buttonDisabled]}
         onPress={handleSubmit}
-        disabled={!filterText.trim()}
+        disabled={!hasText}
       >
         <Text style={styles.buttonText}>+</Text>
       </Pressable>
@@ -46,7 +47,7 @@ export function AddItemInput({ filterText, onFilterTextChange, onClearFilter }: 
   )
 
   function handleSubmit(): void {
-    if (!filterText.trim()) return
+    if (!hasText) return
     addItem(filterText)
     onClearFilter()
     inputRef.current?.focus()
