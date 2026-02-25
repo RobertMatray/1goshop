@@ -362,6 +362,7 @@ curl -s -X POST https://api.github.com/user/repos \
 | Iteration | Tag | CRITICAL | HIGH | MEDIUM | Status |
 |-----------|-----|----------|------|--------|--------|
 | 0 (baseline) | v1.2.0-pre-iterative-review | - | - | - | Starting point |
+| 1 | commit 29d6c3a | 3→0 | 3→0 | 5→0 | Fixed: ErrorBoundary, debounced persist, backup reload, try/finally, item name limit, backup validation |
 
 ### Build History
 | Build | Date | Changes |
