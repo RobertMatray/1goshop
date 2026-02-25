@@ -291,7 +291,7 @@ curl -s -X POST https://api.github.com/user/repos \
   - GitHub: https://github.com/robertmatray/superapp-ai-poc
   - Same Apple Developer account, same EAS credentials pattern
 
-## Current Status (v1.2.0 - February 24, 2026)
+## Current Status (v1.2.1 - February 25, 2026)
 
 ### Implemented (all working on TestFlight)
 - Shopping list CRUD (add, remove, edit, toggle checked, quantity +1/-1, reorder)
@@ -330,7 +330,7 @@ curl -s -X POST https://api.github.com/user/repos \
 **Provisioning Profile**: f649b342-4c71-4d84-98c3-cc22a77085ba (ACTIVE, expires 2026-12-12)
 **Distribution Certificate**: 28T88DA5Q5 (shared with moja4ka-zdravie)
 
-**Latest successful iOS build**: Build #70 (v1.2.0)
+**Latest successful iOS build**: Build #74 (v1.2.1) - post-iterative code review fixes
 - EAS Build ID: check EAS dashboard
 
 **Latest successful Android build**: Build (v1.2.0, versionCode 6)
@@ -366,6 +366,10 @@ curl -s -X POST https://api.github.com/user/repos \
 | 2 | commit 445e8e2 | 0 | 2→0 | 7→0 | Fixed: hardcoded colors (settings icon, ColorPicker preview), backup JSON validation |
 | 3 | commit 3bf1561 | 0 | 0 | 3→0 | Fixed: JSON parse validation in stores, flushPersist utility. **GOAL MET: 0 CRITICAL, 0 HIGH** |
 
+**Final independent review (v6)**: 0 CRITICAL, 0 HIGH, 3 MEDIUM, 5 LOW. Score: **9.2/10 (A - Production Ready)**
+- Report: `code-reviews/2026-02-25-code-review-v6-post-iterative-independent.docx`
+- Generator: `scripts/generate-code-review-v6.mjs`
+
 ### Build History
 | Build | Date | Changes |
 |-------|------|---------|
@@ -396,6 +400,8 @@ curl -s -X POST https://api.github.com/user/repos \
 | #68 | Feb 22 | v1.2.0 - iOS TestFlight (5 new languages, auto-check new items) |
 | #69 | Feb 24 | Code review cleanup (remove unused deps, fix anti-patterns) |
 | #70 | Feb 24 | UX improvements: uncheck bought items after shopping, decrement-to-delete, long press to edit |
+| #71-73 | Feb 25 | Code review v4/v5 fixes, TutorialOverlay refactoring |
+| #74 | Feb 25 | v1.2.1 - Post-iterative code review fixes (ErrorBoundary, debouncedPersist, backup validation, hardcoded colors, JSON parse validation, flushPersist) |
 | Android | Feb 22 | v1.2.0 (versionCode 6) - Android AAB for Google Play |
 
 ### Scripts (for CI/CD automation)
@@ -466,8 +472,8 @@ Interactive animated tutorial showing all gestures with pulsing touch indicator:
 ### App Store (iOS)
 
 - **App Store Connect**: https://appstoreconnect.apple.com/apps/6759269751
-- **Status**: v1.1.0 on App Store, v1.2.0 on TestFlight (Build #68)
-- **Git tag**: `v1.2.0`
+- **Status**: v1.1.0 on App Store, v1.2.1 on TestFlight (Build #74)
+- **Git tag**: `v1.2.1`
 
 ### Not Yet Done
 - No splash screen customization
@@ -531,6 +537,82 @@ Interactive animated tutorial showing all gestures with pulsing touch indicator:
 - **KO** (Korean) - South Korea, high spending (~25M iOS)
 - **TR** (Turkish) - growing market (~20M iOS)
 - **NL** (Dutch) - Netherlands + Belgium, high purchasing power
+
+### Regression Testing Strategy (February 25, 2026)
+
+**Current state**: Zero automated tests (0% coverage). Only `npm run verify` (TypeScript typecheck + lint).
+
+**Recommended approach**: Maestro E2E testing (YAML-based, declaratívne, funguje na iOS simulátore aj Android emulátore).
+
+#### Why Maestro
+
+- YAML syntax, žiadny test kód - jednoduché na údržbu
+- Testuje reálne gestá (swipe, tap, long-press, scroll) - kritické pre 1GoShop
+- Funguje na iOS aj Android s rovnakou syntaxou
+- Open-source CLI zadarmo, voliteľný platený cloud
+
+#### Cenová analýza
+
+| Prístup | Mesačné náklady | Vhodnosť |
+|---------|-----------------|----------|
+| Maestro CLI lokálne | $0 | Spúšťať pred releaseom manuálne |
+| Maestro Cloud Free | $0 | $10 kreditov mesačne (~5-10 runov) |
+| GitHub Actions (Free plán) | $0-50 | Android zadarmo, iOS 10x multiplikátor |
+| Maestro Cloud platený | $125/mes | Plná automatizácia s paralelnými testami |
+| Self-hosted Mac Mini | ~$500 jednorazovo | Najlepší ROI dlhodobo |
+
+**GitHub Actions macOS runner**: 10x minute multiplier (2,000 free min = 200 macOS min). Jeden iOS regression run ~30 min → max ~6-7 runov mesačne na Free pláne.
+
+#### Odporúčaný implementačný plán
+
+**Fáza 1 - Maestro CLI lokálne ($0)**:
+- Napísať 10-15 YAML testov pre kritické flows
+- Spúšťať pred každým releaseom
+
+**Testy na napísanie (prioritizované)**:
+1. Add item → verify visible in list
+2. Toggle checked → verify visual state
+3. Swipe left (left half) → delete confirmation → confirm
+4. Swipe right (left half) → edit item name
+5. Swipe right (right half) → +1 quantity
+6. Swipe left (right half) → -1 quantity
+7. Start shopping → mark bought → finish shopping → verify history
+8. Backup export → verify file created
+9. Language switch → verify UI text changes
+10. Theme switch → verify visual change
+
+**Fáza 2 - CI/CD integrácia (ak user base rastie)**:
+- GitHub Actions pre Android (Linux runner, lacný)
+- Maestro Cloud Free pre iOS (do 10 runov mesačne)
+- Trigger: pred každým App Store/Google Play releaseom
+
+**Fáza 3 - Plná automatizácia (ak monetizácia)**:
+- Maestro Cloud platený ($125/mes) alebo self-hosted Mac Mini ($500 jednorazovo)
+- Trigger: každý PR + nightly build
+
+#### Technické poznámky
+
+- Maestro nepotrebuje modifikáciu kódu aplikácie
+- Vyžaduje development build (nie production) pre testovanie
+- EAS build profile `development` už existuje v eas.json
+- Maestro Studio (GUI) pomáha s tvorbou testov interaktívne
+- Testy sa ukladajú do `.maestro/` adresára
+
+#### Alternatívy (zvážené a zamietnuté)
+
+| Nástroj | Dôvod zamietnutia |
+|---------|-------------------|
+| Detox (Wix) | Zložitejší setup, vyžaduje natívne build hooky, nestabilný v CI |
+| Appium | Príliš ťažkopádny pre jednoduchú shopping list app |
+| Jest + RNTL (unit testy) | Netestujú gestá - hlavný risk area 1GoShop |
+| Percy/Chromatic (visual) | Len pre web, nie pre natívne mobile |
+
+#### Zdroje
+
+- Maestro: https://maestro.dev
+- Maestro docs: https://docs.maestro.dev
+- Maestro GitHub: https://github.com/mobile-dev-inc/Maestro
+- GitHub Actions pricing: https://docs.github.com/en/billing/reference/actions-runner-pricing
 
 ### Known Limitations
 - Apple API key has Developer access - cannot create App Store Connect apps via API (manual creation required)
