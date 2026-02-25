@@ -55,7 +55,7 @@ src/
         ShoppingListItem.tsx   # Swipeable item (pan, tap, drag handle)
         AddItemInput.tsx       # Text input + add button
         EmptyListPlaceholder.tsx
-        TutorialOverlay.tsx    # 9-step interactive tutorial with animations
+        TutorialOverlay/       # 9-step interactive tutorial (14 files, refactored from monolith)
     ActiveShoppingScreen/
       ActiveShoppingScreen.tsx # Active shopping mode (checked = bought)
       components/
@@ -340,6 +340,28 @@ curl -s -X POST https://api.github.com/user/repos \
 - **ascAppId**: `6759269751`
 - **TestFlight URL**: https://appstoreconnect.apple.com/apps/6759269751/testflight/ios
 - **App Store Connect login**: `matray@realise.sk` (Account Holder + Admin role)
+
+### Code Review Iterative Process (February 25, 2026)
+
+**Process**: Run code review → fix CRITICAL/HIGH/MEDIUM → repeat until 0 CRITICAL and 0 HIGH (max 5 iterations).
+
+**Baseline tag**: `v1.2.0-pre-iterative-review` (commit `e2ff339`)
+
+**Previous reviews completed**:
+- v1-v3: Initial reviews with incremental fixes
+- v4 (Build #72): 23 findings (4C/5H/7M/7L) - CRITICAL+HIGH+MEDIUM fixed in commit `a3f716a`
+- v5 (Build #73): 22 findings (5C/5H/5M/7L) - documented only, severity inflation noted
+
+**Severity calibration notes** (from v4→v5 comparison):
+- UUID collision (randomUUID) is LOW, not CRITICAL (probability 2^-122)
+- HTML sanitization in React Native is MEDIUM (RN escapes natively, only relevant for web port)
+- Follow-up findings on already-fixed code should be downgraded vs original finding
+- Shopping list app context: data loss = CRITICAL, theoretical attacks = LOW/MEDIUM
+
+**Iterative review log**:
+| Iteration | Tag | CRITICAL | HIGH | MEDIUM | Status |
+|-----------|-----|----------|------|--------|--------|
+| 0 (baseline) | v1.2.0-pre-iterative-review | - | - | - | Starting point |
 
 ### Build History
 | Build | Date | Changes |
