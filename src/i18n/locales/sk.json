@@ -144,5 +144,27 @@
     "listNamePlaceholder": "Názov zoznamu",
     "shared": "Zdieľaný",
     "lastList": "Nemôžeš zmazať posledný zoznam"
+  },
+  "Sharing": {
+    "title": "Zdieľanie zoznamu",
+    "shareDescription": "Zdieľajte tento zoznam s rodinou alebo priateľmi. Zmeny sa budú synchronizovať v reálnom čase.",
+    "shareButton": "Zdieľať zoznam",
+    "shareError": "Nepodarilo sa zdieľať zoznam",
+    "codeTitle": "Kód zdieľania",
+    "codeInstructions": "Zadajte tento kód na druhom telefóne v 1GoShop",
+    "codeExpires": "Kód vyprší o {{minutes}}:{{seconds}}",
+    "stopSharing": "Prestať zdieľať",
+    "unlinkTitle": "Odpojiť zoznam",
+    "unlinkConfirm": "Zoznam zostane u ostatných, ale ty ho tu stratíš.",
+    "alreadyShared": "Zoznam je zdieľaný",
+    "membersCount": "{{count}} pripojených zariadení",
+    "joinTitle": "Pripojiť sa k zoznamu",
+    "joinDescription": "Zadajte 6-znakový kód z druhého telefónu",
+    "joinPlaceholder": "Zadajte kód",
+    "joinButton": "Pripojiť sa",
+    "joinSuccess": "Pripojený k zoznamu \"{{name}}\"!",
+    "joinError": "Neplatný alebo expirovaný kód",
+    "joinSharedList": "Pripojiť sa k zdieľanému zoznamu",
+    "error": "Chyba"
   }
 }

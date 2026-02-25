@@ -142,5 +142,27 @@
     "listNamePlaceholder": "List name",
     "shared": "Shared",
     "lastList": "You cannot delete the last list"
+  },
+  "Sharing": {
+    "title": "Share List",
+    "shareDescription": "Share this list with family or friends. Changes will sync in real time.",
+    "shareButton": "Share List",
+    "shareError": "Failed to share list",
+    "codeTitle": "Sharing Code",
+    "codeInstructions": "Enter this code on another phone in 1GoShop",
+    "codeExpires": "Code expires in {{minutes}}:{{seconds}}",
+    "stopSharing": "Stop Sharing",
+    "unlinkTitle": "Unlink List",
+    "unlinkConfirm": "The list will remain for others, but you will lose it here.",
+    "alreadyShared": "List is shared",
+    "membersCount": "{{count}} connected devices",
+    "joinTitle": "Join Shared List",
+    "joinDescription": "Enter the 6-character code from another phone",
+    "joinPlaceholder": "Enter code",
+    "joinButton": "Join",
+    "joinSuccess": "Joined list \"{{name}}\"!",
+    "joinError": "Invalid or expired code",
+    "joinSharedList": "Join a shared list",
+    "error": "Error"
   }
 }

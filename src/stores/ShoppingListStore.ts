@@ -3,6 +3,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { randomUUID } from 'expo-crypto'
 import type { ShoppingItem } from '../types/shopping'
 import { debouncedPersist } from '../services/debouncedPersist'
+import { useListsMetaStore } from './ListsMetaStore'
+import {
+  firebaseSetItems,
+  subscribeToList,
+  unsubscribeFromList,
+} from '../services/FirebaseSyncService'
 
 export interface ShoppingListStoreState {
   items: ShoppingItem[]
@@ -22,7 +28,10 @@ export interface ShoppingListStoreState {
   uncheckItems: (ids: string[]) => void
   clearChecked: () => void
   clearAll: () => void
+  setItemsFromFirebase: (items: ShoppingItem[]) => void
 }
+
+let currentFirebaseUnsub: (() => void) | null = null
 
 export const useShoppingListStore = create<ShoppingListStoreState>((set, get) => ({
   items: [],
@@ -34,6 +43,31 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
   },
 
   switchToList: async (listId: string) => {
+    // Unsubscribe from previous Firebase listener
+    if (currentFirebaseUnsub) {
+      currentFirebaseUnsub()
+      currentFirebaseUnsub = null
+    }
+
+    const listMeta = useListsMetaStore.getState().lists.find((l) => l.id === listId)
+
+    // If shared, subscribe to Firebase and let listener populate items
+    if (listMeta?.isShared && listMeta.firebaseListId) {
+      set({ items: [], currentListId: listId, isLoaded: true })
+      currentFirebaseUnsub = subscribeToList(listMeta.firebaseListId, {
+        onItems: (items) => {
+          // Only update if still on same list
+          if (get().currentListId === listId) {
+            set({ items })
+          }
+        },
+        onSession: () => {},
+        onMeta: () => {},
+      })
+      return
+    }
+
+    // Local list — load from AsyncStorage
     const key = `@list_${listId}_items`
     try {
       const saved = await AsyncStorage.getItem(key)
@@ -154,9 +188,27 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
     set({ items: [] })
     persist([], get().currentListId)
   },
+
+  setItemsFromFirebase: (items: ShoppingItem[]) => {
+    set({ items })
+  },
 }))
+
+function getFirebaseListId(listId: string | null): string | null {
+  if (!listId) return null
+  const listMeta = useListsMetaStore.getState().lists.find((l) => l.id === listId)
+  if (listMeta?.isShared && listMeta.firebaseListId) return listMeta.firebaseListId
+  return null
+}
 
 function persist(items: ShoppingItem[], listId: string | null): void {
   if (!listId) return
-  debouncedPersist(`@list_${listId}_items`, items)
+  const firebaseListId = getFirebaseListId(listId)
+  if (firebaseListId) {
+    firebaseSetItems(firebaseListId, items).catch((e) =>
+      console.warn('[ShoppingListStore] Firebase persist failed:', e),
+    )
+  } else {
+    debouncedPersist(`@list_${listId}_items`, items)
+  }
 }

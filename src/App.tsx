@@ -14,6 +14,7 @@ import { useThemeStore } from './stores/ThemeStore'
 import { useAccentColorStore } from './stores/AccentColorStore'
 import { useListsMetaStore } from './stores/ListsMetaStore'
 import { migrateToMultiList } from './services/MigrationService'
+import { initFirebase } from './services/FirebaseSyncService'
 
 export function App(): React.ReactElement {
   const [isReady, setIsReady] = useState(false)
@@ -51,6 +52,9 @@ export function App(): React.ReactElement {
 
     // Migration must run before stores load
     await migrateToMultiList()
+
+    // Initialize Firebase (non-blocking — app works offline too)
+    await initFirebase().catch((e) => console.warn('[App] Firebase init failed:', e))
 
     // Load lists meta first, then switch to selected list
     const results = await Promise.allSettled([

@@ -6,6 +6,8 @@ import { SettingsScreen } from '../screens/SettingsScreen/SettingsScreen'
 import { ActiveShoppingScreen } from '../screens/ActiveShoppingScreen/ActiveShoppingScreen'
 import { ShoppingHistoryScreen } from '../screens/ShoppingHistoryScreen/ShoppingHistoryScreen'
 import { ColorPickerScreen } from '../screens/ColorPickerScreen/ColorPickerScreen'
+import { ShareListScreen } from '../screens/ShareListScreen/ShareListScreen'
+import { JoinListScreen } from '../screens/JoinListScreen/JoinListScreen'
 import { StyleSheet } from 'react-native-unistyles'
 import { useAccentColorStore } from '../stores/AccentColorStore'
 
@@ -15,6 +17,8 @@ export type RootStackParamList = {
   ActiveShoppingScreen: { listId: string }
   ShoppingHistoryScreen: { listId: string }
   ColorPickerScreen: undefined
+  ShareListScreen: { listId: string }
+  JoinListScreen: undefined
 }
 
 const Stack = createNativeStackNavigator<RootStackParamList>()
@@ -66,6 +70,20 @@ export function AppNavigator(): React.ReactElement {
         component={ColorPickerScreen}
         options={{
           title: t('ColorPicker.title'),
+        }}
+      />
+      <Stack.Screen
+        name="ShareListScreen"
+        component={ShareListScreen}
+        options={{
+          title: t('Sharing.title'),
+        }}
+      />
+      <Stack.Screen
+        name="JoinListScreen"
+        component={JoinListScreen}
+        options={{
+          title: t('Sharing.joinTitle'),
         }}
       />
     </Stack.Navigator>

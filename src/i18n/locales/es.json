@@ -142,5 +142,27 @@
     "listNamePlaceholder": "Nombre de la lista",
     "shared": "Compartida",
     "lastList": "No se puede eliminar la última lista"
+  },
+  "Sharing": {
+    "title": "Compartir lista",
+    "shareDescription": "Comparte esta lista con familia o amigos. Los cambios se sincronizarán en tiempo real.",
+    "shareButton": "Compartir lista",
+    "shareError": "No se pudo compartir la lista",
+    "codeTitle": "Código para compartir",
+    "codeInstructions": "Introduce este código en otro teléfono en 1GoShop",
+    "codeExpires": "El código expira en {{minutes}}:{{seconds}}",
+    "stopSharing": "Dejar de compartir",
+    "unlinkTitle": "Desvincular lista",
+    "unlinkConfirm": "La lista permanecerá para los demás, pero la perderás aquí.",
+    "alreadyShared": "Lista compartida",
+    "membersCount": "{{count}} dispositivos conectados",
+    "joinTitle": "Unirse a lista compartida",
+    "joinDescription": "Introduce el código de 6 caracteres del otro teléfono",
+    "joinPlaceholder": "Introduce el código",
+    "joinButton": "Unirse",
+    "joinSuccess": "¡Unido a la lista \"{{name}}\"!",
+    "joinError": "Código inválido o expirado",
+    "joinSharedList": "Unirse a una lista compartida",
+    "error": "Error"
   }
 }

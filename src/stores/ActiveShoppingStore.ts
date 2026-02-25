@@ -3,6 +3,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { randomUUID } from 'expo-crypto'
 import type { ShoppingItem, ActiveShoppingItem, ShoppingSession } from '../types/shopping'
 import { debouncedPersist } from '../services/debouncedPersist'
+import { useListsMetaStore } from './ListsMetaStore'
+import {
+  firebaseSetSession,
+  firebaseAddHistory,
+  firebaseRemoveHistory,
+  firebaseClearHistory,
+  firebaseLoadHistory,
+} from '../services/FirebaseSyncService'
 
 export interface ActiveShoppingStoreState {
   session: ShoppingSession | null
@@ -59,6 +67,18 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
   loadHistory: async () => {
     const { currentListId } = get()
     if (!currentListId) return
+
+    const firebaseListId = getFirebaseListId(currentListId)
+    if (firebaseListId) {
+      try {
+        const history = await firebaseLoadHistory(firebaseListId)
+        set({ history })
+      } catch (error) {
+        console.warn('[ActiveShoppingStore] Failed to load Firebase history:', error)
+      }
+      return
+    }
+
     const historyKey = `@list_${currentListId}_history`
     try {
       const historyRaw = await AsyncStorage.getItem(historyKey)
@@ -128,22 +148,27 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
 
     set({ isFinishing: true })
 
-    const historyKey = `@list_${currentListId}_history`
-    const sessionKey = `@list_${currentListId}_session`
-
     try {
       const finishedSession: ShoppingSession = {
         ...session,
         finishedAt: new Date().toISOString(),
       }
 
-      const historyRaw = await AsyncStorage.getItem(historyKey)
-      const history = historyRaw ? (JSON.parse(historyRaw) as ShoppingSession[]) : []
-      history.push(finishedSession)
-      await AsyncStorage.setItem(historyKey, JSON.stringify(history))
+      const firebaseListId = getFirebaseListId(currentListId)
+      if (firebaseListId) {
+        await firebaseAddHistory(firebaseListId, finishedSession)
+        await firebaseSetSession(firebaseListId, null)
+      } else {
+        const historyKey = `@list_${currentListId}_history`
+        const sessionKey = `@list_${currentListId}_session`
+        const historyRaw = await AsyncStorage.getItem(historyKey)
+        const history = historyRaw ? (JSON.parse(historyRaw) as ShoppingSession[]) : []
+        history.push(finishedSession)
+        await AsyncStorage.setItem(historyKey, JSON.stringify(history))
+        await AsyncStorage.removeItem(sessionKey)
+      }
 
       set({ session: null, showBought: true })
-      await AsyncStorage.removeItem(sessionKey)
     } catch (error) {
       console.warn('[ActiveShoppingStore] Failed to finish shopping:', error)
     } finally {
@@ -154,22 +179,58 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
   removeSession: async (id: string) => {
     const { currentListId } = get()
     if (!currentListId) return
-    const historyKey = `@list_${currentListId}_history`
+
     const updated = get().history.filter((s) => s.id !== id)
     set({ history: updated })
-    await AsyncStorage.setItem(historyKey, JSON.stringify(updated)).catch((e) => console.warn('[ActiveShoppingStore] Failed to persist history:', e))
+
+    const firebaseListId = getFirebaseListId(currentListId)
+    if (firebaseListId) {
+      await firebaseRemoveHistory(firebaseListId, id).catch((e) =>
+        console.warn('[ActiveShoppingStore] Firebase remove history failed:', e),
+      )
+    } else {
+      const historyKey = `@list_${currentListId}_history`
+      await AsyncStorage.setItem(historyKey, JSON.stringify(updated)).catch((e) =>
+        console.warn('[ActiveShoppingStore] Failed to persist history:', e),
+      )
+    }
   },
 
   clearHistory: async () => {
     const { currentListId } = get()
     if (!currentListId) return
-    const historyKey = `@list_${currentListId}_history`
+
     set({ history: [] })
-    await AsyncStorage.removeItem(historyKey).catch((e) => console.warn('[ActiveShoppingStore] Failed to clear history:', e))
+
+    const firebaseListId = getFirebaseListId(currentListId)
+    if (firebaseListId) {
+      await firebaseClearHistory(firebaseListId).catch((e) =>
+        console.warn('[ActiveShoppingStore] Firebase clear history failed:', e),
+      )
+    } else {
+      const historyKey = `@list_${currentListId}_history`
+      await AsyncStorage.removeItem(historyKey).catch((e) =>
+        console.warn('[ActiveShoppingStore] Failed to clear history:', e),
+      )
+    }
   },
 }))
 
+function getFirebaseListId(listId: string | null): string | null {
+  if (!listId) return null
+  const listMeta = useListsMetaStore.getState().lists.find((l) => l.id === listId)
+  if (listMeta?.isShared && listMeta.firebaseListId) return listMeta.firebaseListId
+  return null
+}
+
 function persistSession(session: ShoppingSession, listId: string | null): void {
   if (!listId) return
-  debouncedPersist(`@list_${listId}_session`, session)
+  const firebaseListId = getFirebaseListId(listId)
+  if (firebaseListId) {
+    firebaseSetSession(firebaseListId, session).catch((e) =>
+      console.warn('[ActiveShoppingStore] Firebase session persist failed:', e),
+    )
+  } else {
+    debouncedPersist(`@list_${listId}_session`, session)
+  }
 }

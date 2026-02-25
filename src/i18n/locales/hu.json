@@ -142,5 +142,27 @@
     "listNamePlaceholder": "Lista neve",
     "shared": "Megosztott",
     "lastList": "Az utolsó listát nem lehet törölni"
+  },
+  "Sharing": {
+    "title": "Lista megosztása",
+    "shareDescription": "Ossza meg ezt a listát családjával vagy barátaival. A változások valós időben szinkronizálódnak.",
+    "shareButton": "Lista megosztása",
+    "shareError": "Nem sikerült megosztani a listát",
+    "codeTitle": "Megosztási kód",
+    "codeInstructions": "Adja meg ezt a kódot egy másik telefonon az 1GoShop-ban",
+    "codeExpires": "A kód lejár: {{minutes}}:{{seconds}}",
+    "stopSharing": "Megosztás leállítása",
+    "unlinkTitle": "Lista leválasztása",
+    "unlinkConfirm": "A lista megmarad másoknál, de Ön elveszíti itt.",
+    "alreadyShared": "A lista megosztva",
+    "membersCount": "{{count}} csatlakozott eszköz",
+    "joinTitle": "Csatlakozás megosztott listához",
+    "joinDescription": "Adja meg a 6 karakteres kódot a másik telefonról",
+    "joinPlaceholder": "Kód megadása",
+    "joinButton": "Csatlakozás",
+    "joinSuccess": "Csatlakozott a \"{{name}}\" listához!",
+    "joinError": "Érvénytelen vagy lejárt kód",
+    "joinSharedList": "Csatlakozás megosztott listához",
+    "error": "Hiba"
   }
 }

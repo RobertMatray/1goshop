@@ -140,5 +140,27 @@
     "listNamePlaceholder": "清单名称",
     "shared": "共享",
     "lastList": "无法删除最后一个清单"
+  },
+  "Sharing": {
+    "title": "分享清单",
+    "shareDescription": "与家人或朋友分享此清单。更改将实时同步。",
+    "shareButton": "分享清单",
+    "shareError": "分享清单失败",
+    "codeTitle": "分享码",
+    "codeInstructions": "在另一部手机的1GoShop中输入此代码",
+    "codeExpires": "代码将在 {{minutes}}:{{seconds}} 后过期",
+    "stopSharing": "停止分享",
+    "unlinkTitle": "取消关联清单",
+    "unlinkConfirm": "清单将保留给其他人，但您将在此处失去它。",
+    "alreadyShared": "清单已分享",
+    "membersCount": "{{count}} 个已连接设备",
+    "joinTitle": "加入共享清单",
+    "joinDescription": "输入另一部手机上的6位代码",
+    "joinPlaceholder": "输入代码",
+    "joinButton": "加入",
+    "joinSuccess": "已加入清单\"{{name}}\"！",
+    "joinError": "无效或已过期的代码",
+    "joinSharedList": "加入共享清单",
+    "error": "错误"
   }
 }
