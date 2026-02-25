@@ -11,6 +11,8 @@ import { StartShoppingAnimation } from './StartShoppingAnimation'
 import { MarkBoughtAnimation } from './MarkBoughtAnimation'
 import { FinishShoppingAnimation } from './FinishShoppingAnimation'
 import { HistoryAnimation } from './HistoryAnimation'
+import { ShareListAnimation } from './ShareListAnimation'
+import { JoinListAnimation } from './JoinListAnimation'
 import { styles } from './styles'
 
 interface Props {
@@ -18,7 +20,7 @@ interface Props {
   onClose: () => void
 }
 
-const TOTAL_STEPS = 9
+const TOTAL_STEPS = 11
 
 export function TutorialOverlay({ visible, onClose }: Props): React.ReactElement | null {
   const { t } = useTranslation()
@@ -41,6 +43,8 @@ export function TutorialOverlay({ visible, onClose }: Props): React.ReactElement
     t('Tutorial.step7Title'),
     t('Tutorial.step8Title'),
     t('Tutorial.step9Title'),
+    t('Tutorial.step10Title'),
+    t('Tutorial.step11Title'),
   ]
 
   const stepDescriptions = [
@@ -53,6 +57,8 @@ export function TutorialOverlay({ visible, onClose }: Props): React.ReactElement
     t('Tutorial.step7Desc'),
     t('Tutorial.step8Desc'),
     t('Tutorial.step9Desc'),
+    t('Tutorial.step10Desc'),
+    t('Tutorial.step11Desc'),
   ]
 
   return (
@@ -144,6 +150,10 @@ function StepAnimation({ step, t }: { step: number; t: (key: string) => string }
       return <FinishShoppingAnimation t={t} />
     case 8:
       return <HistoryAnimation t={t} />
+    case 9:
+      return <ShareListAnimation t={t} />
+    case 10:
+      return <JoinListAnimation t={t} />
     default:
       return <View />
   }

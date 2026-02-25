@@ -81,7 +81,19 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
 
     const historyKey = `@list_${currentListId}_history`
     try {
-      const historyRaw = await AsyncStorage.getItem(historyKey)
+      let historyRaw = await AsyncStorage.getItem(historyKey)
+
+      // Fallback: recover history from old single-list key if migration missed it
+      if (!historyRaw) {
+        const oldHistoryRaw = await AsyncStorage.getItem('@shopping_history')
+        if (oldHistoryRaw) {
+          console.log('[ActiveShoppingStore] Recovering history from old key')
+          await AsyncStorage.setItem(historyKey, oldHistoryRaw)
+          await AsyncStorage.removeItem('@shopping_history')
+          historyRaw = oldHistoryRaw
+        }
+      }
+
       if (historyRaw) {
         const parsed: unknown = JSON.parse(historyRaw)
         if (!Array.isArray(parsed)) {
