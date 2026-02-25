@@ -1,5 +1,7 @@
 import React from 'react'
-import { View, Text, Pressable, Alert, ScrollView } from 'react-native'
+import { View, Text, Pressable, Alert, ScrollView, Platform } from 'react-native'
+import * as Clipboard from 'expo-clipboard'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { StyleSheet } from 'react-native-unistyles'
 import { useTranslation } from 'react-i18next'
 import { useNavigation } from '@react-navigation/native'
@@ -129,6 +131,13 @@ export function SettingsScreen(): React.ReactElement {
           </Pressable>
         </View>
       </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Debug</Text>
+        <Pressable style={styles.backupButton} onPress={handleDebugDump}>
+          <Text style={styles.backupButtonText}>Dump AsyncStorage</Text>
+        </Pressable>
+      </View>
     </ScrollView>
   )
 
@@ -148,6 +157,24 @@ export function SettingsScreen(): React.ReactElement {
       await createAndShareBackup()
     } catch {
       Alert.alert(t('Backup.error'), t('Backup.exportError'))
+    }
+  }
+
+  async function handleDebugDump(): Promise<void> {
+    try {
+      const allKeys = await AsyncStorage.getAllKeys()
+      const allData = await AsyncStorage.multiGet(allKeys as string[])
+      const lines: string[] = []
+      for (const [key, value] of allData) {
+        const size = value ? value.length : 0
+        const preview = value && value.length > 200 ? value.slice(0, 200) + '...' : (value ?? 'null')
+        lines.push(`[${key}] (${size} chars)\n${preview}`)
+      }
+      const dump = `Platform: ${Platform.OS}\nKeys: ${allKeys.length}\n\n${lines.join('\n\n')}`
+      await Clipboard.setStringAsync(dump)
+      Alert.alert('Copied to clipboard', `${allKeys.length} keys found.\n\nPaste and send to developer.`)
+    } catch (e) {
+      Alert.alert('Error', String(e))
     }
   }
 
