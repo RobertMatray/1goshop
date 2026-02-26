@@ -31,6 +31,13 @@ export function ShareListScreen(): React.ReactElement {
   const [memberCount, setMemberCount] = useState(0)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const isUnlinkingRef = useRef(false)
+  const isMountedRef = useRef(true)
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false
+    }
+  }, [])
 
   const isShared = list?.isShared ?? false
 
@@ -138,7 +145,7 @@ export function ShareListScreen(): React.ReactElement {
   )
 
   async function checkAndAutoUnlink(): Promise<void> {
-    if (isUnlinkingRef.current) return
+    if (isUnlinkingRef.current || !isMountedRef.current) return
     isUnlinkingRef.current = true
 
     try {

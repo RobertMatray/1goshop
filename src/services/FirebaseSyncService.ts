@@ -154,10 +154,15 @@ export async function createSharingCode(
   const db = getFirebaseDb()
 
   // Retry up to 5 times if code already exists
+  let collisions = 0
   for (let attempt = 0; attempt < 5; attempt++) {
     const code = generateSharingCode()
     const existingSnap = await firebaseGet(ref(db, `sharing-codes/${code}`))
-    if (existingSnap.exists()) continue
+    if (existingSnap.exists()) {
+      collisions++
+      console.warn(`[FirebaseSyncService] Sharing code collision #${collisions}: ${code}`)
+      continue
+    }
 
     const now = Date.now()
     const sharingData: FirebaseSharingCode = {
@@ -172,7 +177,7 @@ export async function createSharingCode(
     return code
   }
 
-  throw new Error('Failed to generate unique sharing code after 5 attempts')
+  throw new Error(`Failed to generate unique sharing code after 5 attempts (${collisions} collisions)`)
 }
 
 export async function joinSharedList(
@@ -306,6 +311,10 @@ export function unsubscribeAll(): void {
 }
 
 // ─── Firebase write operations ───
+// NOTE: All writes use last-write-wins semantics (Firebase Realtime Database default).
+// For a shopping list app this is acceptable: concurrent edits to the same item are rare,
+// and the real-time listener immediately syncs the latest state to all devices.
+// If conflict resolution becomes necessary, consider Firebase transactions or CRDT-based merging.
 
 export async function firebaseSetItems(
   firebaseListId: string,

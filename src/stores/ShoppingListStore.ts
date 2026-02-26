@@ -7,7 +7,7 @@ import { useListsMetaStore } from './ListsMetaStore'
 import {
   firebaseSetItems,
   firebaseAddItem,
-  firebaseRemoveItem,
+
   firebaseUpdateItem,
   firebaseBatchUpdateOrder,
   firebaseRemoveItemsAndReorder,
@@ -267,9 +267,7 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
     set({ items: [] })
     const fbId = getFirebaseListId(get().currentListId)
     if (fbId) {
-      for (const id of allIds) {
-        firebaseRemoveItem(fbId, id).catch(logFirebaseError)
-      }
+      firebaseRemoveItemsAndReorder(fbId, allIds, []).catch(logFirebaseError)
     } else {
       persistLocal([], get().currentListId)
     }
