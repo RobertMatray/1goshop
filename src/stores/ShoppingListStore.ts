@@ -51,43 +51,39 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
 
     const listMeta = useListsMetaStore.getState().lists.find((l) => l.id === listId)
 
-    // If shared, subscribe to Firebase and let listener populate items
+    // Always load local data first as immediate fallback
+    const key = `@list_${listId}_items`
+    let localItems: ShoppingItem[] = []
+    try {
+      const saved = await AsyncStorage.getItem(key)
+      if (saved) {
+        const parsed: unknown = JSON.parse(saved)
+        if (Array.isArray(parsed)) {
+          localItems = (parsed as ShoppingItem[])
+            .sort((a, b) => a.order - b.order)
+            .map((item, i) => ({ ...item, order: i }))
+        }
+      }
+    } catch (error) {
+      console.warn('[ShoppingListStore] Failed to load local items:', error)
+    }
+
+    // Show local data immediately
+    set({ items: localItems, currentListId: listId, isLoaded: true })
+
+    // If shared, also subscribe to Firebase — will override local data when it arrives
     if (listMeta?.isShared && listMeta.firebaseListId) {
-      set({ items: [], currentListId: listId, isLoaded: true })
       currentFirebaseUnsub = subscribeToList(listMeta.firebaseListId, {
         onItems: (items) => {
-          // Only update if still on same list
           if (get().currentListId === listId) {
             set({ items })
+            // Also persist to local storage as cache
+            debouncedPersist(key, items)
           }
         },
         onSession: () => {},
         onMeta: () => {},
       })
-      return
-    }
-
-    // Local list — load from AsyncStorage
-    const key = `@list_${listId}_items`
-    try {
-      const saved = await AsyncStorage.getItem(key)
-      if (saved) {
-        const parsed: unknown = JSON.parse(saved)
-        if (!Array.isArray(parsed)) {
-          console.warn('[ShoppingListStore] Invalid data for list', listId)
-          set({ items: [], currentListId: listId, isLoaded: true })
-          return
-        }
-        const items = (parsed as ShoppingItem[])
-          .sort((a, b) => a.order - b.order)
-          .map((item, i) => ({ ...item, order: i }))
-        set({ items, currentListId: listId, isLoaded: true })
-      } else {
-        set({ items: [], currentListId: listId, isLoaded: true })
-      }
-    } catch (error) {
-      console.warn('[ShoppingListStore] Failed to load list:', listId, error)
-      set({ items: [], currentListId: listId, isLoaded: true })
     }
   },
 
