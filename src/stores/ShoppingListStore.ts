@@ -6,9 +6,15 @@ import { debouncedPersist } from '../services/debouncedPersist'
 import { useListsMetaStore } from './ListsMetaStore'
 import {
   firebaseSetItems,
+  firebaseAddItem,
+  firebaseRemoveItem,
+  firebaseUpdateItem,
+  firebaseUpdateListName,
   subscribeToList,
   unsubscribeFromList,
+  type FirebaseListMeta,
 } from '../services/FirebaseSyncService'
+import { useActiveShoppingStore } from './ActiveShoppingStore'
 
 export interface ShoppingListStoreState {
   items: ShoppingItem[]
@@ -81,8 +87,20 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
             debouncedPersist(key, items)
           }
         },
-        onSession: () => {},
-        onMeta: () => {},
+        onSession: (session) => {
+          if (get().currentListId === listId) {
+            useActiveShoppingStore.getState().setSessionFromFirebase(session)
+          }
+        },
+        onMeta: (meta) => {
+          if (get().currentListId === listId) {
+            // Sync list name from Firebase to local meta
+            const currentMeta = useListsMetaStore.getState().lists.find((l) => l.id === listId)
+            if (currentMeta && currentMeta.name !== meta.name) {
+              useListsMetaStore.getState().renameList(listId, meta.name)
+            }
+          }
+        },
       })
     }
   },
@@ -102,7 +120,12 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
     }
     const updated = [...items, newItem]
     set({ items: updated })
-    persist(updated, get().currentListId)
+    const fbId = getFirebaseListId(get().currentListId)
+    if (fbId) {
+      firebaseAddItem(fbId, newItem).catch(logFirebaseError)
+    } else {
+      persistLocal(updated, get().currentListId)
+    }
   },
 
   removeItem: (id: string) => {
@@ -110,15 +133,32 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
       .items.filter((item) => item.id !== id)
       .map((item, i) => ({ ...item, order: i }))
     set({ items: updated })
-    persist(updated, get().currentListId)
+    const fbId = getFirebaseListId(get().currentListId)
+    if (fbId) {
+      // Remove item + update order of remaining items
+      firebaseRemoveItem(fbId, id).catch(logFirebaseError)
+      for (const item of updated) {
+        firebaseUpdateItem(fbId, item.id, { order: item.order }).catch(logFirebaseError)
+      }
+    } else {
+      persistLocal(updated, get().currentListId)
+    }
   },
 
   toggleChecked: (id: string) => {
-    const updated = get().items.map((item) =>
-      item.id === id ? { ...item, isChecked: !item.isChecked } : item,
+    const item = get().items.find((i) => i.id === id)
+    if (!item) return
+    const newChecked = !item.isChecked
+    const updated = get().items.map((i) =>
+      i.id === id ? { ...i, isChecked: newChecked } : i,
     )
     set({ items: updated })
-    persist(updated, get().currentListId)
+    const fbId = getFirebaseListId(get().currentListId)
+    if (fbId) {
+      firebaseUpdateItem(fbId, id, { isChecked: newChecked }).catch(logFirebaseError)
+    } else {
+      persistLocal(updated, get().currentListId)
+    }
   },
 
   editItem: (id: string, name: string) => {
@@ -128,23 +168,44 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
       item.id === id ? { ...item, name: trimmed } : item,
     )
     set({ items: updated })
-    persist(updated, get().currentListId)
+    const fbId = getFirebaseListId(get().currentListId)
+    if (fbId) {
+      firebaseUpdateItem(fbId, id, { name: trimmed }).catch(logFirebaseError)
+    } else {
+      persistLocal(updated, get().currentListId)
+    }
   },
 
   incrementQuantity: (id: string) => {
-    const updated = get().items.map((item) =>
-      item.id === id ? { ...item, quantity: item.quantity + 1 } : item,
+    const item = get().items.find((i) => i.id === id)
+    if (!item) return
+    const newQty = item.quantity + 1
+    const updated = get().items.map((i) =>
+      i.id === id ? { ...i, quantity: newQty } : i,
     )
     set({ items: updated })
-    persist(updated, get().currentListId)
+    const fbId = getFirebaseListId(get().currentListId)
+    if (fbId) {
+      firebaseUpdateItem(fbId, id, { quantity: newQty }).catch(logFirebaseError)
+    } else {
+      persistLocal(updated, get().currentListId)
+    }
   },
 
   decrementQuantity: (id: string) => {
-    const updated = get().items.map((item) =>
-      item.id === id ? { ...item, quantity: Math.max(1, item.quantity - 1) } : item,
+    const item = get().items.find((i) => i.id === id)
+    if (!item) return
+    const newQty = Math.max(1, item.quantity - 1)
+    const updated = get().items.map((i) =>
+      i.id === id ? { ...i, quantity: newQty } : i,
     )
     set({ items: updated })
-    persist(updated, get().currentListId)
+    const fbId = getFirebaseListId(get().currentListId)
+    if (fbId) {
+      firebaseUpdateItem(fbId, id, { quantity: newQty }).catch(logFirebaseError)
+    } else {
+      persistLocal(updated, get().currentListId)
+    }
   },
 
   reorderItems: (fromIndex: number, toIndex: number) => {
@@ -155,12 +216,25 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
     items.splice(toIndex, 0, moved)
     const updated = items.map((item, i) => ({ ...item, order: i }))
     set({ items: updated })
-    persist(updated, get().currentListId)
+    const fbId = getFirebaseListId(get().currentListId)
+    if (fbId) {
+      // Batch update order for all affected items
+      for (const item of updated) {
+        firebaseUpdateItem(fbId, item.id, { order: item.order }).catch(logFirebaseError)
+      }
+    } else {
+      persistLocal(updated, get().currentListId)
+    }
   },
 
   setItems: (items: ShoppingItem[]) => {
     set({ items })
-    persist(items, get().currentListId)
+    const fbId = getFirebaseListId(get().currentListId)
+    if (fbId) {
+      firebaseSetItems(fbId, items).catch(logFirebaseError)
+    } else {
+      persistLocal(items, get().currentListId)
+    }
   },
 
   uncheckItems: (ids: string[]) => {
@@ -169,20 +243,46 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
       idSet.has(item.id) ? { ...item, isChecked: false } : item,
     )
     set({ items: updated })
-    persist(updated, get().currentListId)
+    const fbId = getFirebaseListId(get().currentListId)
+    if (fbId) {
+      for (const id of ids) {
+        firebaseUpdateItem(fbId, id, { isChecked: false }).catch(logFirebaseError)
+      }
+    } else {
+      persistLocal(updated, get().currentListId)
+    }
   },
 
   clearChecked: () => {
+    const checkedIds = get().items.filter((item) => item.isChecked).map((item) => item.id)
     const updated = get()
       .items.filter((item) => !item.isChecked)
       .map((item, i) => ({ ...item, order: i }))
     set({ items: updated })
-    persist(updated, get().currentListId)
+    const fbId = getFirebaseListId(get().currentListId)
+    if (fbId) {
+      for (const id of checkedIds) {
+        firebaseRemoveItem(fbId, id).catch(logFirebaseError)
+      }
+      for (const item of updated) {
+        firebaseUpdateItem(fbId, item.id, { order: item.order }).catch(logFirebaseError)
+      }
+    } else {
+      persistLocal(updated, get().currentListId)
+    }
   },
 
   clearAll: () => {
+    const allIds = get().items.map((item) => item.id)
     set({ items: [] })
-    persist([], get().currentListId)
+    const fbId = getFirebaseListId(get().currentListId)
+    if (fbId) {
+      for (const id of allIds) {
+        firebaseRemoveItem(fbId, id).catch(logFirebaseError)
+      }
+    } else {
+      persistLocal([], get().currentListId)
+    }
   },
 
   setItemsFromFirebase: (items: ShoppingItem[]) => {
@@ -197,14 +297,11 @@ function getFirebaseListId(listId: string | null): string | null {
   return null
 }
 
-function persist(items: ShoppingItem[], listId: string | null): void {
+function persistLocal(items: ShoppingItem[], listId: string | null): void {
   if (!listId) return
-  const firebaseListId = getFirebaseListId(listId)
-  if (firebaseListId) {
-    firebaseSetItems(firebaseListId, items).catch((e) =>
-      console.warn('[ShoppingListStore] Firebase persist failed:', e),
-    )
-  } else {
-    debouncedPersist(`@list_${listId}_items`, items)
-  }
+  debouncedPersist(`@list_${listId}_items`, items)
+}
+
+function logFirebaseError(e: unknown): void {
+  console.warn('[ShoppingListStore] Firebase operation failed:', e)
 }

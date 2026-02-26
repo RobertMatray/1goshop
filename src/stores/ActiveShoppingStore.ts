@@ -29,6 +29,7 @@ export interface ActiveShoppingStoreState {
   finishShopping: () => Promise<void>
   removeSession: (id: string) => Promise<void>
   clearHistory: () => Promise<void>
+  setSessionFromFirebase: (session: ShoppingSession | null) => void
 }
 
 export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get) => ({
@@ -72,11 +73,14 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
     if (firebaseListId) {
       try {
         const history = await firebaseLoadHistory(firebaseListId)
-        set({ history })
+        if (history.length > 0) {
+          set({ history })
+          return
+        }
       } catch (error) {
         console.warn('[ActiveShoppingStore] Failed to load Firebase history:', error)
       }
-      return
+      // Fallback to local storage if Firebase has no history
     }
 
     const historyKey = `@list_${currentListId}_history`
@@ -225,6 +229,10 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
         console.warn('[ActiveShoppingStore] Failed to clear history:', e),
       )
     }
+  },
+
+  setSessionFromFirebase: (session: ShoppingSession | null) => {
+    set({ session })
   },
 }))
 

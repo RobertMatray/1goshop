@@ -1,13 +1,15 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { View, Text, Pressable, Alert, ActivityIndicator } from 'react-native'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { StyleSheet } from 'react-native-unistyles'
 import { useTranslation } from 'react-i18next'
-import { useRoute } from '@react-navigation/native'
+import { useRoute, useFocusEffect } from '@react-navigation/native'
 import type { RouteProp } from '@react-navigation/native'
 import type { RootStackParamList } from '../../navigation/AppNavigator'
 import { useListsMetaStore } from '../../stores/ListsMetaStore'
 import { useShoppingListStore } from '../../stores/ShoppingListStore'
 import { useActiveShoppingStore } from '../../stores/ActiveShoppingStore'
+import type { ShoppingSession } from '../../types/shopping'
 import {
   createFirebaseList,
   createSharingCode,
@@ -46,6 +48,7 @@ export function ShareListScreen(): React.ReactElement {
         setSharingCode(null)
         setExpiresAt(null)
         if (timerRef.current) clearInterval(timerRef.current)
+        checkAndAutoUnlink()
         return
       }
       const mins = Math.floor(remaining / 60000)
@@ -56,6 +59,16 @@ export function ShareListScreen(): React.ReactElement {
       if (timerRef.current) clearInterval(timerRef.current)
     }
   }, [expiresAt])
+
+  // When leaving the screen, check if nobody joined and auto-unlink
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        // Screen losing focus — check if we should auto-unlink
+        checkAndAutoUnlink()
+      }
+    }, [list?.firebaseListId, list?.isShared]),
+  )
 
   if (!list) return <View style={styles.container} />
 
@@ -123,13 +136,56 @@ export function ShareListScreen(): React.ReactElement {
     </View>
   )
 
+  async function checkAndAutoUnlink(): Promise<void> {
+    const currentList = useListsMetaStore.getState().lists.find((l) => l.id === listId)
+    if (!currentList?.isShared || !currentList.firebaseListId) return
+
+    try {
+      const count = await firebaseGetMemberCount(currentList.firebaseListId)
+      if (count <= 1) {
+        // Only the owner — nobody joined, revert to local-only
+        await firebaseLeaveList(currentList.firebaseListId).catch(() => {})
+        useListsMetaStore.getState().unlinkList(listId)
+        // Re-subscribe store to use local data instead of Firebase
+        const selectedListId = useListsMetaStore.getState().selectedListId
+        if (selectedListId === listId) {
+          await useShoppingListStore.getState().switchToList(listId)
+        }
+      }
+    } catch {
+      // Network error — don't auto-unlink, keep current state
+    }
+  }
+
   async function handleShare(): Promise<void> {
     if (!list) return
     setIsLoading(true)
     try {
       const items = useShoppingListStore.getState().items
-      const session = useActiveShoppingStore.getState().session
-      const history = useActiveShoppingStore.getState().history
+
+      // Load session from AsyncStorage if store doesn't have it
+      let session = useActiveShoppingStore.getState().session
+      if (!session) {
+        const sessionRaw = await AsyncStorage.getItem(`@list_${listId}_session`)
+        if (sessionRaw) {
+          const parsed: unknown = JSON.parse(sessionRaw)
+          if (typeof parsed === 'object' && parsed !== null && 'id' in parsed) {
+            session = parsed as ShoppingSession
+          }
+        }
+      }
+
+      // Load history from AsyncStorage directly — store may not have it loaded yet
+      let history = useActiveShoppingStore.getState().history
+      if (history.length === 0) {
+        const historyRaw = await AsyncStorage.getItem(`@list_${listId}_history`)
+        if (historyRaw) {
+          const parsed: unknown = JSON.parse(historyRaw)
+          if (Array.isArray(parsed)) {
+            history = parsed as ShoppingSession[]
+          }
+        }
+      }
 
       const deviceId = useListsMetaStore.getState().deviceId
       const firebaseListId = await createFirebaseList(

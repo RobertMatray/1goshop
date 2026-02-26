@@ -361,6 +361,16 @@ export async function firebaseLeaveList(firebaseListId: string): Promise<void> {
   if (!uid) return
   const db = getFirebaseDb()
   await remove(ref(db, `lists/${firebaseListId}/meta/members/${uid}`))
+
+  // Clean up entire list if no members remain
+  try {
+    const membersSnap = await firebaseGet(ref(db, `lists/${firebaseListId}/meta/members`))
+    if (!membersSnap.exists() || Object.keys(membersSnap.val() as Record<string, unknown>).length === 0) {
+      await remove(ref(db, `lists/${firebaseListId}`))
+    }
+  } catch {
+    // Cleanup is best-effort — don't fail the leave operation
+  }
 }
 
 export async function firebaseGetMemberCount(firebaseListId: string): Promise<number> {

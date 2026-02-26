@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { randomUUID } from 'expo-crypto'
 import type { ShoppingListMeta, ListsMetaData } from '../types/shopping'
+import { firebaseUpdateListName } from '../services/FirebaseSyncService'
 
 const STORAGE_KEY = '@lists_meta'
 
@@ -74,9 +75,17 @@ export const useListsMetaStore = create<ListsMetaStoreState>((set, get) => ({
   renameList: (id: string, name: string) => {
     const trimmed = name.trim()
     if (!trimmed) return
+    const listMeta = get().lists.find((l) => l.id === id)
+    if (listMeta && listMeta.name === trimmed) return // No change
     const updated = get().lists.map((l) => (l.id === id ? { ...l, name: trimmed } : l))
     set({ lists: updated })
     persist(get())
+    // Sync rename to Firebase if shared
+    if (listMeta?.isShared && listMeta.firebaseListId) {
+      firebaseUpdateListName(listMeta.firebaseListId, trimmed).catch((e) =>
+        console.warn('[ListsMetaStore] Firebase rename failed:', e),
+      )
+    }
   },
 
   deleteList: async (id: string) => {
