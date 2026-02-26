@@ -427,6 +427,24 @@ curl -s -X POST https://api.github.com/user/repos \
 - Report: `code-reviews/2026-02-25-code-review-v6-post-iterative-independent.docx`
 - Generator: `scripts/generate-code-review-v6.mjs`
 
+### Code Review Iterative Process #2 — Multi-list + Firebase (February 26, 2026)
+
+**Process**: Run code review → fix CRITICAL/HIGH/MEDIUM → repeat until 0 CRITICAL and 0 HIGH (max 5 iterations).
+
+**Scope**: 18 files changed, +2292 lines (multi-list support + Firebase sharing + real-time sync)
+
+**Baseline tag**: `v1.2.1-pre-review-2` (commit `8124ac6`)
+
+**Iterative review log**:
+| Iteration | Commit | CRITICAL | HIGH | MEDIUM | Status |
+|-----------|--------|----------|------|--------|--------|
+| 0 (baseline) | v1.2.1-pre-review-2 | - | - | - | Starting point |
+| 1 | aeac0e1 | 4→0 | 7→0 | 9→4 | Fixed: initFirebase timeout, subscribeToList race+try-catch, getCurrentUid stale, JoinList duplicate detection, MigrationService error propagation, finishShopping data loss, App.tsx sequential load, handleImport catch, BackupService rollback |
+| 2 | 3b36d46 | 0 | 0 | 4→1 | Fixed: sharing code collision check, expired code cleanup, batch Firebase writes (removeItem/reorder/clearChecked), history caching, restore Firebase cleanup |
+| 3 | ab16811 | 0 | 0 | 1→0 | Fixed: auto-unlink mutex guard. **GOAL MET: 0 CRITICAL, 0 HIGH** |
+
+**Remaining (accepted)**: 2 MEDIUM (theoretical: code saturation 729M, last-write-wins conflict), 2 LOW (hardcoded device name, no error telemetry)
+
 ### Build History
 | Build | Date | Changes |
 |-------|------|---------|
