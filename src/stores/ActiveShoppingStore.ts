@@ -75,12 +75,15 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
         const history = await firebaseLoadHistory(firebaseListId)
         if (history.length > 0) {
           set({ history })
+          // Cache to local storage for offline access
+          const historyKey = `@list_${currentListId}_history`
+          await AsyncStorage.setItem(historyKey, JSON.stringify(history)).catch(() => {})
           return
         }
       } catch (error) {
         console.warn('[ActiveShoppingStore] Failed to load Firebase history:', error)
       }
-      // Fallback to local storage if Firebase has no history
+      // Fallback to local storage if Firebase has no history or fails
     }
 
     const historyKey = `@list_${currentListId}_history`

@@ -153,19 +153,26 @@ export async function createSharingCode(
   const uid = await signInAnonymously()
   const db = getFirebaseDb()
 
-  const code = generateSharingCode()
-  const now = Date.now()
+  // Retry up to 5 times if code already exists
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const code = generateSharingCode()
+    const existingSnap = await firebaseGet(ref(db, `sharing-codes/${code}`))
+    if (existingSnap.exists()) continue
 
-  const sharingData: FirebaseSharingCode = {
-    firebaseListId,
-    listName,
-    createdBy: uid,
-    createdAt: now,
-    expiresAt: now + CODE_EXPIRY_MS,
+    const now = Date.now()
+    const sharingData: FirebaseSharingCode = {
+      firebaseListId,
+      listName,
+      createdBy: uid,
+      createdAt: now,
+      expiresAt: now + CODE_EXPIRY_MS,
+    }
+
+    await set(ref(db, `sharing-codes/${code}`), sharingData)
+    return code
   }
 
-  await set(ref(db, `sharing-codes/${code}`), sharingData)
-  return code
+  throw new Error('Failed to generate unique sharing code after 5 attempts')
 }
 
 export async function joinSharedList(
@@ -179,7 +186,11 @@ export async function joinSharedList(
   if (!codeSnap.exists()) return null
 
   const data = codeSnap.val() as FirebaseSharingCode
-  if (Date.now() > data.expiresAt) return null
+  if (Date.now() > data.expiresAt) {
+    // Clean up expired code
+    await remove(ref(db, `sharing-codes/${code.toUpperCase()}`)).catch(() => {})
+    return null
+  }
 
   // Add device as member
   await set(ref(db, `lists/${data.firebaseListId}/meta/members/${uid}`), {
@@ -346,6 +357,34 @@ export async function firebaseUpdateItem(
 ): Promise<void> {
   const db = getFirebaseDb()
   await update(ref(db, `lists/${firebaseListId}/items/${itemId}`), updates)
+}
+
+export async function firebaseBatchUpdateOrder(
+  firebaseListId: string,
+  items: ShoppingItem[],
+): Promise<void> {
+  const db = getFirebaseDb()
+  const updates: Record<string, number> = {}
+  for (const item of items) {
+    updates[`lists/${firebaseListId}/items/${item.id}/order`] = item.order
+  }
+  await update(ref(db), updates)
+}
+
+export async function firebaseRemoveItemsAndReorder(
+  firebaseListId: string,
+  removeIds: string[],
+  remainingItems: ShoppingItem[],
+): Promise<void> {
+  const db = getFirebaseDb()
+  const updates: Record<string, unknown> = {}
+  for (const id of removeIds) {
+    updates[`lists/${firebaseListId}/items/${id}`] = null
+  }
+  for (const item of remainingItems) {
+    updates[`lists/${firebaseListId}/items/${item.id}/order`] = item.order
+  }
+  await update(ref(db), updates)
 }
 
 export async function firebaseSetSession(

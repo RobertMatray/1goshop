@@ -11,6 +11,7 @@ import { useShoppingListStore } from '../../stores/ShoppingListStore'
 import { useActiveShoppingStore } from '../../stores/ActiveShoppingStore'
 import { useListsMetaStore } from '../../stores/ListsMetaStore'
 import { createAndShareBackup, restoreFromFile } from '../../services/BackupService'
+import { unsubscribeAll } from '../../services/FirebaseSyncService'
 import { defaultLightColors } from '../../unistyles'
 import type { SupportedLanguage } from '../../i18n/i18n'
 
@@ -156,6 +157,8 @@ export function SettingsScreen(): React.ReactElement {
     try {
       const success = await restoreFromFile()
       if (success) {
+        // Cleanup Firebase listeners before reloading stores with restored data
+        unsubscribeAll()
         await Promise.allSettled([
           useListsMetaStore.getState().load(),
           useShoppingListStore.getState().load(),

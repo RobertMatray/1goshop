@@ -9,6 +9,8 @@ import {
   firebaseAddItem,
   firebaseRemoveItem,
   firebaseUpdateItem,
+  firebaseBatchUpdateOrder,
+  firebaseRemoveItemsAndReorder,
   firebaseUpdateListName,
   subscribeToList,
   unsubscribeFromList,
@@ -135,11 +137,7 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
     set({ items: updated })
     const fbId = getFirebaseListId(get().currentListId)
     if (fbId) {
-      // Remove item + update order of remaining items
-      firebaseRemoveItem(fbId, id).catch(logFirebaseError)
-      for (const item of updated) {
-        firebaseUpdateItem(fbId, item.id, { order: item.order }).catch(logFirebaseError)
-      }
+      firebaseRemoveItemsAndReorder(fbId, [id], updated).catch(logFirebaseError)
     } else {
       persistLocal(updated, get().currentListId)
     }
@@ -218,10 +216,7 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
     set({ items: updated })
     const fbId = getFirebaseListId(get().currentListId)
     if (fbId) {
-      // Batch update order for all affected items
-      for (const item of updated) {
-        firebaseUpdateItem(fbId, item.id, { order: item.order }).catch(logFirebaseError)
-      }
+      firebaseBatchUpdateOrder(fbId, updated).catch(logFirebaseError)
     } else {
       persistLocal(updated, get().currentListId)
     }
@@ -261,12 +256,7 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
     set({ items: updated })
     const fbId = getFirebaseListId(get().currentListId)
     if (fbId) {
-      for (const id of checkedIds) {
-        firebaseRemoveItem(fbId, id).catch(logFirebaseError)
-      }
-      for (const item of updated) {
-        firebaseUpdateItem(fbId, item.id, { order: item.order }).catch(logFirebaseError)
-      }
+      firebaseRemoveItemsAndReorder(fbId, checkedIds, updated).catch(logFirebaseError)
     } else {
       persistLocal(updated, get().currentListId)
     }
