@@ -30,6 +30,7 @@ export function ShareListScreen(): React.ReactElement {
   const [isLoading, setIsLoading] = useState(false)
   const [memberCount, setMemberCount] = useState(0)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const isUnlinkingRef = useRef(false)
 
   const isShared = list?.isShared ?? false
 
@@ -137,10 +138,13 @@ export function ShareListScreen(): React.ReactElement {
   )
 
   async function checkAndAutoUnlink(): Promise<void> {
-    const currentList = useListsMetaStore.getState().lists.find((l) => l.id === listId)
-    if (!currentList?.isShared || !currentList.firebaseListId) return
+    if (isUnlinkingRef.current) return
+    isUnlinkingRef.current = true
 
     try {
+      const currentList = useListsMetaStore.getState().lists.find((l) => l.id === listId)
+      if (!currentList?.isShared || !currentList.firebaseListId) return
+
       const count = await firebaseGetMemberCount(currentList.firebaseListId)
       if (count <= 1) {
         // Only the owner — nobody joined, revert to local-only
@@ -154,6 +158,8 @@ export function ShareListScreen(): React.ReactElement {
       }
     } catch {
       // Network error — don't auto-unlink, keep current state
+    } finally {
+      isUnlinkingRef.current = false
     }
   }
 
