@@ -72,6 +72,25 @@ export function JoinListScreen(): React.ReactElement {
         return
       }
 
+      // Check if already joined this Firebase list — prevent duplicates
+      const existingList = useListsMetaStore.getState().lists.find(
+        (l) => l.firebaseListId === result.firebaseListId,
+      )
+      if (existingList) {
+        // Already joined — just switch to existing list
+        useListsMetaStore.getState().selectList(existingList.id)
+        await Promise.allSettled([
+          useShoppingListStore.getState().switchToList(existingList.id),
+          useActiveShoppingStore.getState().switchToList(existingList.id),
+        ])
+        Alert.alert(
+          t('Sharing.joinSuccess', { name: result.listName }),
+          undefined,
+          [{ text: 'OK', onPress: () => navigation.popToTop() }],
+        )
+        return
+      }
+
       // Create local list entry linked to Firebase
       const newId = useListsMetaStore.getState().createList(result.listName)
       useListsMetaStore.getState().markListAsShared(newId, result.firebaseListId, cleanCode)

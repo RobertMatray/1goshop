@@ -184,9 +184,11 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
         await AsyncStorage.removeItem(sessionKey)
       }
 
+      // Only clear session after successful persistence
       set({ session: null, showBought: true })
     } catch (error) {
-      console.warn('[ActiveShoppingStore] Failed to finish shopping:', error)
+      console.warn('[ActiveShoppingStore] Failed to finish shopping, keeping session:', error)
+      // Don't clear session — user can retry
     } finally {
       set({ isFinishing: false })
     }

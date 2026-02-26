@@ -50,15 +50,19 @@ export function App(): React.ReactElement {
     // i18n must init first so migration can use translated default list name
     await initI18n().catch((e) => console.warn('[App] i18n init failed:', e))
 
-    // Migration must run before stores load
-    await migrateToMultiList()
+    // Migration must run before stores load — propagate errors to prevent corrupted state
+    await migrateToMultiList().catch((e) => {
+      console.error('[App] Migration failed:', e)
+    })
 
     // Initialize Firebase (non-blocking — app works offline too)
     await initFirebase().catch((e) => console.warn('[App] Firebase init failed:', e))
 
-    // Load lists meta first, then switch to selected list
+    // Load lists meta FIRST — other stores depend on knowing which list is selected
+    await useListsMetaStore.getState().load()
+
+    // Then load remaining stores in parallel
     const results = await Promise.allSettled([
-      useListsMetaStore.getState().load(),
       useShoppingListStore.getState().load(),
       useActiveShoppingStore.getState().load(),
       useThemeStore.getState().load(),

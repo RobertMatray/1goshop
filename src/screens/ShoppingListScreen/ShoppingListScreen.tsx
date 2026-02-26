@@ -205,33 +205,38 @@ export function ShoppingListScreen(): React.ReactElement {
 
   function handleImport(): void {
     const { addItem, editItem } = useShoppingListStore.getState()
-    importFromClipboard(items).then((result) => {
-      if (result.empty) {
-        Alert.alert(t('ClipboardList.import'), t('ClipboardList.importEmpty'))
-        return
-      }
-      if (result.added.length === 0 && result.updated.length === 0) {
-        Alert.alert(t('ClipboardList.import'), t('ClipboardList.importNoNew'))
-        return
-      }
-      for (const name of result.added) {
-        addItem(name)
-      }
-      for (const name of result.updated) {
-        const existingId = findExistingItemId(name, items)
-        if (existingId) {
-          editItem(existingId, name)
+    importFromClipboard(items)
+      .then((result) => {
+        if (result.empty) {
+          Alert.alert(t('ClipboardList.import'), t('ClipboardList.importEmpty'))
+          return
         }
-      }
-      const parts: string[] = []
-      if (result.added.length > 0) {
-        parts.push(t('ClipboardList.importAdded', { count: result.added.length }))
-      }
-      if (result.updated.length > 0) {
-        parts.push(t('ClipboardList.importUpdated', { count: result.updated.length }))
-      }
-      Alert.alert(t('ClipboardList.import'), parts.join(', '))
-    })
+        if (result.added.length === 0 && result.updated.length === 0) {
+          Alert.alert(t('ClipboardList.import'), t('ClipboardList.importNoNew'))
+          return
+        }
+        for (const name of result.added) {
+          addItem(name)
+        }
+        for (const name of result.updated) {
+          const existingId = findExistingItemId(name, items)
+          if (existingId) {
+            editItem(existingId, name)
+          }
+        }
+        const parts: string[] = []
+        if (result.added.length > 0) {
+          parts.push(t('ClipboardList.importAdded', { count: result.added.length }))
+        }
+        if (result.updated.length > 0) {
+          parts.push(t('ClipboardList.importUpdated', { count: result.updated.length }))
+        }
+        Alert.alert(t('ClipboardList.import'), parts.join(', '))
+      })
+      .catch((error) => {
+        console.warn('[ShoppingListScreen] Import failed:', error)
+        Alert.alert(t('ClipboardList.import'), t('ClipboardList.importEmpty'))
+      })
   }
 
   async function handleSelectList(listId: string): Promise<void> {

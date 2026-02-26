@@ -36,7 +36,7 @@ export async function migrateToMultiList(): Promise<void> {
 
     const listId = randomUUID()
     const deviceId = randomUUID()
-    const defaultName = i18n.t('Lists.defaultListName')
+    const defaultName = i18n.t('Lists.defaultListName') || 'My Shopping List'
 
     const meta: ShoppingListMeta = {
       id: listId,
@@ -79,7 +79,8 @@ export async function migrateToMultiList(): Promise<void> {
 
     console.log('[MigrationService] Migration complete, list:', listId)
   } catch (error) {
-    console.warn('[MigrationService] Migration failed:', error)
+    console.error('[MigrationService] Migration failed:', error)
+    throw error
   }
 }
 
@@ -89,9 +90,12 @@ export async function migrateToMultiList(): Promise<void> {
  */
 async function recoverOrphanedData(metaRaw: string): Promise<void> {
   try {
-    const meta = JSON.parse(metaRaw) as ListsMetaData
+    const parsed: unknown = JSON.parse(metaRaw)
+    if (typeof parsed !== 'object' || parsed === null || !('lists' in parsed)) return
+    const meta = parsed as ListsMetaData
+    if (!Array.isArray(meta.lists) || meta.lists.length === 0) return
     const firstList = meta.lists[0]
-    if (!firstList) return
+    if (!firstList?.id) return
 
     const listId = firstList.id
     const oldResults = await AsyncStorage.multiGet([OLD_LIST_KEY, OLD_SESSION_KEY, OLD_HISTORY_KEY])

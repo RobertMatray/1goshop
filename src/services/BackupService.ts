@@ -112,6 +112,11 @@ export async function restoreBackup(jsonString: string): Promise<boolean> {
       }
     }
 
+    // Snapshot current state for rollback on partial failure
+    const affectedKeys = entries.map(([key]) => key)
+    const currentPairs = await AsyncStorage.multiGet(affectedKeys)
+    const snapshot = new Map(currentPairs.map(([k, v]) => [k, v]))
+
     const results = await Promise.allSettled(
       entries.map(([key, value]) =>
         value !== null ? AsyncStorage.setItem(key, value) : AsyncStorage.removeItem(key),
@@ -119,7 +124,15 @@ export async function restoreBackup(jsonString: string): Promise<boolean> {
     )
     const failures = results.filter((r) => r.status === 'rejected')
     if (failures.length > 0) {
-      console.warn('[BackupService] Partial restore failure:', failures)
+      console.warn('[BackupService] Partial restore failure, rolling back:', failures)
+      // Rollback to snapshot
+      for (const [key, value] of snapshot) {
+        if (value !== null) {
+          await AsyncStorage.setItem(key, value).catch(() => {})
+        } else {
+          await AsyncStorage.removeItem(key).catch(() => {})
+        }
+      }
       return false
     }
 

@@ -52,7 +52,14 @@ let currentUser: User | null = null
 export async function initFirebase(): Promise<void> {
   const auth = getFirebaseAuth()
   return new Promise<void>((resolve) => {
+    const timeout = setTimeout(() => {
+      unsub()
+      console.warn('[FirebaseSyncService] Auth init timeout (10s), continuing without auth')
+      resolve()
+    }, 10_000)
+
     const unsub = onAuthStateChanged(auth, (user) => {
+      clearTimeout(timeout)
       currentUser = user
       unsub()
       resolve()
@@ -69,7 +76,7 @@ export async function signInAnonymously(): Promise<string> {
 }
 
 export function getCurrentUid(): string | null {
-  return currentUser?.uid ?? null
+  return getFirebaseAuth().currentUser?.uid ?? null
 }
 
 // ─── List CRUD ───
@@ -197,52 +204,78 @@ interface ListCallbacks {
 const activeListeners: Map<string, Unsubscribe[]> = new Map()
 
 export function subscribeToList(firebaseListId: string, callbacks: ListCallbacks): () => void {
+  // Cleanup existing listeners first to prevent duplicates
+  const existing = activeListeners.get(firebaseListId)
+  if (existing) {
+    for (const unsub of existing) unsub()
+    activeListeners.delete(firebaseListId)
+  }
+
   const db = getFirebaseDb()
   const unsubs: Unsubscribe[] = []
 
-  // Items listener
-  const itemsRef = ref(db, `lists/${firebaseListId}/items`)
-  const itemsUnsub = onValue(itemsRef, (snap) => {
-    if (!snap.exists()) {
-      callbacks.onItems([])
-      return
+  try {
+    // Items listener
+    const itemsRef = ref(db, `lists/${firebaseListId}/items`)
+    const itemsUnsub = onValue(itemsRef, (snap) => {
+      try {
+        if (!snap.exists()) {
+          callbacks.onItems([])
+          return
+        }
+        const val = snap.val() as Record<string, FirebaseItem>
+        const items: ShoppingItem[] = Object.values(val)
+          .map((fi) => ({
+            id: fi.id,
+            name: fi.name,
+            quantity: fi.quantity,
+            isChecked: fi.isChecked,
+            order: fi.order,
+            createdAt: fi.createdAt,
+          }))
+          .sort((a, b) => a.order - b.order)
+        callbacks.onItems(items)
+      } catch (error) {
+        console.warn('[FirebaseSyncService] Error in onItems callback:', error)
+      }
+    })
+    unsubs.push(itemsUnsub)
+
+    // Session listener
+    const sessionRef = ref(db, `lists/${firebaseListId}/session`)
+    const sessionUnsub = onValue(sessionRef, (snap) => {
+      try {
+        callbacks.onSession(snap.exists() ? (snap.val() as ShoppingSession) : null)
+      } catch (error) {
+        console.warn('[FirebaseSyncService] Error in onSession callback:', error)
+      }
+    })
+    unsubs.push(sessionUnsub)
+
+    // Meta listener
+    const metaRef = ref(db, `lists/${firebaseListId}/meta`)
+    const metaUnsub = onValue(metaRef, (snap) => {
+      try {
+        if (snap.exists()) {
+          callbacks.onMeta(snap.val() as FirebaseListMeta)
+        }
+      } catch (error) {
+        console.warn('[FirebaseSyncService] Error in onMeta callback:', error)
+      }
+    })
+    unsubs.push(metaUnsub)
+
+    activeListeners.set(firebaseListId, unsubs)
+
+    return () => {
+      for (const unsub of unsubs) unsub()
+      activeListeners.delete(firebaseListId)
     }
-    const val = snap.val() as Record<string, FirebaseItem>
-    const items: ShoppingItem[] = Object.values(val)
-      .map((fi) => ({
-        id: fi.id,
-        name: fi.name,
-        quantity: fi.quantity,
-        isChecked: fi.isChecked,
-        order: fi.order,
-        createdAt: fi.createdAt,
-      }))
-      .sort((a, b) => a.order - b.order)
-    callbacks.onItems(items)
-  })
-  unsubs.push(itemsUnsub)
-
-  // Session listener
-  const sessionRef = ref(db, `lists/${firebaseListId}/session`)
-  const sessionUnsub = onValue(sessionRef, (snap) => {
-    callbacks.onSession(snap.exists() ? (snap.val() as ShoppingSession) : null)
-  })
-  unsubs.push(sessionUnsub)
-
-  // Meta listener
-  const metaRef = ref(db, `lists/${firebaseListId}/meta`)
-  const metaUnsub = onValue(metaRef, (snap) => {
-    if (snap.exists()) {
-      callbacks.onMeta(snap.val() as FirebaseListMeta)
-    }
-  })
-  unsubs.push(metaUnsub)
-
-  activeListeners.set(firebaseListId, unsubs)
-
-  return () => {
+  } catch (error) {
+    // Cleanup any partial listeners on setup failure
     for (const unsub of unsubs) unsub()
-    activeListeners.delete(firebaseListId)
+    console.warn('[FirebaseSyncService] Failed to subscribe to list:', error)
+    return () => {}
   }
 }
 
