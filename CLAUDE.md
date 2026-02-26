@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-**1GoShop** is a simple shopping list mobile app built with React Native / Expo SDK 54. Local storage only (AsyncStorage), no backend. Deployed to TestFlight via EAS Build.
+**1GoShop** is a shopping list mobile app built with React Native / Expo SDK 54. Supports multiple lists with Firebase Realtime Database sharing (anonymous auth). Local storage via AsyncStorage, Firebase sync for shared lists. Deployed to TestFlight via EAS Build.
 
 ## User Preferences (APPLIES TO ALL PROJECTS)
 
@@ -32,9 +32,10 @@ npm run typecheck   # Same as verify
 - **Zustand** for state management
 - **react-native-gesture-handler** + **react-native-reanimated** for gestures
 - **react-native-unistyles** for styling (light/dark theme)
-- **AsyncStorage** for persistence
+- **AsyncStorage** for local persistence
+- **Firebase JS SDK v12+** for real-time sync (Realtime Database + Anonymous Auth)
 - **i18next** for i18n (12 languages: SK, EN, DE, HU, UK, CS, ZH, ES, FR, IT, PL, PT)
-- **React Navigation** (native stack, 4 screens)
+- **React Navigation** (native stack, 7 screens)
 - **@expo/vector-icons** (Ionicons) for icons
 - **expo-file-system** + **expo-sharing** for file-based backup export
 - **expo-file-system** (`File.pickFileAsync`) for backup import from file picker
@@ -44,18 +45,18 @@ npm run typecheck   # Same as verify
 ```
 src/
   index.ts                    # Entry point (imports unistyles, registers App)
-  App.tsx                     # Root component with providers
+  App.tsx                     # Root component with providers (migration + Firebase init)
   unistyles.ts                # Theme config (light + dark)
   navigation/
-    AppNavigator.tsx           # Stack navigator (4 screens)
+    AppNavigator.tsx           # Stack navigator (7 screens)
   screens/
     ShoppingListScreen/
-      ShoppingListScreen.tsx   # Main screen - DraggableFlatList with footer
+      ShoppingListScreen.tsx   # Main screen - DraggableFlatList with footer + list picker modal
       components/
         ShoppingListItem.tsx   # Swipeable item (pan, tap, drag handle)
         AddItemInput.tsx       # Text input + add button
         EmptyListPlaceholder.tsx
-        TutorialOverlay/       # 9-step interactive tutorial (14 files, refactored from monolith)
+        TutorialOverlay/       # 11-step interactive tutorial (16 files)
     ActiveShoppingScreen/
       ActiveShoppingScreen.tsx # Active shopping mode (checked = bought)
       components/
@@ -64,19 +65,32 @@ src/
       ShoppingHistoryScreen.tsx # Shopping history and statistics
     SettingsScreen/
       SettingsScreen.tsx       # Language, theme, history, backup/restore
+    ColorPickerScreen/
+      ColorPickerScreen.tsx    # Accent color picker
+    ShareListScreen/
+      ShareListScreen.tsx      # Share list (generate code, manage sharing, auto-unlink)
+    JoinListScreen/
+      JoinListScreen.tsx       # Join shared list (enter 6-char code)
   stores/
-    ShoppingListStore.ts       # Items CRUD + AsyncStorage persistence
-    ActiveShoppingStore.ts     # Active shopping session state
+    ShoppingListStore.ts       # Items CRUD + per-item Firebase sync + AsyncStorage
+    ActiveShoppingStore.ts     # Active shopping session + Firebase session sync
+    ListsMetaStore.ts          # Multi-list management (create, rename, delete, share/unlink)
     ThemeStore.ts              # Theme preference (auto/light/dark)
+    AccentColorStore.ts        # Custom accent color
   services/
+    FirebaseSyncService.ts     # Firebase auth, CRUD, real-time listeners, sharing codes
+    firebaseConfig.ts          # Firebase project config (onegoshop)
     BackupService.ts           # Export/import via Share sheet
+    MigrationService.ts        # Single-list → multi-list migration (idempotent)
+    debouncedPersist.ts        # Debounced AsyncStorage writes
+    ListClipboardService.ts    # Clipboard import/export
   i18n/
     i18n.ts                    # i18next setup (12 languages)
     locales/
       sk.json, en.json, de.json, hu.json, uk.json, cs.json, zh.json
       es.json, fr.json, it.json, pl.json, pt.json
   types/
-    shopping.ts                # ShoppingItem interface
+    shopping.ts                # ShoppingItem, ShoppingListMeta, ListsMetaData interfaces
     expo-vector-icons.d.ts     # Type declarations for @expo/vector-icons
 ```
 
@@ -84,30 +98,58 @@ src/
 
 ```typescript
 interface ShoppingItem {
-  id: string          // UUID v4
-  name: string        // Item name
-  quantity: number    // >= 1
-  isChecked: boolean  // Bought or not
-  order: number       // Sort position
-  createdAt: string   // ISO timestamp
+  id: string; name: string; quantity: number; isChecked: boolean; order: number; createdAt: string
 }
 
 interface ActiveShoppingItem {
-  id: string              // UUID v4
-  name: string            // Item name
-  quantity: number        // >= 1
-  isBought: boolean       // Bought during shopping
-  order: number           // Sort position
-  purchasedAt: string | null  // ISO timestamp when marked as bought (set on toggle, cleared on untoggle)
+  id: string; name: string; quantity: number; isBought: boolean; order: number; purchasedAt: string | null
 }
 
 interface ShoppingSession {
-  id: string              // UUID v4
-  items: ActiveShoppingItem[]
-  startedAt: string       // ISO timestamp when shopping started
-  finishedAt: string | null  // ISO timestamp when shopping finished
+  id: string; items: ActiveShoppingItem[]; startedAt: string; finishedAt: string | null
+}
+
+interface ShoppingListMeta {
+  id: string; name: string; createdAt: string
+  isShared: boolean; shareCode: string | null; firebaseListId: string | null; ownerDeviceId: string | null
+}
+
+interface ListsMetaData {
+  version: 1; lists: ShoppingListMeta[]; selectedListId: string; deviceId: string
 }
 ```
+
+### AsyncStorage Keys
+
+- `@lists_meta` — ListsMetaData (all list metadata + selected list)
+- `@list_{uuid}_items` — ShoppingItem[] per list
+- `@list_{uuid}_session` — ShoppingSession per list
+- `@list_{uuid}_history` — ShoppingSession[] per list
+- `@accent_color`, `@app_theme`, `@saved_colors` — settings
+
+### Firebase Structure (shared lists)
+
+```
+/lists/{firebaseListId}/
+  meta/ { name, createdAt, createdBy, members/{uid}: { joinedAt, deviceName } }
+  items/{itemId}: { id, name, quantity, isChecked, order, createdAt }
+  session: ShoppingSession | null
+  history/{sessionId}: ShoppingSession
+/sharing-codes/{6-char-code}/
+  { firebaseListId, listName, createdBy, createdAt, expiresAt }
+```
+
+### Firebase Sync Architecture
+
+- **Per-item writes**: addItem → `firebaseAddItem`, toggleChecked → `firebaseUpdateItem`, etc. (no full overwrite)
+- **Real-time listeners**: `subscribeToList` with `onItems`, `onSession`, `onMeta` callbacks
+- **Local-first**: Always load from AsyncStorage first, Firebase overrides when data arrives
+- **Local cache**: Firebase data cached to AsyncStorage via `debouncedPersist`
+- **Session sync**: `onSession` → `ActiveShoppingStore.setSessionFromFirebase()`
+- **Rename sync**: `onMeta` → `ListsMetaStore.renameList()` (with guard to prevent loop)
+- **Auto-unlink**: When sharing code expires with no joiners, list reverts to local-only
+- **Orphan cleanup**: `firebaseLeaveList` deletes entire Firebase list if no members remain
+- **Sharing code**: 6 chars from `ABCDEFGHJKMNPQRSTUVWXYZ23456789` (no O/0/I/1/L), 15min expiry
 
 ### Gesture Design (v1.0.1)
 
@@ -137,24 +179,26 @@ The item row is divided into **left half** and **right half**. The gesture actio
 
 ### State Management
 
-- **ShoppingListStore**: Zustand store with manual AsyncStorage persistence
-  - `items: ShoppingItem[]` - all items
-  - CRUD: addItem, removeItem, editItem, toggleChecked, incrementQuantity, decrementQuantity
-  - setItems (for drag reorder), reorderItems(fromIndex, toIndex)
-  - uncheckItems(ids) - uncheck specific items by ID array (used after finishing shopping)
-  - clearChecked, clearAll
-  - Persistence via `persist()` helper function (fire-and-forget)
-  - On load: items sorted by order and reindexed (0,1,2...) to fix any gaps
+- **ListsMetaStore**: Multi-list management
+  - `lists: ShoppingListMeta[]`, `selectedListId`, `deviceId`
+  - CRUD: createList, renameList (+ Firebase sync), deleteList, selectList
+  - Sharing: markListAsShared, unlinkList
+  - Persisted to `@lists_meta`
 
-- **ActiveShoppingStore**: Active shopping session management
-  - startShopping(items) - creates session from checked items (purchasedAt: null)
-  - toggleBought(id) - marks item as bought with `purchasedAt` timestamp (ISO), clears on untoggle
-  - finishShopping() - saves session to history with finishedAt timestamp
-  - On finish: bought items are unchecked in ShoppingListStore (so they don't appear pre-selected next time)
-  - Session and history persisted in AsyncStorage (`@active_shopping`, `@shopping_history`)
+- **ShoppingListStore**: Items CRUD with Firebase sync
+  - `items: ShoppingItem[]`, `currentListId`
+  - `switchToList(listId)`: loads from AsyncStorage first, subscribes to Firebase if shared
+  - Per-item Firebase writes (addItem → firebaseAddItem, etc.)
+  - Firebase listener callbacks: onItems, onSession (→ ActiveShoppingStore), onMeta (→ rename sync)
+
+- **ActiveShoppingStore**: Shopping session + history
+  - startShopping, toggleBought, finishShopping
+  - `setSessionFromFirebase(session)` - receives real-time session updates from Firebase
+  - `loadHistory()` - tries Firebase first, falls back to AsyncStorage
+  - On finish: bought items unchecked in ShoppingListStore
 
 - **ThemeStore**: auto/light/dark with AsyncStorage
-  - Applies theme via `UnistylesRuntime.setTheme()`
+- **AccentColorStore**: Custom accent color with HSL picker
 
 ### Code Standards
 
@@ -291,7 +335,7 @@ curl -s -X POST https://api.github.com/user/repos \
   - GitHub: https://github.com/robertmatray/superapp-ai-poc
   - Same Apple Developer account, same EAS credentials pattern
 
-## Current Status (v1.2.1 - February 25, 2026)
+## Current Status (v1.2.1 - February 26, 2026)
 
 ### Implemented (all working on TestFlight)
 - Shopping list CRUD (add, remove, edit, toggle checked, quantity +1/-1, reorder)
@@ -323,6 +367,19 @@ curl -s -X POST https://api.github.com/user/repos \
 - Search/filter in shopping list (filter text in AddItemInput component)
 - Bold text for checked items on main list
 
+**v1.2.1 multi-list + Firebase features (Build #75-#80):**
+- Multiple shopping lists (create, rename, delete, switch via header dropdown)
+- Firebase Realtime Database sharing with anonymous auth
+- 6-character sharing codes (15min expiry, auto-unlink if nobody joins)
+- Join shared list by entering code
+- Per-item Firebase sync (prevents data loss on simultaneous edits)
+- Real-time session sync (both users see active shopping)
+- Real-time list rename sync (bidirectional)
+- Orphaned Firebase data cleanup (auto-delete when last member leaves)
+- Migration from single-list to multi-list format (idempotent, with orphan recovery)
+- Tutorial steps 10+11 (share list, join shared list animations)
+- Local-first architecture: always loads from AsyncStorage, Firebase overrides when available
+
 ### Build & Deploy Status
 
 **EAS Project**: `f6744446-31a1-40f5-abe9-77e7dc41a501`
@@ -330,8 +387,8 @@ curl -s -X POST https://api.github.com/user/repos \
 **Provisioning Profile**: f649b342-4c71-4d84-98c3-cc22a77085ba (ACTIVE, expires 2026-12-12)
 **Distribution Certificate**: 28T88DA5Q5 (shared with moja4ka-zdravie)
 
-**Latest successful iOS build**: Build #74 (v1.2.1) - post-iterative code review fixes
-- EAS Build ID: check EAS dashboard
+**Latest successful iOS build**: Build #80 (v1.2.1) - all sharing edge cases fixed
+- Git tag: `v1.2.1-b80`
 
 **Latest successful Android build**: Build (v1.2.0, versionCode 6)
 - AAB: `internals/google-play/app.aab` (not in git, 58MB)
@@ -402,6 +459,12 @@ curl -s -X POST https://api.github.com/user/repos \
 | #70 | Feb 24 | UX improvements: uncheck bought items after shopping, decrement-to-delete, long press to edit |
 | #71-73 | Feb 25 | Code review v4/v5 fixes, TutorialOverlay refactoring |
 | #74 | Feb 25 | v1.2.1 - Post-iterative code review fixes (ErrorBoundary, debouncedPersist, backup validation, hardcoded colors, JSON parse validation, flushPersist) |
+| #75 | Feb 25 | Phase 1: Multi-list support (local) — multiple shopping lists with per-list storage |
+| #76 | Feb 25 | Phase 2+3: Firebase sharing + real-time sync |
+| #77 | Feb 26 | Tutorial sharing steps (10+11) + migration recovery for orphaned history |
+| #78 | Feb 26 | Debug AsyncStorage dump button (diagnostic) |
+| #79 | Feb 26 | Fix shared list showing empty: load local data first, then Firebase |
+| #80 | Feb 26 | Fix all sharing edge cases: per-item sync, session/rename sync, auto-unlink, history upload, orphan cleanup. Remove debug button. |
 | Android | Feb 22 | v1.2.0 (versionCode 6) - Android AAB for Google Play |
 
 ### Scripts (for CI/CD automation)
@@ -417,13 +480,15 @@ curl -s -X POST https://api.github.com/user/repos \
 
 ### App Screens
 
-1. **ShoppingListScreen** (main) - Master list of all items. Tap to mark for shopping. Swipe gestures for edit/delete/quantity. Footer shows count + "Start Shopping" button when items are checked. Tutorial overlay accessible from footer.
-2. **ActiveShoppingScreen** - Active shopping session. Shows only checked items. Tap to mark as bought (strikethrough). Finish button saves to history.
+1. **ShoppingListScreen** (main) - Master list with header list picker (dropdown). Swipe gestures, footer with count + "Start Shopping". Share icon in header. Tutorial overlay (11 steps).
+2. **ActiveShoppingScreen** - Active shopping session. Tap to mark bought (strikethrough). Finish saves to history.
 3. **ShoppingHistoryScreen** - Past shopping sessions with statistics.
-4. **SettingsScreen** - Language (12 langs with flags), theme (auto/light/dark), history link, backup/restore.
+4. **SettingsScreen** - Language (12 langs), theme (auto/light/dark), accent color, history link, backup/restore.
 5. **ColorPickerScreen** - Accent color picker with 20 presets + custom HSL wheel.
+6. **ShareListScreen** - Share list (generate 6-char code, show members count, stop sharing). Auto-unlinks if nobody joins.
+7. **JoinListScreen** - Join shared list by entering 6-character code.
 
-### Tutorial Overlay (9 steps)
+### Tutorial Overlay (11 steps)
 
 Interactive animated tutorial showing all gestures with pulsing touch indicator:
 1. Add item (tap input + add button)
@@ -435,6 +500,8 @@ Interactive animated tutorial showing all gestures with pulsing touch indicator:
 7. Mark as bought (tap in active shopping)
 8. Finish shopping (tap finish button)
 9. View history (navigate to history)
+10. Share list (tap share icon, show code)
+11. Join shared list (enter code, connect)
 
 ### App Store Submission (February 18, 2026)
 
@@ -472,26 +539,17 @@ Interactive animated tutorial showing all gestures with pulsing touch indicator:
 ### App Store (iOS)
 
 - **App Store Connect**: https://appstoreconnect.apple.com/apps/6759269751
-- **Status**: v1.1.0 on App Store, v1.2.1 on TestFlight (Build #74)
-- **Git tag**: `v1.2.1`
-
-### Not Yet Done
-- No splash screen customization
-- iCloud sync not working (app not visible in iCloud settings - requires CloudKit entitlement)
+- **Status**: v1.1.0 on App Store, v1.2.1 on TestFlight (Build #80)
+- **Git tag**: `v1.2.1-b80`
 
 ### Future Ideas (implement when user base grows)
 
-**1. Shared Shopping List via Firebase**
-- **Goal**: Allow two or more people (e.g. husband + wife) to share and sync a shopping list in real-time
-- **Technology**: Firebase Firestore (free tier sufficient for family use)
-- **How it will work**:
-  1. One user creates a "shared list" → app generates a 6-digit pairing code
-  2. Second user enters the code → both phones connect to the same Firestore document
-  3. All operations sync in real-time: add, edit, delete, quantity changes, check/uncheck items
-  4. Works offline - changes sync when back online (Firestore offline persistence)
-- **No custom backend needed** - Firebase handles everything (auth, storage, real-time sync)
-- **Monetization**: Free for 1 shared person, premium for multiple people
-- **Status**: Idea phase
+**1. Shared Shopping List via Firebase** - IMPLEMENTED (Build #76-#80)
+- Firebase Realtime Database (not Firestore) with anonymous auth
+- 6-character sharing codes, per-item sync, real-time listeners
+- Firebase Spark plan (free) — sufficient for family use
+- Firebase project: "onegoshop" on matray@realise.sk Google account
+- Firebase config: `src/services/firebaseConfig.ts`
 
 **2. Smart Ordering by Store Layout (strongest premium feature)**
 - **Goal**: Automatically reorder shopping list items based on the order the user typically buys them
@@ -516,11 +574,10 @@ Interactive animated tutorial showing all gestures with pulsing touch indicator:
 
 | Free | Premium (subscription) |
 |------|----------------------|
-| Basic shopping list | Smart store ordering |
-| Share with 1 person | Share with multiple |
-| Basic history | Statistics & predictions |
-| | Multiple lists |
-| | No ads |
+| Multiple shopping lists | Smart store ordering |
+| Share with unlimited people | Statistics & predictions |
+| Full history | Purchase reminders |
+| All 12 languages | No ads |
 
 ### Language Expansion Plan
 
@@ -617,3 +674,14 @@ Interactive animated tutorial showing all gestures with pulsing touch indicator:
 ### Known Limitations
 - Apple API key has Developer access - cannot create App Store Connect apps via API (manual creation required)
 - App Privacy cannot be set via REST API - must be done manually in App Store Connect
+- iCloud sync not working (app not visible in iCloud settings - requires CloudKit entitlement, not worth the effort)
+- Firebase Spark plan: 100 simultaneous connections, 1GB storage, 10GB/month transfer (sufficient for family app)
+
+### Firebase Project Details
+- **Project**: onegoshop
+- **Google account**: matray@realise.sk
+- **Region**: europe-west1
+- **Auth**: Anonymous Authentication enabled
+- **Database**: Realtime Database
+- **Security Rules**: Members-only read/write, sharing codes readable by any authenticated user
+- **Plan**: Spark (free)
