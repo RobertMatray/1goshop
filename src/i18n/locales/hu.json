@@ -168,6 +168,8 @@
     "joinError": "Érvénytelen vagy lejárt kód",
     "networkError": "Ellenőrizze az internetkapcsolatot és próbálja újra",
     "joinSharedList": "Csatlakozás megosztott listához",
-    "error": "Hiba"
+    "error": "Hiba",
+    "offlineWarning": "A változtatások helyben mentve, de nem szinkronizálódnak a többi eszközzel, amíg a kapcsolat helyre nem áll.",
+    "offlineTitle": "Offline"
   }
 }

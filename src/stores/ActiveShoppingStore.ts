@@ -1,6 +1,8 @@
 import { create } from 'zustand'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { Alert } from 'react-native'
 import { randomUUID } from 'expo-crypto'
+import i18n from '../i18n/i18n'
 import type { ShoppingItem, ActiveShoppingItem, ShoppingSession } from '../types/shopping'
 import { debouncedPersist } from '../services/debouncedPersist'
 import { useListsMetaStore } from './ListsMetaStore'
@@ -206,9 +208,7 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
 
     const firebaseListId = getFirebaseListId(currentListId)
     if (firebaseListId) {
-      await firebaseRemoveHistory(firebaseListId, id).catch((e) =>
-        console.warn('[ActiveShoppingStore] Firebase remove history failed:', e),
-      )
+      await firebaseRemoveHistory(firebaseListId, id).catch(logFirebaseError)
     } else {
       const historyKey = `@list_${currentListId}_history`
       await AsyncStorage.setItem(historyKey, JSON.stringify(updated)).catch((e) =>
@@ -225,9 +225,7 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
 
     const firebaseListId = getFirebaseListId(currentListId)
     if (firebaseListId) {
-      await firebaseClearHistory(firebaseListId).catch((e) =>
-        console.warn('[ActiveShoppingStore] Firebase clear history failed:', e),
-      )
+      await firebaseClearHistory(firebaseListId).catch(logFirebaseError)
     } else {
       const historyKey = `@list_${currentListId}_history`
       await AsyncStorage.removeItem(historyKey).catch((e) =>
@@ -252,10 +250,23 @@ function persistSession(session: ShoppingSession, listId: string | null): void {
   if (!listId) return
   const firebaseListId = getFirebaseListId(listId)
   if (firebaseListId) {
-    firebaseSetSession(firebaseListId, session).catch((e) =>
-      console.warn('[ActiveShoppingStore] Firebase session persist failed:', e),
-    )
+    firebaseSetSession(firebaseListId, session).catch(logFirebaseError)
   } else {
     debouncedPersist(`@list_${listId}_session`, session)
+  }
+}
+
+let lastOfflineAlertAt = 0
+const OFFLINE_ALERT_COOLDOWN_MS = 60_000
+
+function logFirebaseError(e: unknown): void {
+  console.warn('[ActiveShoppingStore] Firebase operation failed:', e)
+  const now = Date.now()
+  if (now - lastOfflineAlertAt > OFFLINE_ALERT_COOLDOWN_MS) {
+    lastOfflineAlertAt = now
+    Alert.alert(
+      i18n.t('Sharing.offlineTitle'),
+      i18n.t('Sharing.offlineWarning'),
+    )
   }
 }

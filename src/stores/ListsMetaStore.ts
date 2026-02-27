@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { randomUUID } from 'expo-crypto'
 import type { ShoppingListMeta, ListsMetaData } from '../types/shopping'
-import { firebaseUpdateListName } from '../services/FirebaseSyncService'
+import { firebaseUpdateListName, firebaseLeaveList, unsubscribeFromList } from '../services/FirebaseSyncService'
 
 const STORAGE_KEY = '@lists_meta'
 
@@ -91,6 +91,16 @@ export const useListsMetaStore = create<ListsMetaStoreState>((set, get) => ({
   deleteList: async (id: string) => {
     const { lists, selectedListId } = get()
     if (lists.length <= 1) return
+
+    const listToDelete = lists.find((l) => l.id === id)
+
+    // Leave Firebase list if shared (unsubscribe listener + remove from members)
+    if (listToDelete?.isShared && listToDelete.firebaseListId) {
+      unsubscribeFromList(listToDelete.firebaseListId)
+      await firebaseLeaveList(listToDelete.firebaseListId).catch((e) =>
+        console.warn('[ListsMetaStore] Firebase leave failed:', e),
+      )
+    }
 
     const updated = lists.filter((l) => l.id !== id)
     const newSelectedId = selectedListId === id ? updated[0]?.id ?? null : selectedListId

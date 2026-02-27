@@ -168,6 +168,8 @@
     "joinError": "Código inválido ou expirado",
     "networkError": "Verifique sua conexão com a internet e tente novamente",
     "joinSharedList": "Juntar-se a uma lista partilhada",
-    "error": "Erro"
+    "error": "Erro",
+    "offlineWarning": "Alterações guardadas localmente mas não serão sincronizadas com outros dispositivos até a ligação ser restabelecida.",
+    "offlineTitle": "Offline"
   }
 }

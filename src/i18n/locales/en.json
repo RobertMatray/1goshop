@@ -168,6 +168,8 @@
     "joinError": "Invalid or expired code",
     "networkError": "Check your internet connection and try again",
     "joinSharedList": "Join a shared list",
-    "error": "Error"
+    "error": "Error",
+    "offlineWarning": "Changes saved locally but won't sync with other devices until connection is restored.",
+    "offlineTitle": "Offline"
   }
 }

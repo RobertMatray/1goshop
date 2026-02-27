@@ -168,6 +168,8 @@
     "joinError": "Codice non valido o scaduto",
     "networkError": "Controlla la connessione internet e riprova",
     "joinSharedList": "Unisciti a una lista condivisa",
-    "error": "Errore"
+    "error": "Errore",
+    "offlineWarning": "Modifiche salvate localmente ma non verranno sincronizzate con altri dispositivi fino al ripristino della connessione.",
+    "offlineTitle": "Offline"
   }
 }

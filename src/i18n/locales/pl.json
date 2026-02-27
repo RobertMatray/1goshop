@@ -170,6 +170,8 @@
     "joinError": "Nieprawidłowy lub wygasły kod",
     "networkError": "Sprawdź połączenie z internetem i spróbuj ponownie",
     "joinSharedList": "Dołącz do udostępnionej listy",
-    "error": "Błąd"
+    "error": "Błąd",
+    "offlineWarning": "Zmiany zapisane lokalnie, ale nie zostaną zsynchronizowane z innymi urządzeniami do momentu przywrócenia połączenia.",
+    "offlineTitle": "Offline"
   }
 }

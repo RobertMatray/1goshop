@@ -170,6 +170,8 @@
     "joinError": "Neplatný alebo expirovaný kód",
     "networkError": "Skontrolujte internetové pripojenie a skúste znova",
     "joinSharedList": "Pripojiť sa k zdieľanému zoznamu",
-    "error": "Chyba"
+    "error": "Chyba",
+    "offlineWarning": "Zmeny boli uložené lokálne, ale nebudú synchronizované s ostatnými zariadeniami, kým sa neobnoví pripojenie.",
+    "offlineTitle": "Offline"
   }
 }

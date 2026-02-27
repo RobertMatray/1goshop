@@ -168,6 +168,8 @@
     "joinError": "Ungültiger oder abgelaufener Code",
     "networkError": "Überprüfen Sie Ihre Internetverbindung und versuchen Sie es erneut",
     "joinSharedList": "Geteilter Liste beitreten",
-    "error": "Fehler"
+    "error": "Fehler",
+    "offlineWarning": "Änderungen lokal gespeichert, aber werden erst mit anderen Geräten synchronisiert, wenn die Verbindung wiederhergestellt ist.",
+    "offlineTitle": "Offline"
   }
 }

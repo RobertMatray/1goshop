@@ -6,14 +6,11 @@ import {
   remove,
   update,
   onValue,
-  off,
   get as firebaseGet,
-  serverTimestamp,
   type Unsubscribe,
-  type DatabaseReference,
 } from 'firebase/database'
 import { getFirebaseAuth, getFirebaseDb } from './firebaseConfig'
-import type { ShoppingItem, ActiveShoppingItem, ShoppingSession } from '../types/shopping'
+import type { ShoppingItem, ShoppingSession } from '../types/shopping'
 
 // ─── Sharing code charset (30 chars: no O/0/I/1/L) ───
 const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
@@ -24,6 +21,7 @@ const CODE_EXPIRY_MS = 15 * 60 * 1000 // 15 minutes
 export interface FirebaseListMeta {
   name: string
   createdAt: number
+  updatedAt: number
   createdBy: string
   members: Record<string, { joinedAt: number; deviceName: string }>
 }
@@ -35,6 +33,7 @@ export interface FirebaseItem {
   isChecked: boolean
   order: number
   createdAt: string
+  updatedAt: number
 }
 
 export interface FirebaseSharingCode {
@@ -94,12 +93,14 @@ export async function createFirebaseList(
   const listRef = push(ref(db, 'lists'))
   const listId = listRef.key!
 
+  const now = Date.now()
   const meta: FirebaseListMeta = {
     name,
-    createdAt: Date.now(),
+    createdAt: now,
+    updatedAt: now,
     createdBy: uid,
     members: {
-      [uid]: { joinedAt: Date.now(), deviceName },
+      [uid]: { joinedAt: now, deviceName },
     },
   }
 
@@ -112,6 +113,7 @@ export async function createFirebaseList(
       isChecked: item.isChecked,
       order: item.order,
       createdAt: item.createdAt,
+      updatedAt: now,
     }
   }
 
@@ -321,6 +323,7 @@ export async function firebaseSetItems(
   items: ShoppingItem[],
 ): Promise<void> {
   const db = getFirebaseDb()
+  const now = Date.now()
   const itemsObj: Record<string, FirebaseItem> = {}
   for (const item of items) {
     itemsObj[item.id] = {
@@ -330,9 +333,11 @@ export async function firebaseSetItems(
       isChecked: item.isChecked,
       order: item.order,
       createdAt: item.createdAt,
+      updatedAt: now,
     }
   }
   await set(ref(db, `lists/${firebaseListId}/items`), itemsObj)
+  await update(ref(db, `lists/${firebaseListId}/meta`), { updatedAt: now })
 }
 
 export async function firebaseAddItem(
@@ -340,6 +345,7 @@ export async function firebaseAddItem(
   item: ShoppingItem,
 ): Promise<void> {
   const db = getFirebaseDb()
+  const now = Date.now()
   const firebaseItem: FirebaseItem = {
     id: item.id,
     name: item.name,
@@ -347,8 +353,10 @@ export async function firebaseAddItem(
     isChecked: item.isChecked,
     order: item.order,
     createdAt: item.createdAt,
+    updatedAt: now,
   }
   await set(ref(db, `lists/${firebaseListId}/items/${item.id}`), firebaseItem)
+  await update(ref(db, `lists/${firebaseListId}/meta`), { updatedAt: now })
 }
 
 export async function firebaseRemoveItem(
@@ -356,7 +364,9 @@ export async function firebaseRemoveItem(
   itemId: string,
 ): Promise<void> {
   const db = getFirebaseDb()
+  const now = Date.now()
   await remove(ref(db, `lists/${firebaseListId}/items/${itemId}`))
+  await update(ref(db, `lists/${firebaseListId}/meta`), { updatedAt: now })
 }
 
 export async function firebaseUpdateItem(
@@ -365,7 +375,9 @@ export async function firebaseUpdateItem(
   updates: Partial<FirebaseItem>,
 ): Promise<void> {
   const db = getFirebaseDb()
-  await update(ref(db, `lists/${firebaseListId}/items/${itemId}`), updates)
+  const now = Date.now()
+  await update(ref(db, `lists/${firebaseListId}/items/${itemId}`), { ...updates, updatedAt: now })
+  await update(ref(db, `lists/${firebaseListId}/meta`), { updatedAt: now })
 }
 
 export async function firebaseBatchUpdateOrder(
@@ -373,10 +385,13 @@ export async function firebaseBatchUpdateOrder(
   items: ShoppingItem[],
 ): Promise<void> {
   const db = getFirebaseDb()
-  const updates: Record<string, number> = {}
+  const now = Date.now()
+  const updates: Record<string, unknown> = {}
   for (const item of items) {
     updates[`lists/${firebaseListId}/items/${item.id}/order`] = item.order
+    updates[`lists/${firebaseListId}/items/${item.id}/updatedAt`] = now
   }
+  updates[`lists/${firebaseListId}/meta/updatedAt`] = now
   await update(ref(db), updates)
 }
 
@@ -386,13 +401,16 @@ export async function firebaseRemoveItemsAndReorder(
   remainingItems: ShoppingItem[],
 ): Promise<void> {
   const db = getFirebaseDb()
+  const now = Date.now()
   const updates: Record<string, unknown> = {}
   for (const id of removeIds) {
     updates[`lists/${firebaseListId}/items/${id}`] = null
   }
   for (const item of remainingItems) {
     updates[`lists/${firebaseListId}/items/${item.id}/order`] = item.order
+    updates[`lists/${firebaseListId}/items/${item.id}/updatedAt`] = now
   }
+  updates[`lists/${firebaseListId}/meta/updatedAt`] = now
   await update(ref(db), updates)
 }
 
@@ -401,11 +419,13 @@ export async function firebaseSetSession(
   session: ShoppingSession | null,
 ): Promise<void> {
   const db = getFirebaseDb()
+  const now = Date.now()
   if (session) {
     await set(ref(db, `lists/${firebaseListId}/session`), session)
   } else {
     await remove(ref(db, `lists/${firebaseListId}/session`))
   }
+  await update(ref(db, `lists/${firebaseListId}/meta`), { updatedAt: now })
 }
 
 export async function firebaseAddHistory(
@@ -413,7 +433,9 @@ export async function firebaseAddHistory(
   session: ShoppingSession,
 ): Promise<void> {
   const db = getFirebaseDb()
+  const now = Date.now()
   await set(ref(db, `lists/${firebaseListId}/history/${session.id}`), session)
+  await update(ref(db, `lists/${firebaseListId}/meta`), { updatedAt: now })
 }
 
 export async function firebaseRemoveHistory(
@@ -421,12 +443,16 @@ export async function firebaseRemoveHistory(
   sessionId: string,
 ): Promise<void> {
   const db = getFirebaseDb()
+  const now = Date.now()
   await remove(ref(db, `lists/${firebaseListId}/history/${sessionId}`))
+  await update(ref(db, `lists/${firebaseListId}/meta`), { updatedAt: now })
 }
 
 export async function firebaseClearHistory(firebaseListId: string): Promise<void> {
   const db = getFirebaseDb()
+  const now = Date.now()
   await remove(ref(db, `lists/${firebaseListId}/history`))
+  await update(ref(db, `lists/${firebaseListId}/meta`), { updatedAt: now })
 }
 
 export async function firebaseUpdateListName(
@@ -434,7 +460,7 @@ export async function firebaseUpdateListName(
   name: string,
 ): Promise<void> {
   const db = getFirebaseDb()
-  await update(ref(db, `lists/${firebaseListId}/meta`), { name })
+  await update(ref(db, `lists/${firebaseListId}/meta`), { name, updatedAt: Date.now() })
 }
 
 export async function firebaseLeaveList(firebaseListId: string): Promise<void> {

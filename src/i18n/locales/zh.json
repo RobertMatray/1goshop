@@ -166,6 +166,8 @@
     "joinError": "无效或已过期的代码",
     "networkError": "请检查网络连接后重试",
     "joinSharedList": "加入共享清单",
-    "error": "错误"
+    "error": "错误",
+    "offlineWarning": "更改已保存到本地，但在恢复连接之前不会与其他设备同步。",
+    "offlineTitle": "离线"
   }
 }

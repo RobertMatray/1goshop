@@ -1,6 +1,8 @@
 import { create } from 'zustand'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { Alert } from 'react-native'
 import { randomUUID } from 'expo-crypto'
+import i18n from '../i18n/i18n'
 import type { ShoppingItem } from '../types/shopping'
 import { debouncedPersist } from '../services/debouncedPersist'
 import { useListsMetaStore } from './ListsMetaStore'
@@ -290,6 +292,17 @@ function persistLocal(items: ShoppingItem[], listId: string | null): void {
   debouncedPersist(`@list_${listId}_items`, items)
 }
 
+let lastOfflineAlertAt = 0
+const OFFLINE_ALERT_COOLDOWN_MS = 60_000
+
 function logFirebaseError(e: unknown): void {
   console.warn('[ShoppingListStore] Firebase operation failed:', e)
+  const now = Date.now()
+  if (now - lastOfflineAlertAt > OFFLINE_ALERT_COOLDOWN_MS) {
+    lastOfflineAlertAt = now
+    Alert.alert(
+      i18n.t('Sharing.offlineTitle'),
+      i18n.t('Sharing.offlineWarning'),
+    )
+  }
 }
