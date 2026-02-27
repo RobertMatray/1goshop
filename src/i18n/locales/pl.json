@@ -168,6 +168,7 @@
     "joinButton": "Dołącz",
     "joinSuccess": "Dołączono do listy \"{{name}}\"!",
     "joinError": "Nieprawidłowy lub wygasły kod",
+    "networkError": "Sprawdź połączenie z internetem i spróbuj ponownie",
     "joinSharedList": "Dołącz do udostępnionej listy",
     "error": "Błąd"
   }

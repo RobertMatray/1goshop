@@ -166,6 +166,7 @@
     "joinButton": "Unirse",
     "joinSuccess": "¡Unido a la lista \"{{name}}\"!",
     "joinError": "Código inválido o expirado",
+    "networkError": "Comprueba tu conexión a internet e inténtalo de nuevo",
     "joinSharedList": "Unirse a una lista compartida",
     "error": "Error"
   }

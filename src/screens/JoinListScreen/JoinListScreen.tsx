@@ -91,15 +91,28 @@ export function JoinListScreen(): React.ReactElement {
         return
       }
 
-      // Create local list entry linked to Firebase
-      const newId = useListsMetaStore.getState().createList(result.listName)
-      useListsMetaStore.getState().markListAsShared(newId, result.firebaseListId, cleanCode)
+      // Check if there's an unlinked local list that was previously connected to this Firebase list
+      // This happens when user unlinks and then re-joins the same shared list
+      const unlinkedList = useListsMetaStore.getState().lists.find(
+        (l) => !l.isShared && !l.firebaseListId && l.name === result.listName,
+      )
 
-      // Switch to the new list
-      useListsMetaStore.getState().selectList(newId)
+      let listId: string
+      if (unlinkedList) {
+        // Re-link existing local list instead of creating a duplicate
+        useListsMetaStore.getState().markListAsShared(unlinkedList.id, result.firebaseListId, cleanCode)
+        listId = unlinkedList.id
+      } else {
+        // Create new local list entry linked to Firebase
+        listId = useListsMetaStore.getState().createList(result.listName)
+        useListsMetaStore.getState().markListAsShared(listId, result.firebaseListId, cleanCode)
+      }
+
+      // Switch to the joined list
+      useListsMetaStore.getState().selectList(listId)
       await Promise.allSettled([
-        useShoppingListStore.getState().switchToList(newId),
-        useActiveShoppingStore.getState().switchToList(newId),
+        useShoppingListStore.getState().switchToList(listId),
+        useActiveShoppingStore.getState().switchToList(listId),
       ])
 
       Alert.alert(
@@ -109,7 +122,16 @@ export function JoinListScreen(): React.ReactElement {
       )
     } catch (error) {
       console.warn('[JoinListScreen] Failed to join:', error)
-      Alert.alert(t('Sharing.error'), t('Sharing.joinError'))
+      const isNetworkError =
+        error instanceof Error &&
+        (error.message.includes('network') ||
+          error.message.includes('timeout') ||
+          error.message.includes('Failed to fetch') ||
+          error.message.includes('NETWORK_ERROR'))
+      Alert.alert(
+        t('Sharing.error'),
+        isNetworkError ? t('Sharing.networkError') : t('Sharing.joinError'),
+      )
     } finally {
       setIsLoading(false)
     }

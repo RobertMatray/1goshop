@@ -166,6 +166,7 @@
     "joinButton": "Csatlakozás",
     "joinSuccess": "Csatlakozott a \"{{name}}\" listához!",
     "joinError": "Érvénytelen vagy lejárt kód",
+    "networkError": "Ellenőrizze az internetkapcsolatot és próbálja újra",
     "joinSharedList": "Csatlakozás megosztott listához",
     "error": "Hiba"
   }

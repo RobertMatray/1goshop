@@ -166,6 +166,7 @@
     "joinButton": "Unisciti",
     "joinSuccess": "Unito alla lista \"{{name}}\"!",
     "joinError": "Codice non valido o scaduto",
+    "networkError": "Controlla la connessione internet e riprova",
     "joinSharedList": "Unisciti a una lista condivisa",
     "error": "Errore"
   }

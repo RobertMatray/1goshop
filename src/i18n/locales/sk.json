@@ -168,6 +168,7 @@
     "joinButton": "Pripojiť sa",
     "joinSuccess": "Pripojený k zoznamu \"{{name}}\"!",
     "joinError": "Neplatný alebo expirovaný kód",
+    "networkError": "Skontrolujte internetové pripojenie a skúste znova",
     "joinSharedList": "Pripojiť sa k zdieľanému zoznamu",
     "error": "Chyba"
   }

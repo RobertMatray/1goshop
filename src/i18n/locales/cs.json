@@ -168,6 +168,7 @@
     "joinButton": "Připojit se",
     "joinSuccess": "Připojeno k seznamu \"{{name}}\"!",
     "joinError": "Neplatný nebo vypršený kód",
+    "networkError": "Zkontrolujte připojení k internetu a zkuste to znovu",
     "joinSharedList": "Připojit se ke sdílenému seznamu",
     "error": "Chyba"
   }

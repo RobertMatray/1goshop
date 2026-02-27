@@ -164,6 +164,7 @@
     "joinButton": "加入",
     "joinSuccess": "已加入清单\"{{name}}\"！",
     "joinError": "无效或已过期的代码",
+    "networkError": "请检查网络连接后重试",
     "joinSharedList": "加入共享清单",
     "error": "错误"
   }
