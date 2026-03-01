@@ -5,6 +5,7 @@ import { randomUUID } from 'expo-crypto'
 import i18n from '../i18n/i18n'
 import type { ShoppingItem } from '../types/shopping'
 import { debouncedPersist } from '../services/debouncedPersist'
+import { debugLog } from '../services/DebugLogger'
 import { useListsMetaStore } from './ListsMetaStore'
 import {
   firebaseSetItems,
@@ -53,13 +54,17 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
   },
 
   switchToList: async (listId: string) => {
+    debugLog('Store', `switchToList called: ${listId}`)
+
     // Unsubscribe from previous Firebase listener
     if (currentFirebaseUnsub) {
+      debugLog('Store', 'Unsubscribing from previous listener')
       currentFirebaseUnsub()
       currentFirebaseUnsub = null
     }
 
     const listMeta = useListsMetaStore.getState().lists.find((l) => l.id === listId)
+    debugLog('Store', `listMeta: isShared=${listMeta?.isShared}, firebaseListId=${listMeta?.firebaseListId ?? 'null'}`)
 
     // Always load local data first as immediate fallback
     const key = `@list_${listId}_items`
@@ -74,7 +79,9 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
             .map((item, i) => ({ ...item, order: i }))
         }
       }
+      debugLog('Store', `Local items loaded: ${localItems.length}`)
     } catch (error) {
+      debugLog('Store', `Failed to load local items: ${error}`)
       console.warn('[ShoppingListStore] Failed to load local items:', error)
     }
 
@@ -83,9 +90,12 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
 
     // If shared, also subscribe to Firebase — will override local data when it arrives
     if (listMeta?.isShared && listMeta.firebaseListId) {
+      debugLog('Store', `List is shared — subscribing to Firebase: ${listMeta.firebaseListId}`)
       currentFirebaseUnsub = subscribeToList(listMeta.firebaseListId, {
         onItems: (items) => {
-          if (get().currentListId === listId) {
+          const isCurrentList = get().currentListId === listId
+          debugLog('Store', `onItems callback: ${items.length} items, isCurrentList=${isCurrentList}`)
+          if (isCurrentList) {
             set({ items })
             // Also persist to local storage as cache
             debouncedPersist(key, items)
@@ -93,11 +103,13 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
         },
         onSession: (session) => {
           if (get().currentListId === listId) {
+            debugLog('Store', `onSession callback: session=${session ? 'active' : 'null'}`)
             useActiveShoppingStore.getState().setSessionFromFirebase(session)
           }
         },
         onMeta: (meta) => {
           if (get().currentListId === listId) {
+            debugLog('Store', `onMeta callback: name="${meta.name}"`)
             // Sync list name from Firebase to local meta
             const currentMeta = useListsMetaStore.getState().lists.find((l) => l.id === listId)
             if (currentMeta && currentMeta.name !== meta.name) {
@@ -106,6 +118,8 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
           }
         },
       })
+    } else {
+      debugLog('Store', 'List is NOT shared — local only')
     }
   },
 
@@ -125,6 +139,7 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
     const updated = [...items, newItem]
     set({ items: updated })
     const fbId = getFirebaseListId(get().currentListId)
+    debugLog('Store', `addItem: "${trimmed}", fbId=${fbId ?? 'null (local)'}`)
     if (fbId) {
       firebaseAddItem(fbId, newItem).catch(logFirebaseError)
     } else {
@@ -296,7 +311,16 @@ let lastOfflineAlertAt = 0
 const OFFLINE_ALERT_COOLDOWN_MS = 60_000
 
 function logFirebaseError(e: unknown): void {
-  console.warn('[ShoppingListStore] Firebase operation failed:', e)
+  const msg = e instanceof Error ? e.message : String(e)
+  debugLog('Store', `Firebase operation FAILED: ${msg}`)
+  console.warn('[ShoppingListStore] Firebase operation failed:', msg)
+
+  // Persist locally as fallback so changes survive app restart
+  const { items, currentListId } = useShoppingListStore.getState()
+  if (currentListId) {
+    persistLocal(items, currentListId)
+  }
+
   const now = Date.now()
   if (now - lastOfflineAlertAt > OFFLINE_ALERT_COOLDOWN_MS) {
     lastOfflineAlertAt = now

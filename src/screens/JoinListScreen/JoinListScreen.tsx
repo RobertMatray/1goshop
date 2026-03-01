@@ -9,6 +9,7 @@ import { useListsMetaStore } from '../../stores/ListsMetaStore'
 import { useShoppingListStore } from '../../stores/ShoppingListStore'
 import { useActiveShoppingStore } from '../../stores/ActiveShoppingStore'
 import { joinSharedList } from '../../services/FirebaseSyncService'
+import { debugLog } from '../../services/DebugLogger'
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'JoinListScreen'>
 
@@ -66,17 +67,22 @@ export function JoinListScreen(): React.ReactElement {
 
     setIsLoading(true)
     try {
+      debugLog('Join', `Joining with code: ${cleanCode}`)
       const result = await joinSharedList(cleanCode, 'My device')
       if (!result) {
+        debugLog('Join', 'joinSharedList returned null — invalid/expired code')
         Alert.alert(t('Sharing.error'), t('Sharing.joinError'))
         return
       }
+
+      debugLog('Join', `Join OK: firebaseListId=${result.firebaseListId}, name="${result.listName}"`)
 
       // Check if already joined this Firebase list — prevent duplicates
       const existingList = useListsMetaStore.getState().lists.find(
         (l) => l.firebaseListId === result.firebaseListId,
       )
       if (existingList) {
+        debugLog('Join', `Already joined — switching to existing list: ${existingList.id}`)
         // Already joined — just switch to existing list
         useListsMetaStore.getState().selectList(existingList.id)
         await Promise.allSettled([
@@ -99,6 +105,7 @@ export function JoinListScreen(): React.ReactElement {
 
       let listId: string
       if (unlinkedList) {
+        debugLog('Join', `Re-linking unlinked list: ${unlinkedList.id}`)
         // Re-link existing local list instead of creating a duplicate
         useListsMetaStore.getState().markListAsShared(unlinkedList.id, result.firebaseListId, cleanCode)
         listId = unlinkedList.id
@@ -106,9 +113,11 @@ export function JoinListScreen(): React.ReactElement {
         // Create new local list entry linked to Firebase
         listId = useListsMetaStore.getState().createList(result.listName)
         useListsMetaStore.getState().markListAsShared(listId, result.firebaseListId, cleanCode)
+        debugLog('Join', `Created new local list: ${listId}, marked as shared`)
       }
 
       // Switch to the joined list
+      debugLog('Join', `Switching to joined list: ${listId}`)
       useListsMetaStore.getState().selectList(listId)
       await Promise.allSettled([
         useShoppingListStore.getState().switchToList(listId),

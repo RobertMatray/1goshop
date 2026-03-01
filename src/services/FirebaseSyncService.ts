@@ -11,6 +11,7 @@ import {
 } from 'firebase/database'
 import { getFirebaseAuth, getFirebaseDb } from './firebaseConfig'
 import type { ShoppingItem, ShoppingSession } from '../types/shopping'
+import { debugLog } from './DebugLogger'
 
 // ─── Sharing code charset (30 chars: no O/0/I/1/L) ───
 const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
@@ -49,21 +50,40 @@ export interface FirebaseSharingCode {
 let currentUser: User | null = null
 
 export async function initFirebase(): Promise<void> {
+  debugLog('Firebase', 'initFirebase() called')
   const auth = getFirebaseAuth()
-  return new Promise<void>((resolve) => {
+
+  // First check if there's a cached auth session
+  const cachedUser = await new Promise<User | null>((resolve) => {
     const timeout = setTimeout(() => {
+      debugLog('Firebase', 'Auth state check timed out after 5s')
       unsub()
-      console.warn('[FirebaseSyncService] Auth init timeout (10s), continuing without auth')
-      resolve()
-    }, 10_000)
+      resolve(null)
+    }, 5_000)
 
     const unsub = onAuthStateChanged(auth, (user) => {
       clearTimeout(timeout)
-      currentUser = user
       unsub()
-      resolve()
+      debugLog('Firebase', `Cached auth: ${user ? `UID=${user.uid}` : 'none'}`)
+      resolve(user)
     })
   })
+
+  if (cachedUser) {
+    currentUser = cachedUser
+    debugLog('Firebase', `Using cached user: ${cachedUser.uid}`)
+    return
+  }
+
+  // No cached session — sign in anonymously
+  try {
+    const cred = await firebaseSignIn(auth)
+    currentUser = cred.user
+    debugLog('Firebase', `Anonymous sign-in OK: ${cred.user.uid}`)
+  } catch (e) {
+    debugLog('Firebase', `Anonymous sign-in FAILED: ${e}`)
+    console.warn('[FirebaseSyncService] Anonymous sign-in failed:', e)
+  }
 }
 
 export async function signInAnonymously(): Promise<string> {
@@ -222,76 +242,138 @@ interface ListCallbacks {
 const activeListeners: Map<string, Unsubscribe[]> = new Map()
 
 export function subscribeToList(firebaseListId: string, callbacks: ListCallbacks): () => void {
+  debugLog('Sync', `subscribeToList called for: ${firebaseListId}`)
+
   // Cleanup existing listeners first to prevent duplicates
   const existing = activeListeners.get(firebaseListId)
   if (existing) {
+    debugLog('Sync', `Cleaning up ${existing.length} existing listeners`)
     for (const unsub of existing) unsub()
     activeListeners.delete(firebaseListId)
   }
 
+  // Ensure we're signed in before subscribing
+  const auth = getFirebaseAuth()
+  if (!auth.currentUser) {
+    debugLog('Sync', 'No auth.currentUser — signing in first...')
+    // Sign in then retry subscription
+    firebaseSignIn(auth)
+      .then((cred) => {
+        currentUser = cred.user
+        debugLog('Sync', `Auth recovered: ${cred.user.uid}, retrying subscribe`)
+        // Re-subscribe now that we're authenticated
+        subscribeToList(firebaseListId, callbacks)
+      })
+      .catch((e) => {
+        debugLog('Sync', `Auth FAILED in subscribe: ${e}`)
+        console.warn('[FirebaseSyncService] Auth failed in subscribe:', e)
+      })
+    return () => {}
+  }
+
+  debugLog('Sync', `Auth OK (UID=${auth.currentUser.uid}), setting up listeners...`)
   const db = getFirebaseDb()
   const unsubs: Unsubscribe[] = []
 
   try {
+    const onListenerError = (error: Error): void => {
+      debugLog('Sync', `LISTENER ERROR for ${firebaseListId}: ${error.message}`)
+      console.warn('[FirebaseSyncService] Listener error for list', firebaseListId, ':', error.message)
+    }
+
     // Items listener
-    const itemsRef = ref(db, `lists/${firebaseListId}/items`)
-    const itemsUnsub = onValue(itemsRef, (snap) => {
-      try {
-        if (!snap.exists()) {
-          callbacks.onItems([])
-          return
+    const itemsPath = `lists/${firebaseListId}/items`
+    debugLog('Sync', `Setting up onValue for: ${itemsPath}`)
+    const itemsRef = ref(db, itemsPath)
+    const itemsUnsub = onValue(
+      itemsRef,
+      (snap) => {
+        try {
+          if (!snap.exists()) {
+            debugLog('Sync', `onItems: snapshot empty (no items)`)
+            callbacks.onItems([])
+            return
+          }
+          const val = snap.val() as Record<string, FirebaseItem>
+          const items: ShoppingItem[] = Object.values(val)
+            .map((fi) => ({
+              id: fi.id,
+              name: fi.name,
+              quantity: fi.quantity,
+              isChecked: fi.isChecked,
+              order: fi.order,
+              createdAt: fi.createdAt,
+            }))
+            .sort((a, b) => a.order - b.order)
+          debugLog('Sync', `onItems: received ${items.length} items: [${items.map((i) => i.name).join(', ')}]`)
+          callbacks.onItems(items)
+        } catch (error) {
+          debugLog('Sync', `onItems CALLBACK ERROR: ${error}`)
+          console.warn('[FirebaseSyncService] Error in onItems callback:', error)
         }
-        const val = snap.val() as Record<string, FirebaseItem>
-        const items: ShoppingItem[] = Object.values(val)
-          .map((fi) => ({
-            id: fi.id,
-            name: fi.name,
-            quantity: fi.quantity,
-            isChecked: fi.isChecked,
-            order: fi.order,
-            createdAt: fi.createdAt,
-          }))
-          .sort((a, b) => a.order - b.order)
-        callbacks.onItems(items)
-      } catch (error) {
-        console.warn('[FirebaseSyncService] Error in onItems callback:', error)
-      }
-    })
+      },
+      onListenerError,
+    )
     unsubs.push(itemsUnsub)
+    debugLog('Sync', 'Items listener attached')
 
     // Session listener
-    const sessionRef = ref(db, `lists/${firebaseListId}/session`)
-    const sessionUnsub = onValue(sessionRef, (snap) => {
-      try {
-        callbacks.onSession(snap.exists() ? (snap.val() as ShoppingSession) : null)
-      } catch (error) {
-        console.warn('[FirebaseSyncService] Error in onSession callback:', error)
-      }
-    })
+    const sessionPath = `lists/${firebaseListId}/session`
+    debugLog('Sync', `Setting up onValue for: ${sessionPath}`)
+    const sessionRef = ref(db, sessionPath)
+    const sessionUnsub = onValue(
+      sessionRef,
+      (snap) => {
+        try {
+          debugLog('Sync', `onSession: exists=${snap.exists()}`)
+          callbacks.onSession(snap.exists() ? (snap.val() as ShoppingSession) : null)
+        } catch (error) {
+          debugLog('Sync', `onSession CALLBACK ERROR: ${error}`)
+          console.warn('[FirebaseSyncService] Error in onSession callback:', error)
+        }
+      },
+      onListenerError,
+    )
     unsubs.push(sessionUnsub)
+    debugLog('Sync', 'Session listener attached')
 
     // Meta listener
-    const metaRef = ref(db, `lists/${firebaseListId}/meta`)
-    const metaUnsub = onValue(metaRef, (snap) => {
-      try {
-        if (snap.exists()) {
-          callbacks.onMeta(snap.val() as FirebaseListMeta)
+    const metaPath = `lists/${firebaseListId}/meta`
+    debugLog('Sync', `Setting up onValue for: ${metaPath}`)
+    const metaRef = ref(db, metaPath)
+    const metaUnsub = onValue(
+      metaRef,
+      (snap) => {
+        try {
+          if (snap.exists()) {
+            const meta = snap.val() as FirebaseListMeta
+            const memberCount = meta.members ? Object.keys(meta.members).length : 0
+            debugLog('Sync', `onMeta: name="${meta.name}", members=${memberCount}`)
+            callbacks.onMeta(meta)
+          } else {
+            debugLog('Sync', 'onMeta: snapshot empty')
+          }
+        } catch (error) {
+          debugLog('Sync', `onMeta CALLBACK ERROR: ${error}`)
+          console.warn('[FirebaseSyncService] Error in onMeta callback:', error)
         }
-      } catch (error) {
-        console.warn('[FirebaseSyncService] Error in onMeta callback:', error)
-      }
-    })
+      },
+      onListenerError,
+    )
     unsubs.push(metaUnsub)
+    debugLog('Sync', `All 3 listeners attached for ${firebaseListId}`)
 
     activeListeners.set(firebaseListId, unsubs)
 
     return () => {
+      debugLog('Sync', `Unsubscribing from ${firebaseListId}`)
       for (const unsub of unsubs) unsub()
       activeListeners.delete(firebaseListId)
     }
   } catch (error) {
     // Cleanup any partial listeners on setup failure
     for (const unsub of unsubs) unsub()
+    debugLog('Sync', `SUBSCRIBE FAILED: ${error}`)
     console.warn('[FirebaseSyncService] Failed to subscribe to list:', error)
     return () => {}
   }
@@ -312,6 +394,21 @@ export function unsubscribeAll(): void {
   activeListeners.clear()
 }
 
+// ─── Auth guard ───
+// Ensures user is authenticated before any Firebase write.
+// Without this, writes fail silently with PERMISSION_DENIED if auth state was lost.
+async function ensureAuth(): Promise<void> {
+  const auth = getFirebaseAuth()
+  if (auth.currentUser) return
+  try {
+    const cred = await firebaseSignIn(auth)
+    currentUser = cred.user
+  } catch (e) {
+    console.warn('[FirebaseSyncService] ensureAuth failed:', e)
+    throw new Error('Firebase auth required but sign-in failed')
+  }
+}
+
 // ─── Firebase write operations ───
 // NOTE: All writes use last-write-wins semantics (Firebase Realtime Database default).
 // For a shopping list app this is acceptable: concurrent edits to the same item are rare,
@@ -322,6 +419,7 @@ export async function firebaseSetItems(
   firebaseListId: string,
   items: ShoppingItem[],
 ): Promise<void> {
+  await ensureAuth()
   const db = getFirebaseDb()
   const now = Date.now()
   const itemsObj: Record<string, FirebaseItem> = {}
@@ -344,6 +442,8 @@ export async function firebaseAddItem(
   firebaseListId: string,
   item: ShoppingItem,
 ): Promise<void> {
+  debugLog('Write', `firebaseAddItem: "${item.name}" to ${firebaseListId}`)
+  await ensureAuth()
   const db = getFirebaseDb()
   const now = Date.now()
   const firebaseItem: FirebaseItem = {
@@ -357,12 +457,14 @@ export async function firebaseAddItem(
   }
   await set(ref(db, `lists/${firebaseListId}/items/${item.id}`), firebaseItem)
   await update(ref(db, `lists/${firebaseListId}/meta`), { updatedAt: now })
+  debugLog('Write', `firebaseAddItem OK: "${item.name}"`)
 }
 
 export async function firebaseRemoveItem(
   firebaseListId: string,
   itemId: string,
 ): Promise<void> {
+  await ensureAuth()
   const db = getFirebaseDb()
   const now = Date.now()
   await remove(ref(db, `lists/${firebaseListId}/items/${itemId}`))
@@ -374,6 +476,7 @@ export async function firebaseUpdateItem(
   itemId: string,
   updates: Partial<FirebaseItem>,
 ): Promise<void> {
+  await ensureAuth()
   const db = getFirebaseDb()
   const now = Date.now()
   await update(ref(db, `lists/${firebaseListId}/items/${itemId}`), { ...updates, updatedAt: now })
@@ -384,6 +487,7 @@ export async function firebaseBatchUpdateOrder(
   firebaseListId: string,
   items: ShoppingItem[],
 ): Promise<void> {
+  await ensureAuth()
   const db = getFirebaseDb()
   const now = Date.now()
   const updates: Record<string, unknown> = {}
@@ -400,6 +504,7 @@ export async function firebaseRemoveItemsAndReorder(
   removeIds: string[],
   remainingItems: ShoppingItem[],
 ): Promise<void> {
+  await ensureAuth()
   const db = getFirebaseDb()
   const now = Date.now()
   const updates: Record<string, unknown> = {}
@@ -418,6 +523,7 @@ export async function firebaseSetSession(
   firebaseListId: string,
   session: ShoppingSession | null,
 ): Promise<void> {
+  await ensureAuth()
   const db = getFirebaseDb()
   const now = Date.now()
   if (session) {
@@ -432,6 +538,7 @@ export async function firebaseAddHistory(
   firebaseListId: string,
   session: ShoppingSession,
 ): Promise<void> {
+  await ensureAuth()
   const db = getFirebaseDb()
   const now = Date.now()
   await set(ref(db, `lists/${firebaseListId}/history/${session.id}`), session)
@@ -442,6 +549,7 @@ export async function firebaseRemoveHistory(
   firebaseListId: string,
   sessionId: string,
 ): Promise<void> {
+  await ensureAuth()
   const db = getFirebaseDb()
   const now = Date.now()
   await remove(ref(db, `lists/${firebaseListId}/history/${sessionId}`))
@@ -449,6 +557,7 @@ export async function firebaseRemoveHistory(
 }
 
 export async function firebaseClearHistory(firebaseListId: string): Promise<void> {
+  await ensureAuth()
   const db = getFirebaseDb()
   const now = Date.now()
   await remove(ref(db, `lists/${firebaseListId}/history`))
@@ -459,11 +568,13 @@ export async function firebaseUpdateListName(
   firebaseListId: string,
   name: string,
 ): Promise<void> {
+  await ensureAuth()
   const db = getFirebaseDb()
   await update(ref(db, `lists/${firebaseListId}/meta`), { name, updatedAt: Date.now() })
 }
 
 export async function firebaseLeaveList(firebaseListId: string): Promise<void> {
+  await ensureAuth()
   const uid = getCurrentUid()
   if (!uid) return
   const db = getFirebaseDb()
@@ -481,6 +592,7 @@ export async function firebaseLeaveList(firebaseListId: string): Promise<void> {
 }
 
 export async function firebaseGetMemberCount(firebaseListId: string): Promise<number> {
+  await ensureAuth()
   const db = getFirebaseDb()
   const snap = await firebaseGet(ref(db, `lists/${firebaseListId}/meta/members`))
   if (!snap.exists()) return 0
@@ -488,6 +600,7 @@ export async function firebaseGetMemberCount(firebaseListId: string): Promise<nu
 }
 
 export async function firebaseLoadHistory(firebaseListId: string): Promise<ShoppingSession[]> {
+  await ensureAuth()
   const db = getFirebaseDb()
   const snap = await firebaseGet(ref(db, `lists/${firebaseListId}/history`))
   if (!snap.exists()) return []

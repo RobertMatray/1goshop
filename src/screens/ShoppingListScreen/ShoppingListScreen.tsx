@@ -84,7 +84,12 @@ export function ShoppingListScreen(): React.ReactElement {
           <Pressable onPress={handleAddList} hitSlop={12} style={styles.headerButton}>
             <Ionicons name="add" size={26} color={styles.startShoppingText.color as string} />
           </Pressable>
-          <Pressable onPress={() => navigation.navigate('SettingsScreen')} hitSlop={12} style={styles.headerButton}>
+          <Pressable
+            onPress={() => navigation.navigate('SettingsScreen')}
+            onLongPress={() => navigation.navigate('DebugLogScreen')}
+            hitSlop={12}
+            style={styles.headerButton}
+          >
             <Ionicons name="settings-outline" size={24} color={styles.startShoppingText.color as string} />
           </Pressable>
         </View>
