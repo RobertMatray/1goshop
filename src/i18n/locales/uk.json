@@ -99,7 +99,9 @@
     "themeLight": "Світла",
     "themeDark": "Темна",
     "about": "Про додаток",
-    "version": "Версія"
+    "version": "Версія",
+    "website": "Веб-сайт",
+    "privacyPolicy": "Політика конфіденційності"
   },
   "Backup": {
     "title": "Резервна копія",

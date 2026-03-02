@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react'
-import { View, Text, Pressable, Alert, Modal, FlatList, Platform } from 'react-native'
+import { View, Text, Pressable, Alert, Modal, FlatList, Platform, TextInput as TextInputField } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import DraggableFlatList, { type RenderItemParams } from 'react-native-draggable-flatlist'
@@ -27,6 +27,7 @@ export function ShoppingListScreen(): React.ReactElement {
   const [showTutorial, setShowTutorial] = useState(false)
   const [filterText, setFilterText] = useState('')
   const [showListPicker, setShowListPicker] = useState(false)
+  const [textInputModal, setTextInputModal] = useState<{ title: string; defaultValue: string; onConfirm: (value: string) => void } | null>(null)
   const items = useShoppingListStore((s) => s.items)
   const startShopping = useActiveShoppingStore((s) => s.startShopping)
   const lists = useListsMetaStore((s) => s.lists)
@@ -174,6 +175,18 @@ export function ShoppingListScreen(): React.ReactElement {
         onClose={() => setShowListPicker(false)}
         t={t}
       />
+      {textInputModal !== null && (
+        <TextInputModal
+          title={textInputModal.title}
+          defaultValue={textInputModal.defaultValue}
+          onConfirm={(value) => {
+            setTextInputModal(null)
+            textInputModal.onConfirm(value)
+          }}
+          onCancel={() => setTextInputModal(null)}
+          t={t}
+        />
+      )}
     </View>
   )
 
@@ -263,25 +276,16 @@ export function ShoppingListScreen(): React.ReactElement {
       }
       return
     }
-    Alert.prompt(
-      t('Lists.newList'),
-      undefined,
-      [
-        { text: t('ShoppingList.cancel'), style: 'cancel' },
-        {
-          text: t('ShoppingList.save'),
-          onPress: (value: string | undefined) => {
-            if (value?.trim()) {
-              const newId = useListsMetaStore.getState().createList(value)
-              handleSelectList(newId)
-            }
-          },
-        },
-      ],
-      'plain-text',
-      '',
-      undefined,
-    )
+    setTextInputModal({
+      title: t('Lists.newList'),
+      defaultValue: '',
+      onConfirm: (value) => {
+        if (value.trim()) {
+          const newId = useListsMetaStore.getState().createList(value.trim())
+          handleSelectList(newId)
+        }
+      },
+    })
   }
 
   function handleRenameList(id: string, currentName: string): void {
@@ -292,24 +296,15 @@ export function ShoppingListScreen(): React.ReactElement {
       }
       return
     }
-    Alert.prompt(
-      t('Lists.renameList'),
-      undefined,
-      [
-        { text: t('ShoppingList.cancel'), style: 'cancel' },
-        {
-          text: t('ShoppingList.save'),
-          onPress: (value: string | undefined) => {
-            if (value?.trim()) {
-              useListsMetaStore.getState().renameList(id, value)
-            }
-          },
-        },
-      ],
-      'plain-text',
-      currentName,
-      undefined,
-    )
+    setTextInputModal({
+      title: t('Lists.renameList'),
+      defaultValue: currentName,
+      onConfirm: (value) => {
+        if (value.trim()) {
+          useListsMetaStore.getState().renameList(id, value.trim())
+        }
+      },
+    })
   }
 
   function handleDeleteList(id: string, name: string): void {
@@ -400,6 +395,84 @@ function ListPickerModal({ visible, lists, selectedListId, onSelect, onRename, o
     </Modal>
   )
 }
+
+interface TextInputModalProps {
+  title: string
+  defaultValue: string
+  onConfirm: (value: string) => void
+  onCancel: () => void
+  t: (key: string) => string
+}
+
+function TextInputModal({ title, defaultValue, onConfirm, onCancel, t }: TextInputModalProps): React.ReactElement {
+  const [value, setValue] = useState(defaultValue)
+  return (
+    <Modal visible transparent animationType="fade" onRequestClose={onCancel}>
+      <Pressable style={pickerStyles.overlay} onPress={onCancel}>
+        <Pressable style={pickerStyles.container} onPress={() => {}}>
+          <Text style={pickerStyles.title}>{title}</Text>
+          <TextInputField
+            value={value}
+            onChangeText={setValue}
+            autoFocus
+            style={textInputModalStyles.input}
+          />
+          <View style={textInputModalStyles.buttons}>
+            <Pressable style={textInputModalStyles.cancelButton} onPress={onCancel}>
+              <Text style={textInputModalStyles.cancelText}>{t('ShoppingList.cancel')}</Text>
+            </Pressable>
+            <Pressable style={textInputModalStyles.confirmButton} onPress={() => onConfirm(value)}>
+              <Text style={textInputModalStyles.confirmText}>{t('ShoppingList.save')}</Text>
+            </Pressable>
+          </View>
+        </Pressable>
+      </Pressable>
+    </Modal>
+  )
+}
+
+const textInputModalStyles = StyleSheet.create((theme) => ({
+  input: {
+    width: '100%',
+    borderWidth: 1,
+    borderColor: theme.colors.surfaceBorder,
+    borderRadius: theme.sizes.radiusSm,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: theme.typography.fontSizeM,
+    color: theme.colors.text,
+    marginBottom: 16,
+  },
+  buttons: {
+    flexDirection: 'row',
+    gap: 8,
+    width: '100%',
+  },
+  cancelButton: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderRadius: theme.sizes.radiusSm,
+    borderWidth: 1,
+    borderColor: theme.colors.surfaceBorder,
+  },
+  cancelText: {
+    fontSize: theme.typography.fontSizeM,
+    color: theme.colors.textSecondary,
+  },
+  confirmButton: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderRadius: theme.sizes.radiusSm,
+    backgroundColor: theme.colors.tint,
+  },
+  confirmText: {
+    fontSize: theme.typography.fontSizeM,
+    fontWeight: 'bold',
+    color: theme.colors.textOnTint,
+  },
+}))
 
 const styles = StyleSheet.create((theme) => ({
   container: {

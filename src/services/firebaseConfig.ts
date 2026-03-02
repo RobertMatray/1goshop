@@ -1,6 +1,12 @@
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app'
-import { getAuth, type Auth } from 'firebase/auth'
+import { initializeAuth, getAuth as getAuthDefault, type Auth } from 'firebase/auth'
 import { getDatabase, type Database } from 'firebase/database'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+
+// getReactNativePersistence is only in the RN-specific entry point types,
+// but available at runtime via the react-native package.json condition
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { getReactNativePersistence } = require('firebase/auth')
 
 const firebaseConfig = {
   apiKey: 'AIzaSyCRtaBl5rlqCA0j3tyh6O6S9vqFoTNajrY',
@@ -27,7 +33,16 @@ export function getFirebaseApp(): FirebaseApp {
 
 export function getFirebaseAuth(): Auth {
   if (!auth) {
-    auth = getAuth(getFirebaseApp())
+    try {
+      // Use initializeAuth with AsyncStorage persistence so anonymous UID survives app restarts
+      auth = initializeAuth(getFirebaseApp(), {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        persistence: getReactNativePersistence(AsyncStorage),
+      })
+    } catch {
+      // Already initialized (e.g. hot reload) — fall back to getAuth
+      auth = getAuthDefault(getFirebaseApp())
+    }
   }
   return auth
 }

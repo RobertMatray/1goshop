@@ -99,7 +99,9 @@
     "themeLight": "Světlý",
     "themeDark": "Tmavý",
     "about": "O aplikaci",
-    "version": "Verze"
+    "version": "Verze",
+    "website": "Webová stránka",
+    "privacyPolicy": "Ochrana soukromí"
   },
   "Backup": {
     "title": "Záloha dat",

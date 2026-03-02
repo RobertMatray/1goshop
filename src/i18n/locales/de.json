@@ -97,7 +97,9 @@
     "themeLight": "Hell",
     "themeDark": "Dunkel",
     "about": "Über",
-    "version": "Version"
+    "version": "Version",
+    "website": "Webseite",
+    "privacyPolicy": "Datenschutz"
   },
   "Backup": {
     "title": "Datensicherung",

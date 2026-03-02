@@ -95,7 +95,9 @@
     "themeLight": "浅色",
     "themeDark": "深色",
     "about": "关于",
-    "version": "版本"
+    "version": "版本",
+    "website": "网站",
+    "privacyPolicy": "隐私政策"
   },
   "Backup": {
     "title": "数据备份",

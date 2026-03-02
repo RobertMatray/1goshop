@@ -97,7 +97,9 @@
     "themeLight": "Világos",
     "themeDark": "Sötét",
     "about": "Rólunk",
-    "version": "Verzió"
+    "version": "Verzió",
+    "website": "Weboldal",
+    "privacyPolicy": "Adatvédelmi irányelvek"
   },
   "Backup": {
     "title": "Adatmentés",

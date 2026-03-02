@@ -1,5 +1,5 @@
 import React from 'react'
-import { View, Text, Pressable, Alert, ScrollView } from 'react-native'
+import { View, Text, Pressable, Alert, ScrollView, Linking } from 'react-native'
 import { StyleSheet } from 'react-native-unistyles'
 import { useTranslation } from 'react-i18next'
 import { useNavigation } from '@react-navigation/native'
@@ -112,10 +112,16 @@ export function SettingsScreen(): React.ReactElement {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>{t('Settings.about')}</Text>
-        <Text style={styles.aboutText}>1GoShop v1.2.0</Text>
+        <Text style={styles.aboutText}>1GoShop v1.2.1</Text>
         <Text style={styles.hintText}>{t('ShoppingList.swipeRightHint')}</Text>
         <Text style={styles.hintText}>{t('ShoppingList.swipeLeftHint')}</Text>
         <Text style={styles.hintText}>{t('ShoppingList.longPressHint')}</Text>
+        <Pressable onPress={() => Linking.openURL('https://1goshop.realise.sk')}>
+          <Text style={styles.linkText}>{t('Settings.website')}</Text>
+        </Pressable>
+        <Pressable onPress={() => Linking.openURL('https://1goshop.realise.sk/privacy-policy.html')}>
+          <Text style={styles.linkText}>{t('Settings.privacyPolicy')}</Text>
+        </Pressable>
       </View>
 
       <View style={styles.section}>
@@ -318,5 +324,10 @@ const styles = StyleSheet.create((theme) => ({
     fontSize: theme.typography.fontSizeS,
     color: theme.colors.text,
     fontWeight: '600',
+  },
+  linkText: {
+    fontSize: theme.typography.fontSizeS,
+    color: theme.colors.tint,
+    marginTop: 8,
   },
 }))

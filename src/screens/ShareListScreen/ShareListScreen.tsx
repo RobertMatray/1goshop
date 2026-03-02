@@ -213,6 +213,13 @@ export function ShareListScreen(): React.ReactElement {
       const code = await createSharingCode(firebaseListId, list.name)
 
       useListsMetaStore.getState().markListAsShared(listId, firebaseListId, code)
+
+      // Re-subscribe to Firebase listener now that the list is shared
+      await Promise.allSettled([
+        useShoppingListStore.getState().switchToList(listId),
+        useActiveShoppingStore.getState().switchToList(listId),
+      ])
+
       setSharingCode(code)
       setExpiresAt(Date.now() + 15 * 60 * 1000)
     } catch (error) {

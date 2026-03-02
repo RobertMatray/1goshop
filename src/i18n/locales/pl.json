@@ -99,7 +99,9 @@
     "themeLight": "Jasny",
     "themeDark": "Ciemny",
     "about": "O aplikacji",
-    "version": "Wersja"
+    "version": "Wersja",
+    "website": "Strona internetowa",
+    "privacyPolicy": "Polityka prywatności"
   },
   "Backup": {
     "title": "Kopia zapasowa danych",

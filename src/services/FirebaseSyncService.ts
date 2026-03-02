@@ -208,25 +208,52 @@ export async function joinSharedList(
 ): Promise<{ firebaseListId: string; listName: string } | null> {
   const uid = await signInAnonymously()
   const db = getFirebaseDb()
+  debugLog('Join', `joinSharedList: UID=${uid}, code=${code.toUpperCase()}`)
 
   const codeSnap = await firebaseGet(ref(db, `sharing-codes/${code.toUpperCase()}`))
-  if (!codeSnap.exists()) return null
+  if (!codeSnap.exists()) {
+    debugLog('Join', 'Sharing code not found in Firebase')
+    return null
+  }
 
   const data = codeSnap.val() as FirebaseSharingCode
+  debugLog('Join', `Code data: firebaseListId=${data.firebaseListId}, listName="${data.listName}"`)
+
   if (Date.now() > data.expiresAt) {
-    // Clean up expired code
+    debugLog('Join', 'Sharing code expired')
     await remove(ref(db, `sharing-codes/${code.toUpperCase()}`)).catch(() => {})
     return null
   }
 
   // Add device as member
-  await set(ref(db, `lists/${data.firebaseListId}/meta/members/${uid}`), {
-    joinedAt: Date.now(),
-    deviceName,
-  })
+  const memberPath = `lists/${data.firebaseListId}/meta/members/${uid}`
+  debugLog('Join', `Writing member to: ${memberPath}`)
+  try {
+    await set(ref(db, memberPath), {
+      joinedAt: Date.now(),
+      deviceName,
+    })
+    debugLog('Join', 'Member write SUCCESS')
+  } catch (e) {
+    debugLog('Join', `Member write FAILED: ${e}`)
+    throw e
+  }
+
+  // Verify member was written
+  try {
+    const verifySnap = await firebaseGet(ref(db, memberPath))
+    debugLog('Join', `Member verify: exists=${verifySnap.exists()}, val=${JSON.stringify(verifySnap.val())}`)
+  } catch (e) {
+    debugLog('Join', `Member verify FAILED (read denied?): ${e}`)
+  }
+
+  // Check current auth UID matches what we wrote
+  const currentAuthUid = getFirebaseAuth().currentUser?.uid
+  debugLog('Join', `Post-write auth check: currentUser.uid=${currentAuthUid}, wrote as uid=${uid}, match=${currentAuthUid === uid}`)
 
   // Remove used sharing code
   await remove(ref(db, `sharing-codes/${code.toUpperCase()}`))
+  debugLog('Join', 'Sharing code removed, join complete')
 
   return { firebaseListId: data.firebaseListId, listName: data.listName }
 }
@@ -271,8 +298,28 @@ export function subscribeToList(firebaseListId: string, callbacks: ListCallbacks
     return () => {}
   }
 
-  debugLog('Sync', `Auth OK (UID=${auth.currentUser.uid}), setting up listeners...`)
+  const uid = auth.currentUser.uid
+  debugLog('Sync', `Auth OK (UID=${uid}), setting up listeners...`)
   const db = getFirebaseDb()
+
+  // Check if current UID is already a member. If not, register first then subscribe.
+  // This handles the case where device got a new anonymous UID (reinstall/clear data).
+  const memberRef = ref(db, `lists/${firebaseListId}/meta/members/${uid}`)
+  firebaseGet(memberRef)
+    .then((snap) => {
+      if (!snap.exists()) {
+        debugLog('Sync', `UID=${uid} not in members, registering...`)
+        return set(memberRef, { joinedAt: Date.now(), deviceName: 'My device' })
+          .then(() => { debugLog('Sync', 'Registered as member OK') })
+          .catch((e) => { debugLog('Sync', `Register as member FAILED: ${e}`) })
+      } else {
+        debugLog('Sync', `UID=${uid} already a member`)
+      }
+    })
+    .catch((e) => {
+      debugLog('Sync', `Member check FAILED (permission_denied?): ${e}`)
+    })
+
   const unsubs: Unsubscribe[] = []
 
   try {

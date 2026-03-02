@@ -260,7 +260,15 @@ let lastOfflineAlertAt = 0
 const OFFLINE_ALERT_COOLDOWN_MS = 60_000
 
 function logFirebaseError(e: unknown): void {
-  console.warn('[ActiveShoppingStore] Firebase operation failed:', e)
+  const msg = e instanceof Error ? e.message : String(e)
+  console.warn('[ActiveShoppingStore] Firebase operation failed:', msg)
+
+  // Persist session locally as fallback
+  const { session, currentListId } = useActiveShoppingStore.getState()
+  if (currentListId && session) {
+    debouncedPersist(`@list_${currentListId}_session`, session)
+  }
+
   const now = Date.now()
   if (now - lastOfflineAlertAt > OFFLINE_ALERT_COOLDOWN_MS) {
     lastOfflineAlertAt = now

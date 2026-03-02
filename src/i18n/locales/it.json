@@ -97,7 +97,9 @@
     "themeLight": "Chiaro",
     "themeDark": "Scuro",
     "about": "Info",
-    "version": "Versione"
+    "version": "Versione",
+    "website": "Sito web",
+    "privacyPolicy": "Informativa sulla privacy"
   },
   "Backup": {
     "title": "Backup dei dati",
