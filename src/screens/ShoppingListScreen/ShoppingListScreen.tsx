@@ -51,7 +51,7 @@ export function ShoppingListScreen(): React.ReactElement {
 
   const renderItem = useCallback(
     ({ item, drag, isActive }: RenderItemParams<ShoppingItem>) => (
-      <ShoppingListItem item={item} drag={isFiltering ? undefined : drag} isActive={isActive} />
+      <ShoppingListItem item={item} drag={isFiltering ? undefined : drag} isActive={isActive} onRequestEdit={handleRequestEdit} />
     ),
     [isFiltering],
   )
@@ -192,6 +192,18 @@ export function ShoppingListScreen(): React.ReactElement {
 
   function handleClearFilter(): void {
     setFilterText('')
+  }
+
+  function handleRequestEdit(item: ShoppingItem): void {
+    setTextInputModal({
+      title: t('ShoppingList.editTitle'),
+      defaultValue: item.name,
+      onConfirm: (value) => {
+        if (value.trim()) {
+          useShoppingListStore.getState().editItem(item.id, value.trim())
+        }
+      },
+    })
   }
 
   function handleShareList(): void {

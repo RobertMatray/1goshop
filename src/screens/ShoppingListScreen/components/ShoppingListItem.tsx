@@ -19,16 +19,16 @@ interface Props {
   item: ShoppingItem
   drag?: () => void
   isActive?: boolean
+  onRequestEdit?: (item: ShoppingItem) => void
 }
 
 const SWIPE_THRESHOLD = 30
 
-export function ShoppingListItem({ item, drag, isActive }: Props): React.ReactElement {
+export function ShoppingListItem({ item, drag, isActive, onRequestEdit }: Props): React.ReactElement {
   const translateX = useSharedValue(0)
   const itemWidth = useSharedValue(0)
   const startX = useSharedValue(0)
   const { t } = useTranslation()
-
   const editItem = useShoppingListStore((s) => s.editItem)
   const incrementQuantity = useShoppingListStore((s) => s.incrementQuantity)
   const decrementQuantity = useShoppingListStore((s) => s.decrementQuantity)
@@ -175,19 +175,19 @@ export function ShoppingListItem({ item, drag, isActive }: Props): React.ReactEl
                 </View>
               )}
             </View>
-
-            {drag !== undefined && (
-              <Pressable
-                onLongPress={onDragStart}
-                delayLongPress={200}
-                style={styles.dragHandleArea}
-                hitSlop={8}
-              >
-                <Text style={styles.dragHandle}>☰</Text>
-              </Pressable>
-            )}
           </Animated.View>
         </GestureDetector>
+
+        {drag !== undefined && (
+          <Pressable
+            onLongPress={onDragStart}
+            delayLongPress={150}
+            style={styles.dragHandleAbsolute}
+            hitSlop={8}
+          >
+            <Text style={styles.dragHandle}>☰</Text>
+          </Pressable>
+        )}
       </View>
     </View>
   )
@@ -215,23 +215,7 @@ export function ShoppingListItem({ item, drag, isActive }: Props): React.ReactEl
 
   function onEditItem(): void {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-    Alert.prompt(
-      t('ShoppingList.editTitle'),
-      undefined,
-      [
-        { text: t('ShoppingList.cancel'), style: 'cancel' },
-        {
-          text: t('ShoppingList.save'),
-          onPress: (value: string | undefined) => {
-            if (value && value.trim()) {
-              editItem(item.id, value)
-            }
-          },
-        },
-      ],
-      'plain-text',
-      item.name,
-    )
+    onRequestEdit?.(item)
   }
 
   function onConfirmDelete(): void {
@@ -362,9 +346,12 @@ const styles = StyleSheet.create((theme) => ({
     fontWeight: 'bold',
     color: theme.colors.tint,
   },
-  dragHandleArea: {
-    paddingLeft: 12,
-    paddingVertical: 8,
+  dragHandleAbsolute: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    paddingHorizontal: 12,
     justifyContent: 'center',
     alignItems: 'center',
   },
