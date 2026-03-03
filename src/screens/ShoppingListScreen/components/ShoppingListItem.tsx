@@ -86,7 +86,12 @@ export function ShoppingListItem({ item, drag, isActive, onRequestEdit }: Props)
       runOnJS(onEditItem)()
     })
 
-  const composedGesture = Gesture.Exclusive(panGesture, longPressGesture, tapGesture)
+  // Race: pan and longPress compete — if finger moves, pan wins; if finger stays still, longPress fires after 500ms
+  // Tap is exclusive fallback for quick taps
+  const composedGesture = Gesture.Exclusive(
+    Gesture.Race(panGesture, longPressGesture),
+    tapGesture,
+  )
 
   const animatedItemStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.value }],
