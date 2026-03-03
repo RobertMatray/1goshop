@@ -441,9 +441,10 @@ curl -s -X POST https://api.github.com/user/repos \
 | 0 (baseline) | v1.2.1-build91 | - | - | - | Starting point |
 | 1 | — | 1→fixes | 3→fixes | 4→fixes | Fixed: retry listener leak (partial), handleDragEnd guard, handleRequestEdit deps, removed firebaseRemoveItem dead code, onConfirm ordering |
 | 2 | — | 2→fixes | 0 | 2→fixes | Fixed: __retry race condition (cancelled flag), unsubscribeFromList cleans retry key, selectedListId in useLayoutEffect deps |
-| 3 | 698b5c5 | 0 | 0 | 3 (accepted) | **GOAL MET: 0 CRITICAL, 0 HIGH** |
+| 3 | 698b5c5 | 0 | 0 | 3→fixes | Fixed: DEVICE_NAME constant replaces hardcoded 'My device', activeListeners type + comments |
+| 4 | 4d6a351 | 0 | 0 | 0 | **GOAL MET: 0 CRITICAL, 0 HIGH, 0 MEDIUM** |
 
-**Remaining (accepted)**: 3 MEDIUM (hardcoded 'My device' in self-registration, mixed cleanup closure type in activeListeners, unsubscribeAll comment clarity)
+**Remaining (accepted)**: 1 LOW (fontFamily: undefined removed)
 
 ### Code Review Iterative Process #2 — Multi-list + Firebase (February 26, 2026)
 
