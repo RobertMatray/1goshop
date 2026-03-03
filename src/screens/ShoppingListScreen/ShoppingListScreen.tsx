@@ -49,11 +49,23 @@ export function ShoppingListScreen(): React.ReactElement {
 
   const checkedCount = useMemo(() => items.filter((i) => i.isChecked).length, [items])
 
+  const handleRequestEdit = useCallback((item: ShoppingItem): void => {
+    setTextInputModal({
+      title: t('ShoppingList.editTitle'),
+      defaultValue: item.name,
+      onConfirm: (value) => {
+        if (value.trim()) {
+          useShoppingListStore.getState().editItem(item.id, value.trim())
+        }
+      },
+    })
+  }, [t])
+
   const renderItem = useCallback(
     ({ item, drag, isActive }: RenderItemParams<ShoppingItem>) => (
       <ShoppingListItem item={item} drag={isFiltering ? undefined : drag} isActive={isActive} onRequestEdit={handleRequestEdit} />
     ),
-    [isFiltering],
+    [isFiltering, handleRequestEdit],
   )
 
   const keyExtractor = useCallback((item: ShoppingItem) => item.id, [])
@@ -61,9 +73,10 @@ export function ShoppingListScreen(): React.ReactElement {
   const setItems = useShoppingListStore((s) => s.setItems)
 
   const handleDragEnd = useCallback(({ data }: { data: ShoppingItem[] }) => {
+    if (isFiltering) return
     const reordered = data.map((item, index) => ({ ...item, order: index }))
     setItems(reordered)
-  }, [setItems])
+  }, [setItems, isFiltering])
 
   React.useLayoutEffect(() => {
     navigation.setOptions({
@@ -96,7 +109,7 @@ export function ShoppingListScreen(): React.ReactElement {
         </View>
       ),
     })
-  }, [navigation, selectedList?.name, t])
+  }, [navigation, selectedList?.name, selectedListId, t])
 
   return (
     <View style={styles.container}>
@@ -180,8 +193,8 @@ export function ShoppingListScreen(): React.ReactElement {
           title={textInputModal.title}
           defaultValue={textInputModal.defaultValue}
           onConfirm={(value) => {
-            setTextInputModal(null)
             textInputModal.onConfirm(value)
+            setTextInputModal(null)
           }}
           onCancel={() => setTextInputModal(null)}
           t={t}
@@ -192,18 +205,6 @@ export function ShoppingListScreen(): React.ReactElement {
 
   function handleClearFilter(): void {
     setFilterText('')
-  }
-
-  function handleRequestEdit(item: ShoppingItem): void {
-    setTextInputModal({
-      title: t('ShoppingList.editTitle'),
-      defaultValue: item.name,
-      onConfirm: (value) => {
-        if (value.trim()) {
-          useShoppingListStore.getState().editItem(item.id, value.trim())
-        }
-      },
-    })
   }
 
   function handleShareList(): void {

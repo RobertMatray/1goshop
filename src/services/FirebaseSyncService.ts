@@ -271,31 +271,44 @@ const activeListeners: Map<string, Unsubscribe[]> = new Map()
 export function subscribeToList(firebaseListId: string, callbacks: ListCallbacks): () => void {
   debugLog('Sync', `subscribeToList called for: ${firebaseListId}`)
 
-  // Cleanup existing listeners first to prevent duplicates
+  // Cleanup existing listeners first (including any pending auth retry) to prevent duplicates
   const existing = activeListeners.get(firebaseListId)
   if (existing) {
     debugLog('Sync', `Cleaning up ${existing.length} existing listeners`)
     for (const unsub of existing) unsub()
     activeListeners.delete(firebaseListId)
   }
+  const existingRetry = activeListeners.get(`${firebaseListId}__retry`)
+  if (existingRetry) {
+    for (const unsub of existingRetry) unsub()
+    activeListeners.delete(`${firebaseListId}__retry`)
+  }
 
   // Ensure we're signed in before subscribing
   const auth = getFirebaseAuth()
   if (!auth.currentUser) {
     debugLog('Sync', 'No auth.currentUser — signing in first...')
-    // Sign in then retry subscription
+    let cancelled = false
     firebaseSignIn(auth)
       .then((cred) => {
+        if (cancelled) return
         currentUser = cred.user
         debugLog('Sync', `Auth recovered: ${cred.user.uid}, retrying subscribe`)
-        // Re-subscribe now that we're authenticated
-        subscribeToList(firebaseListId, callbacks)
+        const realUnsub = subscribeToList(firebaseListId, callbacks)
+        activeListeners.set(`${firebaseListId}__retry`, [realUnsub])
       })
       .catch((e) => {
         debugLog('Sync', `Auth FAILED in subscribe: ${e}`)
         console.warn('[FirebaseSyncService] Auth failed in subscribe:', e)
       })
-    return () => {}
+    return () => {
+      cancelled = true
+      const retryUnsubs = activeListeners.get(`${firebaseListId}__retry`)
+      if (retryUnsubs) {
+        for (const unsub of retryUnsubs) unsub()
+        activeListeners.delete(`${firebaseListId}__retry`)
+      }
+    }
   }
 
   const uid = auth.currentUser.uid
@@ -432,6 +445,11 @@ export function unsubscribeFromList(firebaseListId: string): void {
     for (const unsub of unsubs) unsub()
     activeListeners.delete(firebaseListId)
   }
+  const retryUnsubs = activeListeners.get(`${firebaseListId}__retry`)
+  if (retryUnsubs) {
+    for (const unsub of retryUnsubs) unsub()
+    activeListeners.delete(`${firebaseListId}__retry`)
+  }
 }
 
 export function unsubscribeAll(): void {
@@ -505,17 +523,6 @@ export async function firebaseAddItem(
   await set(ref(db, `lists/${firebaseListId}/items/${item.id}`), firebaseItem)
   await update(ref(db, `lists/${firebaseListId}/meta`), { updatedAt: now })
   debugLog('Write', `firebaseAddItem OK: "${item.name}"`)
-}
-
-export async function firebaseRemoveItem(
-  firebaseListId: string,
-  itemId: string,
-): Promise<void> {
-  await ensureAuth()
-  const db = getFirebaseDb()
-  const now = Date.now()
-  await remove(ref(db, `lists/${firebaseListId}/items/${itemId}`))
-  await update(ref(db, `lists/${firebaseListId}/meta`), { updatedAt: now })
 }
 
 export async function firebaseUpdateItem(
