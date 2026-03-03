@@ -9,9 +9,13 @@ import {
   get as firebaseGet,
   type Unsubscribe,
 } from 'firebase/database'
+import { Platform } from 'react-native'
 import { getFirebaseAuth, getFirebaseDb } from './firebaseConfig'
 import type { ShoppingItem, ShoppingSession } from '../types/shopping'
 import { debugLog } from './DebugLogger'
+
+// Human-readable device name used when registering as a list member
+export const DEVICE_NAME = Platform.OS === 'ios' ? 'iPhone' : Platform.OS === 'android' ? 'Android' : 'Web'
 
 // ─── Sharing code charset (30 chars: no O/0/I/1/L) ───
 const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
@@ -266,7 +270,10 @@ interface ListCallbacks {
   onMeta: (meta: FirebaseListMeta) => void
 }
 
-const activeListeners: Map<string, Unsubscribe[]> = new Map()
+// Keys: firebaseListId → real Firebase onValue unsubs
+//       firebaseListId + '__retry' → cleanup closure for a deferred auth-retry subscribe
+//       (both key types are cleaned up by unsubscribeFromList and unsubscribeAll)
+const activeListeners: Map<string, (Unsubscribe | (() => void))[]> = new Map()
 
 export function subscribeToList(firebaseListId: string, callbacks: ListCallbacks): () => void {
   debugLog('Sync', `subscribeToList called for: ${firebaseListId}`)
@@ -322,7 +329,7 @@ export function subscribeToList(firebaseListId: string, callbacks: ListCallbacks
     .then((snap) => {
       if (!snap.exists()) {
         debugLog('Sync', `UID=${uid} not in members, registering...`)
-        return set(memberRef, { joinedAt: Date.now(), deviceName: 'My device' })
+        return set(memberRef, { joinedAt: Date.now(), deviceName: DEVICE_NAME })
           .then(() => { debugLog('Sync', 'Registered as member OK') })
           .catch((e) => { debugLog('Sync', `Register as member FAILED: ${e}`) })
       } else {
@@ -453,6 +460,7 @@ export function unsubscribeFromList(firebaseListId: string): void {
 }
 
 export function unsubscribeAll(): void {
+  // Iterates all entries including __retry keys — activeListeners.clear() removes everything
   for (const [, unsubs] of activeListeners) {
     for (const unsub of unsubs) unsub()
   }

@@ -15,6 +15,7 @@ import {
   createSharingCode,
   firebaseGetMemberCount,
   firebaseLeaveList,
+  DEVICE_NAME,
 } from '../../services/FirebaseSyncService'
 
 type ShareListRoute = RouteProp<RootStackParamList, 'ShareListScreen'>
@@ -204,7 +205,7 @@ export function ShareListScreen(): React.ReactElement {
       const firebaseListId = await createFirebaseList(
         list.name,
         deviceId,
-        'My device',
+        DEVICE_NAME,
         items,
         session,
         history,
@@ -317,7 +318,6 @@ const styles = StyleSheet.create((theme) => ({
     color: theme.colors.tint,
     letterSpacing: 8,
     marginBottom: 16,
-    fontFamily: undefined,
   },
   codeInstructions: {
     fontSize: theme.typography.fontSizeS,

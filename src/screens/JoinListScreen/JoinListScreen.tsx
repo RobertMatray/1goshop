@@ -8,7 +8,7 @@ import type { RootStackParamList } from '../../navigation/AppNavigator'
 import { useListsMetaStore } from '../../stores/ListsMetaStore'
 import { useShoppingListStore } from '../../stores/ShoppingListStore'
 import { useActiveShoppingStore } from '../../stores/ActiveShoppingStore'
-import { joinSharedList } from '../../services/FirebaseSyncService'
+import { joinSharedList, DEVICE_NAME } from '../../services/FirebaseSyncService'
 import { debugLog } from '../../services/DebugLogger'
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'JoinListScreen'>
@@ -68,7 +68,7 @@ export function JoinListScreen(): React.ReactElement {
     setIsLoading(true)
     try {
       debugLog('Join', `Joining with code: ${cleanCode}`)
-      const result = await joinSharedList(cleanCode, 'My device')
+      const result = await joinSharedList(cleanCode, DEVICE_NAME)
       if (!result) {
         debugLog('Join', 'joinSharedList returned null — invalid/expired code')
         Alert.alert(t('Sharing.error'), t('Sharing.joinError'))
