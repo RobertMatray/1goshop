@@ -427,6 +427,24 @@ curl -s -X POST https://api.github.com/user/repos \
 - Report: `code-reviews/2026-02-25-code-review-v6-post-iterative-independent.docx`
 - Generator: `scripts/generate-code-review-v6.mjs`
 
+### Code Review Iterative Process #3 — Android bug fixes (March 3, 2026)
+
+**Process**: Run code review → fix CRITICAL/HIGH/MEDIUM → repeat until 0 CRITICAL and 0 HIGH (max 5 iterations).
+
+**Scope**: Android-specific bug fixes (Alert.prompt → TextInputModal, drag handle gesture conflicts, longPress timing with Gesture.Race)
+
+**Baseline tag**: `v1.2.1-build91`
+
+**Iterative review log**:
+| Iteration | Commit | CRITICAL | HIGH | MEDIUM | Status |
+|-----------|--------|----------|------|--------|--------|
+| 0 (baseline) | v1.2.1-build91 | - | - | - | Starting point |
+| 1 | — | 1→fixes | 3→fixes | 4→fixes | Fixed: retry listener leak (partial), handleDragEnd guard, handleRequestEdit deps, removed firebaseRemoveItem dead code, onConfirm ordering |
+| 2 | — | 2→fixes | 0 | 2→fixes | Fixed: __retry race condition (cancelled flag), unsubscribeFromList cleans retry key, selectedListId in useLayoutEffect deps |
+| 3 | 698b5c5 | 0 | 0 | 3 (accepted) | **GOAL MET: 0 CRITICAL, 0 HIGH** |
+
+**Remaining (accepted)**: 3 MEDIUM (hardcoded 'My device' in self-registration, mixed cleanup closure type in activeListeners, unsubscribeAll comment clarity)
+
 ### Code Review Iterative Process #2 — Multi-list + Firebase (February 26, 2026)
 
 **Process**: Run code review → fix CRITICAL/HIGH/MEDIUM → repeat until 0 CRITICAL and 0 HIGH (max 5 iterations).
@@ -529,8 +547,8 @@ Interactive animated tutorial showing all gestures with pulsing touch indicator:
 - **Price**: Free
 - **Localizations**: Slovak (SK) + English (EN-US)
 - **Screenshots**: iPhone 6.7" + 6.5" + iPad 12.9" (SK + EN, 4 each = 24 total)
-- **Privacy Policy**: https://robertmatray.github.io/1goshop/privacy-policy.html
-- **Support URL**: https://robertmatray.github.io/1goshop/
+- **Privacy Policy**: https://1goshop.realise.sk/privacy-policy.html
+- **Support URL**: https://1goshop.realise.sk/
 - **GitHub Pages**: `docs/` folder (privacy-policy.html, index.html)
 - **App Privacy**: No data collected
 - **App Store screenshots source**: `appstore-screenshots/` (originals + upscaled)
@@ -546,7 +564,7 @@ Interactive animated tutorial showing all gestures with pulsing touch indicator:
 - **Publish Script**: `scripts/publish-google-play.mjs` (uploads AAB, store listings in 12 languages, screenshots)
 - **Store Listing**: 12 languages (en-US, sk, de-DE, hu-HU, uk, cs-CZ, zh-CN, es-ES, fr-FR, it-IT, pl-PL, pt-PT)
 - **Store Assets**: `internals/google-play/icon-512.png`, `internals/google-play/feature-graphic.png`
-- **Privacy Policy**: https://robertmatray.github.io/1goshop/privacy-policy.html
+- **Privacy Policy**: https://1goshop.realise.sk/privacy-policy.html
 - **Content Rating**: IARC - Everyone / PEGI 3 (no objectionable content)
 - **Data Safety**: No data collected
 - **Target Audience**: 13+
@@ -703,3 +721,18 @@ Interactive animated tutorial showing all gestures with pulsing touch indicator:
 - **Database**: Realtime Database
 - **Security Rules**: Members-only read/write, sharing codes readable by any authenticated user
 - **Plan**: Spark (free)
+
+### Webglobe Hosting (realise.sk)
+- **Admin panel**: https://admin.webglobe.sk
+- **FTP host**: ftp.realise.sk (212.57.32.72)
+- **FTP username**: realise
+- **FTP password**: qawsedQAWSED123
+- **Home directory**: /home/html/realise.sk
+- **Subdomains directory**: /home/html/realise.sk/_sub/
+- **1GoShop website**: /home/html/realise.sk/_sub/1goshop/
+- **Website URL**: https://1goshop.realise.sk
+- **SSL**: Let's Encrypt (auto-renewal via Webglobe)
+- **Files deployed**:
+  - `_sub/1goshop/index.html` — Main landing page (12 languages)
+  - `_sub/1goshop/privacy-policy.html` — Privacy policy (12 languages)
+  - `_sub/1goshop/assets/icon.png` — App icon
