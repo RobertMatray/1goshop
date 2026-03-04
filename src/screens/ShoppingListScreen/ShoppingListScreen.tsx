@@ -89,24 +89,14 @@ export function ShoppingListScreen(): React.ReactElement {
         </Pressable>
       ),
       headerRight: () => (
-        <View style={styles.headerRightRow}>
-          {selectedListId && (
-            <Pressable onPress={handleShareList} hitSlop={12} style={styles.headerButton}>
-              <Ionicons name="share-outline" size={22} color={styles.startShoppingText.color as string} />
-            </Pressable>
-          )}
-          <Pressable onPress={handleAddList} hitSlop={12} style={styles.headerButton}>
-            <Ionicons name="add" size={26} color={styles.startShoppingText.color as string} />
-          </Pressable>
-          <Pressable
-            onPress={() => navigation.navigate('SettingsScreen')}
-            onLongPress={() => navigation.navigate('DebugLogScreen')}
-            hitSlop={12}
-            style={styles.headerButton}
-          >
-            <Ionicons name="settings-outline" size={24} color={styles.startShoppingText.color as string} />
-          </Pressable>
-        </View>
+        <Pressable
+          onPress={() => navigation.navigate('SettingsScreen')}
+          onLongPress={() => navigation.navigate('DebugLogScreen')}
+          hitSlop={12}
+          style={styles.headerButton}
+        >
+          <Ionicons name="settings-outline" size={24} color={styles.startShoppingText.color as string} />
+        </Pressable>
       ),
     })
   }, [navigation, selectedList?.name, selectedListId, t])
@@ -185,6 +175,7 @@ export function ShoppingListScreen(): React.ReactElement {
         onDelete={handleDeleteList}
         onAdd={handleAddList}
         onJoin={handleJoinList}
+        onShare={selectedListId ? handleShareList : undefined}
         onClose={() => setShowListPicker(false)}
         t={t}
       />
@@ -209,6 +200,7 @@ export function ShoppingListScreen(): React.ReactElement {
 
   function handleShareList(): void {
     if (selectedListId) {
+      setShowListPicker(false)
       navigation.navigate('ShareListScreen', { listId: selectedListId })
     }
   }
@@ -359,11 +351,12 @@ interface ListPickerModalProps {
   onDelete: (id: string, name: string) => void
   onAdd: () => void
   onJoin: () => void
+  onShare?: () => void
   onClose: () => void
   t: (key: string, options?: Record<string, unknown>) => string
 }
 
-function ListPickerModal({ visible, lists, selectedListId, onSelect, onRename, onDelete, onAdd, onJoin, onClose, t }: ListPickerModalProps): React.ReactElement {
+function ListPickerModal({ visible, lists, selectedListId, onSelect, onRename, onDelete, onAdd, onJoin, onShare, onClose, t }: ListPickerModalProps): React.ReactElement {
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={pickerStyles.overlay} onPress={onClose}>
@@ -399,6 +392,12 @@ function ListPickerModal({ visible, lists, selectedListId, onSelect, onRename, o
             <Ionicons name="add-circle-outline" size={20} color={pickerStyles.addButtonText.color as string} />
             <Text style={pickerStyles.addButtonText}>{t('Lists.newList')}</Text>
           </Pressable>
+          {onShare !== undefined && (
+            <Pressable style={pickerStyles.shareButton} onPress={onShare}>
+              <Ionicons name="share-outline" size={20} color={pickerStyles.shareButtonText.color as string} />
+              <Text style={pickerStyles.shareButtonText}>{t('Sharing.shareButton')}</Text>
+            </Pressable>
+          )}
           <Pressable style={pickerStyles.joinButton} onPress={onJoin}>
             <Ionicons name="people-outline" size={20} color={pickerStyles.joinButtonText.color as string} />
             <Text style={pickerStyles.joinButtonText}>{t('Sharing.joinSharedList')}</Text>
@@ -587,11 +586,6 @@ const styles = StyleSheet.create((theme) => ({
     fontWeight: 'bold',
     maxWidth: 200,
   },
-  headerRightRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
   headerButton: {
     padding: 4,
   },
@@ -670,6 +664,20 @@ const pickerStyles = StyleSheet.create((theme) => ({
     borderTopColor: theme.colors.surfaceBorder,
   },
   addButtonText: {
+    fontSize: theme.typography.fontSizeM,
+    color: theme.colors.tint,
+    fontWeight: '600',
+  },
+  shareButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.surfaceBorder,
+  },
+  shareButtonText: {
     fontSize: theme.typography.fontSizeM,
     color: theme.colors.tint,
     fontWeight: '600',
