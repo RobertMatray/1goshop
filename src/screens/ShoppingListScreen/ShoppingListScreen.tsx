@@ -199,10 +199,8 @@ export function ShoppingListScreen(): React.ReactElement {
   }
 
   function handleShareList(): void {
-    if (selectedListId) {
-      setShowListPicker(false)
-      navigation.navigate('ShareListScreen', { listId: selectedListId })
-    }
+    setShowListPicker(false)
+    navigation.navigate('ShareListScreen', { listId: selectedListId! })
   }
 
   function handleJoinList(): void {
@@ -393,9 +391,9 @@ function ListPickerModal({ visible, lists, selectedListId, onSelect, onRename, o
             <Text style={pickerStyles.addButtonText}>{t('Lists.newList')}</Text>
           </Pressable>
           {onShare !== undefined && (
-            <Pressable style={pickerStyles.shareButton} onPress={onShare}>
-              <Ionicons name="share-outline" size={20} color={pickerStyles.shareButtonText.color as string} />
-              <Text style={pickerStyles.shareButtonText}>{t('Sharing.shareButton')}</Text>
+            <Pressable style={pickerStyles.addButton} onPress={onShare}>
+              <Ionicons name="share-outline" size={20} color={pickerStyles.addButtonText.color as string} />
+              <Text style={pickerStyles.addButtonText}>{t('Sharing.shareButton')}</Text>
             </Pressable>
           )}
           <Pressable style={pickerStyles.joinButton} onPress={onJoin}>
@@ -664,20 +662,6 @@ const pickerStyles = StyleSheet.create((theme) => ({
     borderTopColor: theme.colors.surfaceBorder,
   },
   addButtonText: {
-    fontSize: theme.typography.fontSizeM,
-    color: theme.colors.tint,
-    fontWeight: '600',
-  },
-  shareButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.surfaceBorder,
-  },
-  shareButtonText: {
     fontSize: theme.typography.fontSizeM,
     color: theme.colors.tint,
     fontWeight: '600',
