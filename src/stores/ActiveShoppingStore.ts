@@ -52,7 +52,13 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
       const saved = await AsyncStorage.getItem(sessionKey)
       if (saved) {
         const parsed: unknown = JSON.parse(saved)
-        if (typeof parsed !== 'object' || parsed === null || !('id' in parsed)) {
+        if (
+          typeof parsed !== 'object' ||
+          parsed === null ||
+          !('id' in parsed) ||
+          !('items' in parsed) ||
+          !Array.isArray((parsed as Record<string, unknown>).items)
+        ) {
           console.warn('[ActiveShoppingStore] Invalid session data for list', listId)
           set({ session: null, currentListId: listId, isLoaded: true })
           return
@@ -75,17 +81,18 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
     if (firebaseListId) {
       try {
         const history = await firebaseLoadHistory(firebaseListId)
+        // Firebase succeeded — use its data as source of truth (even if empty)
+        set({ history })
         if (history.length > 0) {
-          set({ history })
           // Cache to local storage for offline access
           const historyKey = `@list_${currentListId}_history`
           await AsyncStorage.setItem(historyKey, JSON.stringify(history)).catch(() => {})
-          return
         }
+        return
       } catch (error) {
-        console.warn('[ActiveShoppingStore] Failed to load Firebase history:', error)
+        console.warn('[ActiveShoppingStore] Failed to load Firebase history, falling back to local:', error)
       }
-      // Fallback to local storage if Firebase has no history or fails
+      // Fallback to local storage only if Firebase request failed (network error etc.)
     }
 
     const historyKey = `@list_${currentListId}_history`
@@ -146,17 +153,21 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
   },
 
   toggleBought: (id: string) => {
-    const { session } = get()
-    if (!session) return
-
-    const updatedItems = session.items.map((item) =>
-      item.id === id
-        ? { ...item, isBought: !item.isBought, purchasedAt: !item.isBought ? new Date().toISOString() : null }
-        : item,
-    )
-    const updatedSession = { ...session, items: updatedItems }
-    set({ session: updatedSession })
-    persistSession(updatedSession, get().currentListId)
+    // Use functional update to read latest state — prevents double-tap from toggling back
+    set((state) => {
+      if (!state.session) return state
+      const updatedItems = state.session.items.map((item) =>
+        item.id === id
+          ? { ...item, isBought: !item.isBought, purchasedAt: !item.isBought ? new Date().toISOString() : null }
+          : item,
+      )
+      return { session: { ...state.session, items: updatedItems } }
+    })
+    // Read committed state after set() — always reflects the latest update
+    const { session, currentListId } = get()
+    if (session) {
+      persistSession(session, currentListId)
+    }
   },
 
   toggleShowBought: () => {
@@ -183,14 +194,25 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
         const historyKey = `@list_${currentListId}_history`
         const sessionKey = `@list_${currentListId}_session`
         const historyRaw = await AsyncStorage.getItem(historyKey)
-        const history = historyRaw ? (JSON.parse(historyRaw) as ShoppingSession[]) : []
+        let history: ShoppingSession[] = []
+        if (historyRaw) {
+          try {
+            const parsed: unknown = JSON.parse(historyRaw)
+            if (Array.isArray(parsed)) {
+              history = parsed as ShoppingSession[]
+            }
+          } catch {
+            console.warn('[ActiveShoppingStore] Corrupted history data, starting fresh')
+          }
+        }
         history.push(finishedSession)
         await AsyncStorage.setItem(historyKey, JSON.stringify(history))
         await AsyncStorage.removeItem(sessionKey)
       }
 
-      // Only clear session after successful persistence
-      set({ session: null, showBought: true })
+      // Only clear session after successful persistence; update history in-memory for immediate UI update
+      const updatedHistory = [finishedSession, ...get().history]
+      set({ session: null, showBought: true, history: updatedHistory })
     } catch (error) {
       console.warn('[ActiveShoppingStore] Failed to finish shopping, keeping session:', error)
       // Don't clear session — user can retry
@@ -236,6 +258,13 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
 
   setSessionFromFirebase: (session: ShoppingSession | null) => {
     set({ session })
+    // When Firebase clears the session, also remove local cache to prevent stale session on restart
+    if (!session) {
+      const { currentListId } = get()
+      if (currentListId) {
+        AsyncStorage.removeItem(`@list_${currentListId}_session`).catch(() => {})
+      }
+    }
   },
 }))
 

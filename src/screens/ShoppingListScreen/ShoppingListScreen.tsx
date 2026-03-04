@@ -225,7 +225,7 @@ export function ShoppingListScreen(): React.ReactElement {
       })
       .catch((error) => {
         console.warn('[ShoppingListScreen] Export failed:', error)
-        Alert.alert(t('ClipboardList.export'), t('ClipboardList.importEmpty'))
+        Alert.alert(t('ClipboardList.export'), t('ClipboardList.exportEmpty'))
       })
   }
 
@@ -330,13 +330,17 @@ export function ShoppingListScreen(): React.ReactElement {
           text: t('ShoppingList.delete'),
           style: 'destructive',
           onPress: async () => {
-            const wasSelected = selectedListId === id
-            await useListsMetaStore.getState().deleteList(id)
-            if (wasSelected) {
-              const { selectedListId: newId } = useListsMetaStore.getState()
-              if (newId) {
-                await handleSelectList(newId)
+            try {
+              const wasSelected = selectedListId === id
+              await useListsMetaStore.getState().deleteList(id)
+              if (wasSelected) {
+                const { selectedListId: newId } = useListsMetaStore.getState()
+                if (newId) {
+                  await handleSelectList(newId)
+                }
               }
+            } catch (error) {
+              console.warn('[ShoppingListScreen] Delete list failed:', error)
             }
           },
         },
@@ -430,6 +434,7 @@ function TextInputModal({ title, defaultValue, onConfirm, onCancel, t }: TextInp
             value={value}
             onChangeText={setValue}
             autoFocus
+            maxLength={100}
             style={textInputModalStyles.input}
             onSubmitEditing={() => onConfirm(value)}
             returnKeyType="done"

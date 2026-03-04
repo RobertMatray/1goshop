@@ -10,6 +10,7 @@ import {
   type Unsubscribe,
 } from 'firebase/database'
 import { Platform } from 'react-native'
+import { getRandomValues } from 'expo-crypto'
 import { getFirebaseAuth, getFirebaseDb } from './firebaseConfig'
 import type { ShoppingItem, ShoppingSession } from '../types/shopping'
 import { debugLog } from './DebugLogger'
@@ -51,8 +52,6 @@ export interface FirebaseSharingCode {
 
 // ─── Auth ───
 
-let currentUser: User | null = null
-
 export async function initFirebase(): Promise<void> {
   debugLog('Firebase', 'initFirebase() called')
   const auth = getFirebaseAuth()
@@ -74,7 +73,6 @@ export async function initFirebase(): Promise<void> {
   })
 
   if (cachedUser) {
-    currentUser = cachedUser
     debugLog('Firebase', `Using cached user: ${cachedUser.uid}`)
     return
   }
@@ -82,7 +80,6 @@ export async function initFirebase(): Promise<void> {
   // No cached session — sign in anonymously
   try {
     const cred = await firebaseSignIn(auth)
-    currentUser = cred.user
     debugLog('Firebase', `Anonymous sign-in OK: ${cred.user.uid}`)
   } catch (e) {
     debugLog('Firebase', `Anonymous sign-in FAILED: ${e}`)
@@ -94,7 +91,6 @@ export async function signInAnonymously(): Promise<string> {
   const auth = getFirebaseAuth()
   if (auth.currentUser) return auth.currentUser.uid
   const cred = await firebaseSignIn(auth)
-  currentUser = cred.user
   return cred.user.uid
 }
 
@@ -106,7 +102,6 @@ export function getCurrentUid(): string | null {
 
 export async function createFirebaseList(
   name: string,
-  deviceId: string,
   deviceName: string,
   items: ShoppingItem[],
   session: ShoppingSession | null,
@@ -165,11 +160,10 @@ export async function createFirebaseList(
 // ─── Sharing codes ───
 
 function generateSharingCode(): string {
-  let code = ''
-  for (let i = 0; i < CODE_LENGTH; i++) {
-    code += CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]
-  }
-  return code
+  const bytes = getRandomValues(new Uint8Array(CODE_LENGTH))
+  return Array.from(bytes)
+    .map((b) => CODE_CHARS[b % CODE_CHARS.length]!)
+    .join('')
 }
 
 export async function createSharingCode(
@@ -299,7 +293,6 @@ export function subscribeToList(firebaseListId: string, callbacks: ListCallbacks
     firebaseSignIn(auth)
       .then((cred) => {
         if (cancelled) return
-        currentUser = cred.user
         debugLog('Sync', `Auth recovered: ${cred.user.uid}, retrying subscribe`)
         const realUnsub = subscribeToList(firebaseListId, callbacks)
         activeListeners.set(`${firebaseListId}__retry`, [realUnsub])
@@ -328,6 +321,8 @@ export function subscribeToList(firebaseListId: string, callbacks: ListCallbacks
   // Firebase Security Rules may deny listener reads if membership hasn't been written yet.
   const memberRef = ref(db, `lists/${firebaseListId}/meta/members/${uid}`)
 
+  let iifeCancelled = false
+
   void (async () => {
     try {
       const snap = await firebaseGet(memberRef)
@@ -341,6 +336,12 @@ export function subscribeToList(firebaseListId: string, callbacks: ListCallbacks
     } catch (e) {
       debugLog('Sync', `Member check/register FAILED: ${e}`)
       // Continue — listeners may still work if rules allow it
+    }
+
+    // If cleanup was called, or a different list is now active, abort listener setup
+    if (iifeCancelled) {
+      debugLog('Sync', `Subscribe cancelled during member check for ${firebaseListId}, aborting`)
+      return
     }
 
     const unsubs: Unsubscribe[] = []
@@ -444,6 +445,7 @@ export function subscribeToList(firebaseListId: string, callbacks: ListCallbacks
 
   return () => {
     debugLog('Sync', `Unsubscribing from ${firebaseListId}`)
+    iifeCancelled = true
     const existing = activeListeners.get(firebaseListId)
     if (existing) {
       for (const unsub of existing) unsub()
@@ -480,8 +482,7 @@ async function ensureAuth(): Promise<void> {
   const auth = getFirebaseAuth()
   if (auth.currentUser) return
   try {
-    const cred = await firebaseSignIn(auth)
-    currentUser = cred.user
+    await firebaseSignIn(auth)
   } catch (e) {
     console.warn('[FirebaseSyncService] ensureAuth failed:', e)
     throw new Error('Firebase auth required but sign-in failed')

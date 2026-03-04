@@ -159,7 +159,6 @@ export function ShoppingListItem({ item, drag, isActive, onRequestEdit }: Props)
                 style={[
                   styles.itemName,
                   item.isChecked && styles.itemNameChecked,
-                  item.isChecked && { fontWeight: 'bold' as const },
                 ]}
                 numberOfLines={1}
               >

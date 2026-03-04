@@ -15,6 +15,7 @@ import {
   createSharingCode,
   firebaseGetMemberCount,
   firebaseLeaveList,
+  unsubscribeFromList,
   DEVICE_NAME,
 } from '../../services/FirebaseSyncService'
 
@@ -33,12 +34,19 @@ export function ShareListScreen(): React.ReactElement {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const isUnlinkingRef = useRef(false)
   const isMountedRef = useRef(true)
+  // Ref tracks sharingCode for use in useFocusEffect cleanup (avoids stale closure)
+  const sharingCodeRef = useRef<string | null>(null)
 
   useEffect(() => {
     return () => {
       isMountedRef.current = false
     }
   }, [])
+
+  // Keep ref in sync so useFocusEffect cleanup can check current sharingCode without stale closure
+  useEffect(() => {
+    sharingCodeRef.current = sharingCode
+  }, [sharingCode])
 
   const isShared = list?.isShared ?? false
 
@@ -76,7 +84,8 @@ export function ShareListScreen(): React.ReactElement {
         // Screen losing focus — check if we should auto-unlink
         checkAndAutoUnlink()
       }
-    }, []),
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [listId]),
   )
 
   if (!list) return <View style={styles.container} />
@@ -147,6 +156,8 @@ export function ShareListScreen(): React.ReactElement {
 
   async function checkAndAutoUnlink(): Promise<void> {
     if (isUnlinkingRef.current || !isMountedRef.current) return
+    // Don't auto-unlink while a sharing code is still active — a joiner may be in the process of joining
+    if (sharingCodeRef.current !== null) return
     isUnlinkingRef.current = true
 
     try {
@@ -156,6 +167,7 @@ export function ShareListScreen(): React.ReactElement {
       const count = await firebaseGetMemberCount(currentList.firebaseListId)
       if (count <= 1) {
         // Only the owner — nobody joined, revert to local-only
+        unsubscribeFromList(currentList.firebaseListId)
         await firebaseLeaveList(currentList.firebaseListId).catch(() => {})
         useListsMetaStore.getState().unlinkList(listId)
         // Re-subscribe store to use local data instead of Firebase
@@ -172,7 +184,7 @@ export function ShareListScreen(): React.ReactElement {
   }
 
   async function handleShare(): Promise<void> {
-    if (!list) return
+    if (!list || isLoading || list.isShared) return
     setIsLoading(true)
     try {
       const items = useShoppingListStore.getState().items
@@ -182,9 +194,13 @@ export function ShareListScreen(): React.ReactElement {
       if (!session) {
         const sessionRaw = await AsyncStorage.getItem(`@list_${listId}_session`)
         if (sessionRaw) {
-          const parsed: unknown = JSON.parse(sessionRaw)
-          if (typeof parsed === 'object' && parsed !== null && 'id' in parsed) {
-            session = parsed as ShoppingSession
+          try {
+            const parsed: unknown = JSON.parse(sessionRaw)
+            if (typeof parsed === 'object' && parsed !== null && 'id' in parsed) {
+              session = parsed as ShoppingSession
+            }
+          } catch {
+            console.warn('[ShareListScreen] Corrupted session data, ignoring')
           }
         }
       }
@@ -194,17 +210,22 @@ export function ShareListScreen(): React.ReactElement {
       if (history.length === 0) {
         const historyRaw = await AsyncStorage.getItem(`@list_${listId}_history`)
         if (historyRaw) {
-          const parsed: unknown = JSON.parse(historyRaw)
-          if (Array.isArray(parsed)) {
-            history = parsed as ShoppingSession[]
+          try {
+            const parsed: unknown = JSON.parse(historyRaw)
+            if (Array.isArray(parsed)) {
+              history = (parsed as unknown[]).filter(
+                (s): s is ShoppingSession =>
+                  typeof s === 'object' && s !== null && 'id' in s && 'items' in s,
+              )
+            }
+          } catch {
+            console.warn('[ShareListScreen] Corrupted history data, ignoring')
           }
         }
       }
 
-      const deviceId = useListsMetaStore.getState().deviceId
       const firebaseListId = await createFirebaseList(
         list.name,
-        deviceId,
         DEVICE_NAME,
         items,
         session,
@@ -254,6 +275,7 @@ export function ShareListScreen(): React.ReactElement {
         style: 'destructive',
         onPress: async () => {
           if (list?.firebaseListId) {
+            unsubscribeFromList(list.firebaseListId)
             await firebaseLeaveList(list.firebaseListId).catch(() => {})
           }
           useListsMetaStore.getState().unlinkList(listId)

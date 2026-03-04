@@ -19,7 +19,7 @@ export function JoinListScreen(): React.ReactElement {
   const [code, setCode] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
-  const isValid = code.replace(/\s/g, '').length === 6
+  const isValid = code.length === 6
 
   return (
     <View style={styles.container}>
@@ -35,7 +35,7 @@ export function JoinListScreen(): React.ReactElement {
           placeholderTextColor={styles.placeholder.color as string}
           autoCapitalize="characters"
           autoCorrect={false}
-          maxLength={7}
+          maxLength={6}
           textAlign="center"
         />
 
@@ -67,7 +67,7 @@ export function JoinListScreen(): React.ReactElement {
 
     setIsLoading(true)
     try {
-      debugLog('Join', `Joining with code: ${cleanCode}`)
+      debugLog('Join', `Joining with code: ${cleanCode.slice(0, 2)}****`)
       const result = await joinSharedList(cleanCode, DEVICE_NAME)
       if (!result) {
         debugLog('Join', 'joinSharedList returned null — invalid/expired code')
