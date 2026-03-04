@@ -46,15 +46,7 @@ export function ShoppingListItem({ item, drag, isActive, onRequestEdit }: Props)
       startX.value = event.x
     })
     .onUpdate((event) => {
-      const isLeftHalf = startX.value < itemWidth.value / 2
-
-      if (isLeftHalf) {
-        // Left half: swipe left (delete), swipe right (edit)
-        translateX.value = event.translationX
-      } else {
-        // Right half: both directions (+1/-1)
-        translateX.value = event.translationX
-      }
+      translateX.value = event.translationX
     })
     .onEnd((event) => {
       const isLeftHalf = startX.value < itemWidth.value / 2

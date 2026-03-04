@@ -34,9 +34,33 @@ export const useListsMetaStore = create<ListsMetaStoreState>((set, get) => ({
       if (saved) {
         const parsed: unknown = JSON.parse(saved)
         if (typeof parsed !== 'object' || parsed === null || !('version' in parsed)) {
-          console.warn('[ListsMetaStore] Invalid meta data, clearing')
+          // Attempt migration: if data has a lists array, reconstruct a valid v1 object
+          if (
+            typeof parsed === 'object' &&
+            parsed !== null &&
+            'lists' in parsed &&
+            Array.isArray((parsed as Record<string, unknown>).lists)
+          ) {
+            console.warn('[ListsMetaStore] Missing version field, attempting migration to v1')
+            const rawSelectedId = (parsed as Record<string, unknown>).selectedListId
+            const rawDeviceId = (parsed as Record<string, unknown>).deviceId
+            const migrated: ListsMetaData = {
+              version: 1,
+              lists: (parsed as Record<string, unknown>).lists as ShoppingListMeta[],
+              selectedListId: typeof rawSelectedId === 'string' ? rawSelectedId : '',
+              deviceId: typeof rawDeviceId === 'string' ? rawDeviceId : randomUUID(),
+            }
+            set({
+              lists: migrated.lists,
+              selectedListId: migrated.selectedListId || null,
+              deviceId: migrated.deviceId,
+              isLoaded: true,
+            })
+            return
+          }
+          console.warn('[ListsMetaStore] Invalid meta data structure, clearing')
           await AsyncStorage.removeItem(STORAGE_KEY)
-          set({ isLoaded: true })
+          set({ isLoaded: true, deviceId: randomUUID() })
           return
         }
         const data = parsed as ListsMetaData

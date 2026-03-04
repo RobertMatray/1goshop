@@ -97,24 +97,11 @@ export function JoinListScreen(): React.ReactElement {
         return
       }
 
-      // Check if there's an unlinked local list that was previously connected to this Firebase list
-      // This happens when user unlinks and then re-joins the same shared list
-      const unlinkedList = useListsMetaStore.getState().lists.find(
-        (l) => !l.isShared && !l.firebaseListId && l.name === result.listName,
-      )
-
-      let listId: string
-      if (unlinkedList) {
-        debugLog('Join', `Re-linking unlinked list: ${unlinkedList.id}`)
-        // Re-link existing local list instead of creating a duplicate
-        useListsMetaStore.getState().markListAsShared(unlinkedList.id, result.firebaseListId, cleanCode)
-        listId = unlinkedList.id
-      } else {
-        // Create new local list entry linked to Firebase
-        listId = useListsMetaStore.getState().createList(result.listName)
-        useListsMetaStore.getState().markListAsShared(listId, result.firebaseListId, cleanCode)
-        debugLog('Join', `Created new local list: ${listId}, marked as shared`)
-      }
+      // Always create a new local list entry — name-based matching is unsafe
+      // (could accidentally re-link an unrelated local list with the same name)
+      const listId = useListsMetaStore.getState().createList(result.listName)
+      useListsMetaStore.getState().markListAsShared(listId, result.firebaseListId, cleanCode)
+      debugLog('Join', `Created new local list: ${listId}, marked as shared`)
 
       // Switch to the joined list
       debugLog('Join', `Switching to joined list: ${listId}`)

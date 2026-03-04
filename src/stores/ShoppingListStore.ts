@@ -10,9 +10,9 @@ import { useListsMetaStore } from './ListsMetaStore'
 import {
   firebaseSetItems,
   firebaseAddItem,
-
   firebaseUpdateItem,
   firebaseBatchUpdateOrder,
+  firebaseBatchUncheckItems,
   firebaseRemoveItemsAndReorder,
   firebaseUpdateListName,
   subscribeToList,
@@ -257,9 +257,7 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
     set({ items: updated })
     const fbId = getFirebaseListId(get().currentListId)
     if (fbId) {
-      for (const id of ids) {
-        firebaseUpdateItem(fbId, id, { isChecked: false }).catch(logFirebaseError)
-      }
+      firebaseBatchUncheckItems(fbId, ids).catch(logFirebaseError)
     } else {
       persistLocal(updated, get().currentListId)
     }

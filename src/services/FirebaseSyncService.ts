@@ -324,125 +324,131 @@ export function subscribeToList(firebaseListId: string, callbacks: ListCallbacks
 
   // Check if current UID is already a member. If not, register first then subscribe.
   // This handles the case where device got a new anonymous UID (reinstall/clear data).
+  // IMPORTANT: member check must complete before listeners are attached — otherwise
+  // Firebase Security Rules may deny listener reads if membership hasn't been written yet.
   const memberRef = ref(db, `lists/${firebaseListId}/meta/members/${uid}`)
-  firebaseGet(memberRef)
-    .then((snap) => {
+
+  void (async () => {
+    try {
+      const snap = await firebaseGet(memberRef)
       if (!snap.exists()) {
         debugLog('Sync', `UID=${uid} not in members, registering...`)
-        return set(memberRef, { joinedAt: Date.now(), deviceName: DEVICE_NAME })
-          .then(() => { debugLog('Sync', 'Registered as member OK') })
-          .catch((e) => { debugLog('Sync', `Register as member FAILED: ${e}`) })
+        await set(memberRef, { joinedAt: Date.now(), deviceName: DEVICE_NAME })
+        debugLog('Sync', 'Registered as member OK')
       } else {
         debugLog('Sync', `UID=${uid} already a member`)
       }
-    })
-    .catch((e) => {
-      debugLog('Sync', `Member check FAILED (permission_denied?): ${e}`)
-    })
-
-  const unsubs: Unsubscribe[] = []
-
-  try {
-    const onListenerError = (error: Error): void => {
-      debugLog('Sync', `LISTENER ERROR for ${firebaseListId}: ${error.message}`)
-      console.warn('[FirebaseSyncService] Listener error for list', firebaseListId, ':', error.message)
+    } catch (e) {
+      debugLog('Sync', `Member check/register FAILED: ${e}`)
+      // Continue — listeners may still work if rules allow it
     }
 
-    // Items listener
-    const itemsPath = `lists/${firebaseListId}/items`
-    debugLog('Sync', `Setting up onValue for: ${itemsPath}`)
-    const itemsRef = ref(db, itemsPath)
-    const itemsUnsub = onValue(
-      itemsRef,
-      (snap) => {
-        try {
-          if (!snap.exists()) {
-            debugLog('Sync', `onItems: snapshot empty (no items)`)
-            callbacks.onItems([])
-            return
+    const unsubs: Unsubscribe[] = []
+
+    try {
+      const onListenerError = (error: Error): void => {
+        debugLog('Sync', `LISTENER ERROR for ${firebaseListId}: ${error.message}`)
+        console.warn('[FirebaseSyncService] Listener error for list', firebaseListId, ':', error.message)
+      }
+
+      // Items listener
+      const itemsPath = `lists/${firebaseListId}/items`
+      debugLog('Sync', `Setting up onValue for: ${itemsPath}`)
+      const itemsRef = ref(db, itemsPath)
+      const itemsUnsub = onValue(
+        itemsRef,
+        (snap) => {
+          try {
+            if (!snap.exists()) {
+              debugLog('Sync', `onItems: snapshot empty (no items)`)
+              callbacks.onItems([])
+              return
+            }
+            const val = snap.val() as Record<string, FirebaseItem>
+            const items: ShoppingItem[] = Object.values(val)
+              .map((fi) => ({
+                id: fi.id,
+                name: fi.name,
+                quantity: fi.quantity,
+                isChecked: fi.isChecked,
+                order: fi.order,
+                createdAt: fi.createdAt,
+              }))
+              .sort((a, b) => a.order - b.order)
+            debugLog('Sync', `onItems: received ${items.length} items: [${items.map((i) => i.name).join(', ')}]`)
+            callbacks.onItems(items)
+          } catch (error) {
+            debugLog('Sync', `onItems CALLBACK ERROR: ${error}`)
+            console.warn('[FirebaseSyncService] Error in onItems callback:', error)
           }
-          const val = snap.val() as Record<string, FirebaseItem>
-          const items: ShoppingItem[] = Object.values(val)
-            .map((fi) => ({
-              id: fi.id,
-              name: fi.name,
-              quantity: fi.quantity,
-              isChecked: fi.isChecked,
-              order: fi.order,
-              createdAt: fi.createdAt,
-            }))
-            .sort((a, b) => a.order - b.order)
-          debugLog('Sync', `onItems: received ${items.length} items: [${items.map((i) => i.name).join(', ')}]`)
-          callbacks.onItems(items)
-        } catch (error) {
-          debugLog('Sync', `onItems CALLBACK ERROR: ${error}`)
-          console.warn('[FirebaseSyncService] Error in onItems callback:', error)
-        }
-      },
-      onListenerError,
-    )
-    unsubs.push(itemsUnsub)
-    debugLog('Sync', 'Items listener attached')
+        },
+        onListenerError,
+      )
+      unsubs.push(itemsUnsub)
+      debugLog('Sync', 'Items listener attached')
 
-    // Session listener
-    const sessionPath = `lists/${firebaseListId}/session`
-    debugLog('Sync', `Setting up onValue for: ${sessionPath}`)
-    const sessionRef = ref(db, sessionPath)
-    const sessionUnsub = onValue(
-      sessionRef,
-      (snap) => {
-        try {
-          debugLog('Sync', `onSession: exists=${snap.exists()}`)
-          callbacks.onSession(snap.exists() ? (snap.val() as ShoppingSession) : null)
-        } catch (error) {
-          debugLog('Sync', `onSession CALLBACK ERROR: ${error}`)
-          console.warn('[FirebaseSyncService] Error in onSession callback:', error)
-        }
-      },
-      onListenerError,
-    )
-    unsubs.push(sessionUnsub)
-    debugLog('Sync', 'Session listener attached')
-
-    // Meta listener
-    const metaPath = `lists/${firebaseListId}/meta`
-    debugLog('Sync', `Setting up onValue for: ${metaPath}`)
-    const metaRef = ref(db, metaPath)
-    const metaUnsub = onValue(
-      metaRef,
-      (snap) => {
-        try {
-          if (snap.exists()) {
-            const meta = snap.val() as FirebaseListMeta
-            const memberCount = meta.members ? Object.keys(meta.members).length : 0
-            debugLog('Sync', `onMeta: name="${meta.name}", members=${memberCount}`)
-            callbacks.onMeta(meta)
-          } else {
-            debugLog('Sync', 'onMeta: snapshot empty')
+      // Session listener
+      const sessionPath = `lists/${firebaseListId}/session`
+      debugLog('Sync', `Setting up onValue for: ${sessionPath}`)
+      const sessionRef = ref(db, sessionPath)
+      const sessionUnsub = onValue(
+        sessionRef,
+        (snap) => {
+          try {
+            debugLog('Sync', `onSession: exists=${snap.exists()}`)
+            callbacks.onSession(snap.exists() ? (snap.val() as ShoppingSession) : null)
+          } catch (error) {
+            debugLog('Sync', `onSession CALLBACK ERROR: ${error}`)
+            console.warn('[FirebaseSyncService] Error in onSession callback:', error)
           }
-        } catch (error) {
-          debugLog('Sync', `onMeta CALLBACK ERROR: ${error}`)
-          console.warn('[FirebaseSyncService] Error in onMeta callback:', error)
-        }
-      },
-      onListenerError,
-    )
-    unsubs.push(metaUnsub)
-    debugLog('Sync', `All 3 listeners attached for ${firebaseListId}`)
+        },
+        onListenerError,
+      )
+      unsubs.push(sessionUnsub)
+      debugLog('Sync', 'Session listener attached')
 
-    activeListeners.set(firebaseListId, unsubs)
+      // Meta listener
+      const metaPath = `lists/${firebaseListId}/meta`
+      debugLog('Sync', `Setting up onValue for: ${metaPath}`)
+      const metaRef = ref(db, metaPath)
+      const metaUnsub = onValue(
+        metaRef,
+        (snap) => {
+          try {
+            if (snap.exists()) {
+              const meta = snap.val() as FirebaseListMeta
+              const memberCount = meta.members ? Object.keys(meta.members).length : 0
+              debugLog('Sync', `onMeta: name="${meta.name}", members=${memberCount}`)
+              callbacks.onMeta(meta)
+            } else {
+              debugLog('Sync', 'onMeta: snapshot empty')
+            }
+          } catch (error) {
+            debugLog('Sync', `onMeta CALLBACK ERROR: ${error}`)
+            console.warn('[FirebaseSyncService] Error in onMeta callback:', error)
+          }
+        },
+        onListenerError,
+      )
+      unsubs.push(metaUnsub)
+      debugLog('Sync', `All 3 listeners attached for ${firebaseListId}`)
 
-    return () => {
-      debugLog('Sync', `Unsubscribing from ${firebaseListId}`)
+      activeListeners.set(firebaseListId, unsubs)
+    } catch (error) {
+      // Cleanup any partial listeners on setup failure
       for (const unsub of unsubs) unsub()
+      debugLog('Sync', `SUBSCRIBE FAILED: ${error}`)
+      console.warn('[FirebaseSyncService] Failed to subscribe to list:', error)
+    }
+  })()
+
+  return () => {
+    debugLog('Sync', `Unsubscribing from ${firebaseListId}`)
+    const existing = activeListeners.get(firebaseListId)
+    if (existing) {
+      for (const unsub of existing) unsub()
       activeListeners.delete(firebaseListId)
     }
-  } catch (error) {
-    // Cleanup any partial listeners on setup failure
-    for (const unsub of unsubs) unsub()
-    debugLog('Sync', `SUBSCRIBE FAILED: ${error}`)
-    console.warn('[FirebaseSyncService] Failed to subscribe to list:', error)
-    return () => {}
   }
 }
 
@@ -543,6 +549,23 @@ export async function firebaseUpdateItem(
   const now = Date.now()
   await update(ref(db, `lists/${firebaseListId}/items/${itemId}`), { ...updates, updatedAt: now })
   await update(ref(db, `lists/${firebaseListId}/meta`), { updatedAt: now })
+}
+
+export async function firebaseBatchUncheckItems(
+  firebaseListId: string,
+  ids: string[],
+): Promise<void> {
+  if (ids.length === 0) return
+  await ensureAuth()
+  const db = getFirebaseDb()
+  const now = Date.now()
+  const updates: Record<string, unknown> = {}
+  for (const id of ids) {
+    updates[`lists/${firebaseListId}/items/${id}/isChecked`] = false
+    updates[`lists/${firebaseListId}/items/${id}/updatedAt`] = now
+  }
+  updates[`lists/${firebaseListId}/meta/updatedAt`] = now
+  await update(ref(db), updates)
 }
 
 export async function firebaseBatchUpdateOrder(

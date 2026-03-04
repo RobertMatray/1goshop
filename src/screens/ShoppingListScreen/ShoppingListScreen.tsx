@@ -215,13 +215,18 @@ export function ShoppingListScreen(): React.ReactElement {
   }
 
   function handleExport(): void {
-    exportToClipboard(items).then((count) => {
-      if (count === 0) {
-        Alert.alert(t('ClipboardList.export'), t('ClipboardList.exportEmpty'))
-      } else {
-        Alert.alert(t('ClipboardList.export'), t('ClipboardList.exportSuccess', { count }))
-      }
-    })
+    exportToClipboard(items)
+      .then((count) => {
+        if (count === 0) {
+          Alert.alert(t('ClipboardList.export'), t('ClipboardList.exportEmpty'))
+        } else {
+          Alert.alert(t('ClipboardList.export'), t('ClipboardList.exportSuccess', { count }))
+        }
+      })
+      .catch((error) => {
+        console.warn('[ShoppingListScreen] Export failed:', error)
+        Alert.alert(t('ClipboardList.export'), t('ClipboardList.importEmpty'))
+      })
   }
 
   function handleImport(): void {
@@ -426,6 +431,8 @@ function TextInputModal({ title, defaultValue, onConfirm, onCancel, t }: TextInp
             onChangeText={setValue}
             autoFocus
             style={textInputModalStyles.input}
+            onSubmitEditing={() => onConfirm(value)}
+            returnKeyType="done"
           />
           <View style={textInputModalStyles.buttons}>
             <Pressable style={textInputModalStyles.cancelButton} onPress={onCancel}>

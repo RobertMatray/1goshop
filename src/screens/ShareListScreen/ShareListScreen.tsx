@@ -51,13 +51,13 @@ export function ShareListScreen(): React.ReactElement {
   useEffect(() => {
     if (!expiresAt) return
     timerRef.current = setInterval(() => {
+      if (!isMountedRef.current) return
       const remaining = expiresAt - Date.now()
       if (remaining <= 0) {
         setTimeLeft('0:00')
         setSharingCode(null)
         setExpiresAt(null)
         if (timerRef.current) clearInterval(timerRef.current)
-        checkAndAutoUnlink()
         return
       }
       const mins = Math.floor(remaining / 60000)
@@ -76,7 +76,7 @@ export function ShareListScreen(): React.ReactElement {
         // Screen losing focus — check if we should auto-unlink
         checkAndAutoUnlink()
       }
-    }, [list?.firebaseListId, list?.isShared]),
+    }, []),
   )
 
   if (!list) return <View style={styles.container} />
@@ -257,6 +257,10 @@ export function ShareListScreen(): React.ReactElement {
             await firebaseLeaveList(list.firebaseListId).catch(() => {})
           }
           useListsMetaStore.getState().unlinkList(listId)
+          const selectedId = useListsMetaStore.getState().selectedListId
+          if (selectedId === listId) {
+            await useShoppingListStore.getState().switchToList(listId)
+          }
         },
       },
     ])
