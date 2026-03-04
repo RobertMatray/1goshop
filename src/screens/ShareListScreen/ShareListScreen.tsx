@@ -33,6 +33,8 @@ export function ShareListScreen(): React.ReactElement {
   const [memberCount, setMemberCount] = useState(0)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const isUnlinkingRef = useRef(false)
+  // Synchronous loading guard — React setState is async so isLoading state alone can't prevent double-tap
+  const isLoadingRef = useRef(false)
   const isMountedRef = useRef(true)
   // Ref tracks sharingCode for use in useFocusEffect cleanup (avoids stale closure)
   const sharingCodeRef = useRef<string | null>(null)
@@ -118,10 +120,10 @@ export function ShareListScreen(): React.ReactElement {
             <Text style={styles.codeText}>{sharingCode}</Text>
             <Text style={styles.codeInstructions}>{t('Sharing.codeInstructions')}</Text>
             <Text style={styles.codeExpires}>
-              {t('Sharing.codeExpires', {
-                minutes: timeLeft.split(':')[0],
-                seconds: timeLeft.split(':')[1],
-              })}
+              {(() => {
+                const [mins = '0', secs = '00'] = timeLeft.split(':')
+                return t('Sharing.codeExpires', { minutes: mins, seconds: secs })
+              })()}
             </Text>
           </>
         )}
@@ -165,6 +167,8 @@ export function ShareListScreen(): React.ReactElement {
       if (!currentList?.isShared || !currentList.firebaseListId) return
 
       const count = await firebaseGetMemberCount(currentList.firebaseListId)
+      // Re-check mounted state after async call — component may have unmounted while waiting
+      if (!isMountedRef.current) return
       if (count <= 1) {
         // Only the owner — nobody joined, revert to local-only
         unsubscribeFromList(currentList.firebaseListId)
@@ -184,7 +188,8 @@ export function ShareListScreen(): React.ReactElement {
   }
 
   async function handleShare(): Promise<void> {
-    if (!list || isLoading || list.isShared) return
+    if (!list || isLoadingRef.current || list.isShared) return
+    isLoadingRef.current = true
     setIsLoading(true)
     try {
       const items = useShoppingListStore.getState().items
@@ -248,12 +253,14 @@ export function ShareListScreen(): React.ReactElement {
       console.warn('[ShareListScreen] Failed to share:', error)
       Alert.alert(t('Sharing.error'), t('Sharing.shareError'))
     } finally {
+      isLoadingRef.current = false
       setIsLoading(false)
     }
   }
 
   async function handleGenerateNewCode(): Promise<void> {
-    if (!list?.firebaseListId) return
+    if (!list?.firebaseListId || isLoadingRef.current) return
+    isLoadingRef.current = true
     setIsLoading(true)
     try {
       const code = await createSharingCode(list.firebaseListId, list.name)
@@ -263,6 +270,7 @@ export function ShareListScreen(): React.ReactElement {
       console.warn('[ShareListScreen] Failed to generate code:', error)
       Alert.alert(t('Sharing.error'), t('Sharing.shareError'))
     } finally {
+      isLoadingRef.current = false
       setIsLoading(false)
     }
   }

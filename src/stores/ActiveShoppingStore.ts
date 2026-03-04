@@ -9,6 +9,7 @@ import { useListsMetaStore } from './ListsMetaStore'
 import {
   firebaseSetSession,
   firebaseAddHistory,
+  firebaseFinishShopping,
   firebaseRemoveHistory,
   firebaseClearHistory,
   firebaseLoadHistory,
@@ -153,7 +154,9 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
   },
 
   toggleBought: (id: string) => {
-    // Use functional update to read latest state — prevents double-tap from toggling back
+    // Use functional update to read latest state — prevents double-tap from toggling back.
+    // Capture the resulting session inside set() so persistSession uses the exact committed state.
+    let committedSession: ShoppingSession | null = null
     set((state) => {
       if (!state.session) return state
       const updatedItems = state.session.items.map((item) =>
@@ -161,12 +164,11 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
           ? { ...item, isBought: !item.isBought, purchasedAt: !item.isBought ? new Date().toISOString() : null }
           : item,
       )
-      return { session: { ...state.session, items: updatedItems } }
+      committedSession = { ...state.session, items: updatedItems }
+      return { session: committedSession }
     })
-    // Read committed state after set() — always reflects the latest update
-    const { session, currentListId } = get()
-    if (session) {
-      persistSession(session, currentListId)
+    if (committedSession) {
+      persistSession(committedSession, get().currentListId)
     }
   },
 
@@ -175,9 +177,11 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
   },
 
   finishShopping: async () => {
-    const { session, isFinishing, currentListId } = get()
-    if (!session || isFinishing || !currentListId) return
+    if (isFinishingInProgress) return
+    const { session, currentListId } = get()
+    if (!session || !currentListId) return
 
+    isFinishingInProgress = true
     set({ isFinishing: true })
 
     try {
@@ -188,8 +192,10 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
 
       const firebaseListId = getFirebaseListId(currentListId)
       if (firebaseListId) {
-        await firebaseAddHistory(firebaseListId, finishedSession)
-        await firebaseSetSession(firebaseListId, null)
+        // Atomically write history + clear session in one Firebase update (prevents duplicate history on retry)
+        await firebaseFinishShopping(firebaseListId, finishedSession)
+        // Clear local session cache so a restart doesn't resurrect the finished session
+        await AsyncStorage.removeItem(`@list_${currentListId}_session`).catch(() => {})
       } else {
         const historyKey = `@list_${currentListId}_history`
         const sessionKey = `@list_${currentListId}_session`
@@ -217,6 +223,7 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
       console.warn('[ActiveShoppingStore] Failed to finish shopping, keeping session:', error)
       // Don't clear session — user can retry
     } finally {
+      isFinishingInProgress = false
       set({ isFinishing: false })
     }
   },
@@ -258,12 +265,14 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
 
   setSessionFromFirebase: (session: ShoppingSession | null) => {
     set({ session })
-    // When Firebase clears the session, also remove local cache to prevent stale session on restart
-    if (!session) {
-      const { currentListId } = get()
-      if (currentListId) {
-        AsyncStorage.removeItem(`@list_${currentListId}_session`).catch(() => {})
-      }
+    const { currentListId } = get()
+    if (!currentListId) return
+    if (session) {
+      // Cache Firebase session locally so restart doesn't lose state before listener reconnects
+      debouncedPersist(`@list_${currentListId}_session`, session)
+    } else {
+      // When Firebase clears the session, also remove local cache to prevent stale session on restart
+      AsyncStorage.removeItem(`@list_${currentListId}_session`).catch(() => {})
     }
   },
 }))
@@ -284,6 +293,10 @@ function persistSession(session: ShoppingSession, listId: string | null): void {
     debouncedPersist(`@list_${listId}_session`, session)
   }
 }
+
+// Module-level flag for finishShopping — prevents double-tap from creating duplicate history entries
+// (Zustand set() is not synchronous enough to guard against rapid consecutive calls)
+let isFinishingInProgress = false
 
 let lastOfflineAlertAt = 0
 const OFFLINE_ALERT_COOLDOWN_MS = 60_000

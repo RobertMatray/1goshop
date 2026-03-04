@@ -6,6 +6,7 @@ import {
   remove,
   update,
   onValue,
+  runTransaction,
   get as firebaseGet,
   type Unsubscribe,
 } from 'firebase/database'
@@ -206,7 +207,7 @@ export async function joinSharedList(
 ): Promise<{ firebaseListId: string; listName: string } | null> {
   const uid = await signInAnonymously()
   const db = getFirebaseDb()
-  debugLog('Join', `joinSharedList: UID=${uid}, code=${code.toUpperCase()}`)
+  debugLog('Join', `joinSharedList: UID=${uid}, code=${code.slice(0, 2).toUpperCase()}****`)
 
   const codeSnap = await firebaseGet(ref(db, `sharing-codes/${code.toUpperCase()}`))
   if (!codeSnap.exists()) {
@@ -249,9 +250,9 @@ export async function joinSharedList(
   const currentAuthUid = getFirebaseAuth().currentUser?.uid
   debugLog('Join', `Post-write auth check: currentUser.uid=${currentAuthUid}, wrote as uid=${uid}, match=${currentAuthUid === uid}`)
 
-  // Remove used sharing code
-  await remove(ref(db, `sharing-codes/${code.toUpperCase()}`))
-  debugLog('Join', 'Sharing code removed, join complete')
+  // Remove used sharing code best-effort — failure is non-critical (code will expire naturally)
+  remove(ref(db, `sharing-codes/${code.toUpperCase()}`)).catch(() => {})
+  debugLog('Join', 'Sharing code removal queued, join complete')
 
   return { firebaseListId: data.firebaseListId, listName: data.listName }
 }
@@ -434,6 +435,13 @@ export function subscribeToList(firebaseListId: string, callbacks: ListCallbacks
       unsubs.push(metaUnsub)
       debugLog('Sync', `All 3 listeners attached for ${firebaseListId}`)
 
+      // Final iifeCancelled check — cleanup may have been called while listeners were being set up.
+      // Also check if a newer subscribe call already registered its own listeners (stale IIFE scenario).
+      if (iifeCancelled || activeListeners.has(firebaseListId)) {
+        for (const unsub of unsubs) unsub()
+        debugLog('Sync', `Subscribe cancelled or superseded for ${firebaseListId}, cleaned up`)
+        return
+      }
       activeListeners.set(firebaseListId, unsubs)
     } catch (error) {
       // Cleanup any partial listeners on setup failure
@@ -631,6 +639,22 @@ export async function firebaseAddHistory(
   await update(ref(db, `lists/${firebaseListId}/meta`), { updatedAt: now })
 }
 
+// Atomically finish a shopping session: adds to history and clears session in one write
+export async function firebaseFinishShopping(
+  firebaseListId: string,
+  session: ShoppingSession,
+): Promise<void> {
+  await ensureAuth()
+  const db = getFirebaseDb()
+  const now = Date.now()
+  const updates: Record<string, unknown> = {
+    [`lists/${firebaseListId}/history/${session.id}`]: session,
+    [`lists/${firebaseListId}/session`]: null,
+    [`lists/${firebaseListId}/meta/updatedAt`]: now,
+  }
+  await update(ref(db), updates)
+}
+
 export async function firebaseRemoveHistory(
   firebaseListId: string,
   sessionId: string,
@@ -664,16 +688,26 @@ export async function firebaseLeaveList(firebaseListId: string): Promise<void> {
   const uid = getCurrentUid()
   if (!uid) return
   const db = getFirebaseDb()
-  await remove(ref(db, `lists/${firebaseListId}/meta/members/${uid}`))
 
-  // Clean up entire list if no members remain
+  // Atomically remove self from members and check if list should be deleted.
+  // Combining remove + empty-check in one transaction prevents TOCTOU where a concurrent
+  // join could be missed by a two-step remove-then-read sequence.
+  let listShouldBeDeleted = false
   try {
-    const membersSnap = await firebaseGet(ref(db, `lists/${firebaseListId}/meta/members`))
-    if (!membersSnap.exists() || Object.keys(membersSnap.val() as Record<string, unknown>).length === 0) {
-      await remove(ref(db, `lists/${firebaseListId}`))
-    }
+    const membersRef = ref(db, `lists/${firebaseListId}/meta/members`)
+    const result = await runTransaction(membersRef, (currentMembers: Record<string, unknown> | null) => {
+      if (!currentMembers) return null
+      const updated = { ...currentMembers }
+      delete updated[uid]
+      return Object.keys(updated).length === 0 ? null : updated
+    })
+    listShouldBeDeleted = !result.snapshot.exists()
   } catch {
     // Cleanup is best-effort — don't fail the leave operation
+  }
+
+  if (listShouldBeDeleted) {
+    await remove(ref(db, `lists/${firebaseListId}`)).catch(() => {})
   }
 }
 

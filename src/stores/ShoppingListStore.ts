@@ -91,6 +91,12 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
     // If shared, also subscribe to Firebase — will override local data when it arrives
     if (listMeta?.isShared && listMeta.firebaseListId) {
       debugLog('Store', `List is shared — subscribing to Firebase: ${listMeta.firebaseListId}`)
+      // Guard against stale async: if switchToList was called again while we were loading local data,
+      // currentListId has moved on — don't subscribe and leave the newer call's listener intact
+      if (get().currentListId !== listId) {
+        debugLog('Store', `switchToList: stale call for ${listId}, currentListId=${get().currentListId ?? 'null'}, aborting subscribe`)
+        return
+      }
       currentFirebaseUnsub = subscribeToList(listMeta.firebaseListId, {
         onItems: (items) => {
           const isCurrentList = get().currentListId === listId

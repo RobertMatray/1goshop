@@ -64,10 +64,21 @@ export const useListsMetaStore = create<ListsMetaStoreState>((set, get) => ({
           return
         }
         const data = parsed as ListsMetaData
+        const validLists = Array.isArray(data.lists)
+          ? data.lists.filter((l): l is ShoppingListMeta => {
+              const item = l as unknown as Record<string, unknown>
+              return (
+                typeof item === 'object' &&
+                item !== null &&
+                typeof item.id === 'string' &&
+                typeof item.name === 'string'
+              )
+            })
+          : []
         set({
-          lists: data.lists,
+          lists: validLists,
           selectedListId: data.selectedListId,
-          deviceId: data.deviceId,
+          deviceId: data.deviceId || randomUUID(),
           isLoaded: true,
         })
       } else {

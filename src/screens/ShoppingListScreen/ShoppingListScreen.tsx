@@ -74,6 +74,9 @@ export function ShoppingListScreen(): React.ReactElement {
 
   const handleDragEnd = useCallback(({ data }: { data: ShoppingItem[] }) => {
     if (isFiltering) return
+    // Safety guard: only reorder if we have all items — prevents filtered drag from overwriting hidden items
+    const currentItems = useShoppingListStore.getState().items
+    if (data.length !== currentItems.length) return
     const reordered = data.map((item, index) => ({ ...item, order: index }))
     setItems(reordered)
   }, [setItems, isFiltering])
@@ -184,8 +187,9 @@ export function ShoppingListScreen(): React.ReactElement {
           title={textInputModal.title}
           defaultValue={textInputModal.defaultValue}
           onConfirm={(value) => {
-            textInputModal.onConfirm(value)
+            const confirm = textInputModal.onConfirm
             setTextInputModal(null)
+            confirm(value)
           }}
           onCancel={() => setTextInputModal(null)}
           t={t}

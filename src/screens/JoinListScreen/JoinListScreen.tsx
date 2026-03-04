@@ -55,7 +55,8 @@ export function JoinListScreen(): React.ReactElement {
   )
 
   function handleCodeChange(text: string): void {
-    const clean = text.toUpperCase().replace(/[^A-Z0-9]/g, '')
+    // Only allow characters that appear in generated codes (excludes O/0/I/1/L to avoid visual confusion)
+    const clean = text.toUpperCase().replace(/[^ABCDEFGHJKMNPQRSTUVWXYZ23456789]/g, '')
     if (clean.length <= 6) {
       setCode(clean)
     }
@@ -83,7 +84,8 @@ export function JoinListScreen(): React.ReactElement {
       )
       if (existingList) {
         debugLog('Join', `Already joined — switching to existing list: ${existingList.id}`)
-        // Already joined — just switch to existing list
+        // Already joined — update shareCode in case the old one expired, then switch to existing list
+        useListsMetaStore.getState().markListAsShared(existingList.id, result.firebaseListId, cleanCode)
         useListsMetaStore.getState().selectList(existingList.id)
         await Promise.allSettled([
           useShoppingListStore.getState().switchToList(existingList.id),
