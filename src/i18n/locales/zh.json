@@ -145,7 +145,8 @@
     "deleteListConfirm": "确定要删除\"{{name}}\"吗？",
     "listNamePlaceholder": "清单名称",
     "shared": "共享",
-    "lastList": "无法删除最后一个清单"
+    "lastList": "无法删除最后一个清单",
+    "manageTitle": "我的清单"
   },
   "Sharing": {
     "title": "分享清单",
@@ -170,6 +171,7 @@
     "joinSharedList": "加入共享清单",
     "error": "错误",
     "offlineWarning": "更改已保存到本地，但在恢复连接之前不会与其他设备同步。",
-    "offlineTitle": "离线"
+    "offlineTitle": "离线",
+    "manageSharing": "管理共享"
   }
 }

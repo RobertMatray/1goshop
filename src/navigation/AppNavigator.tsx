@@ -9,11 +9,13 @@ import { ColorPickerScreen } from '../screens/ColorPickerScreen/ColorPickerScree
 import { ShareListScreen } from '../screens/ShareListScreen/ShareListScreen'
 import { JoinListScreen } from '../screens/JoinListScreen/JoinListScreen'
 import { DebugLogScreen } from '../screens/DebugLogScreen/DebugLogScreen'
+import { ListManagementScreen } from '../screens/ListManagementScreen/ListManagementScreen'
 import { StyleSheet } from 'react-native-unistyles'
 import { useAccentColorStore } from '../stores/AccentColorStore'
 
 export type RootStackParamList = {
   ShoppingListScreen: { listId: string } | undefined
+  ListManagementScreen: undefined
   SettingsScreen: undefined
   ActiveShoppingScreen: { listId: string }
   ShoppingHistoryScreen: { listId: string }
@@ -44,6 +46,13 @@ export function AppNavigator(): React.ReactElement {
         component={ShoppingListScreen}
         options={{
           title: t('ShoppingList.title'),
+        }}
+      />
+      <Stack.Screen
+        name="ListManagementScreen"
+        component={ListManagementScreen}
+        options={{
+          title: t('Lists.manageTitle'),
         }}
       />
       <Stack.Screen

@@ -77,9 +77,9 @@
     "step9Title": "História nákupov",
     "step9Desc": "Pozrite si minulé nákupy a štatistiky v Nastavenia > História.",
     "step10Title": "Zdieľanie zoznamu",
-    "step10Desc": "Klepnite na názov zoznamu v hlavičke, potom na 'Zdieľať zoznam'. Vygeneruje sa 6-znakový kód, ktorý zadajte na druhom telefóne.",
+    "step10Desc": "Klepnite na názov zoznamu v hlavičke → otvorí sa správa zoznamov. Klepnite na ··· vedľa zoznamu a vyberte 'Zdieľať zoznam'. Vygeneruje sa 6-znakový kód.",
     "step11Title": "Pripojenie k zoznamu",
-    "step11Desc": "V zozname listov klepnite na 'Pripojiť sa k zdieľanému zoznamu' a zadajte kód z druhého telefónu.",
+    "step11Desc": "V správe zoznamov klepnite na 'Pripojiť sa k zdieľanému zoznamu' a zadajte kód z druhého telefónu.",
     "prev": "Späť",
     "next": "Ďalej",
     "done": "Hotovo",
@@ -149,7 +149,8 @@
     "deleteListConfirm": "Naozaj chceš zmazať \"{{name}}\"?",
     "listNamePlaceholder": "Názov zoznamu",
     "shared": "Zdieľaný",
-    "lastList": "Nemôžeš zmazať posledný zoznam"
+    "lastList": "Nemôžeš zmazať posledný zoznam",
+    "manageTitle": "Moje zoznamy"
   },
   "Sharing": {
     "title": "Zdieľanie zoznamu",
@@ -174,6 +175,7 @@
     "joinSharedList": "Pripojiť sa k zdieľanému zoznamu",
     "error": "Chyba",
     "offlineWarning": "Zmeny boli uložené lokálne, ale nebudú synchronizované s ostatnými zariadeniami, kým sa neobnoví pripojenie.",
-    "offlineTitle": "Offline"
+    "offlineTitle": "Offline",
+    "manageSharing": "Spravovať zdieľanie"
   }
 }

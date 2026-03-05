@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react'
-import { View, Text, Pressable, Alert, Modal, FlatList, Platform, TextInput as TextInputField } from 'react-native'
+import { View, Text, Pressable, Alert, Modal, Platform, TextInput as TextInputField } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import DraggableFlatList, { type RenderItemParams } from 'react-native-draggable-flatlist'
@@ -15,7 +15,7 @@ import { ShoppingListItem } from './components/ShoppingListItem'
 import { AddItemInput } from './components/AddItemInput'
 import { EmptyListPlaceholder } from './components/EmptyListPlaceholder'
 import { TutorialOverlay } from './components/TutorialOverlay'
-import type { ShoppingItem, ShoppingListMeta } from '../../types/shopping'
+import type { ShoppingItem } from '../../types/shopping'
 import { exportToClipboard, importFromClipboard, findExistingItemId } from '../../services/ListClipboardService'
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'ShoppingListScreen'>
@@ -26,7 +26,6 @@ export function ShoppingListScreen(): React.ReactElement {
   const insets = useSafeAreaInsets()
   const [showTutorial, setShowTutorial] = useState(false)
   const [filterText, setFilterText] = useState('')
-  const [showListPicker, setShowListPicker] = useState(false)
   const [textInputModal, setTextInputModal] = useState<{ title: string; defaultValue: string; onConfirm: (value: string) => void } | null>(null)
   const items = useShoppingListStore((s) => s.items)
   const startShopping = useActiveShoppingStore((s) => s.startShopping)
@@ -84,7 +83,7 @@ export function ShoppingListScreen(): React.ReactElement {
   React.useLayoutEffect(() => {
     navigation.setOptions({
       headerTitle: () => (
-        <Pressable onPress={() => setShowListPicker(true)} style={styles.headerTitleButton}>
+        <Pressable onPress={() => navigation.navigate('ListManagementScreen')} style={styles.headerTitleButton}>
           <Text style={styles.headerTitleText} numberOfLines={1}>
             {selectedList?.name ?? t('ShoppingList.title')}
           </Text>
@@ -169,19 +168,6 @@ export function ShoppingListScreen(): React.ReactElement {
         </Pressable>
       </View>
       <TutorialOverlay visible={showTutorial} onClose={() => setShowTutorial(false)} />
-      <ListPickerModal
-        visible={showListPicker}
-        lists={lists}
-        selectedListId={selectedListId}
-        onSelect={handleSelectList}
-        onRename={handleRenameList}
-        onDelete={handleDeleteList}
-        onAdd={handleAddList}
-        onJoin={handleJoinList}
-        onShare={selectedListId ? handleShareList : undefined}
-        onClose={() => setShowListPicker(false)}
-        t={t}
-      />
       {textInputModal !== null && (
         <TextInputModal
           title={textInputModal.title}
@@ -200,16 +186,6 @@ export function ShoppingListScreen(): React.ReactElement {
 
   function handleClearFilter(): void {
     setFilterText('')
-  }
-
-  function handleShareList(): void {
-    setShowListPicker(false)
-    navigation.navigate('ShareListScreen', { listId: selectedListId! })
-  }
-
-  function handleJoinList(): void {
-    setShowListPicker(false)
-    navigation.navigate('JoinListScreen')
   }
 
   function handleStartShopping(): void {
@@ -268,155 +244,6 @@ export function ShoppingListScreen(): React.ReactElement {
         Alert.alert(t('ClipboardList.import'), t('ClipboardList.importEmpty'))
       })
   }
-
-  async function handleSelectList(listId: string): Promise<void> {
-    setShowListPicker(false)
-    useListsMetaStore.getState().selectList(listId)
-    await Promise.allSettled([
-      useShoppingListStore.getState().switchToList(listId),
-      useActiveShoppingStore.getState().switchToList(listId),
-    ])
-  }
-
-  function handleAddList(): void {
-    setShowListPicker(false)
-    if (Platform.OS === 'web') {
-      const name = window.prompt(t('Lists.newList'), '')
-      if (name?.trim()) {
-        const newId = useListsMetaStore.getState().createList(name)
-        handleSelectList(newId)
-      }
-      return
-    }
-    setTextInputModal({
-      title: t('Lists.newList'),
-      defaultValue: '',
-      onConfirm: (value) => {
-        if (value.trim()) {
-          const newId = useListsMetaStore.getState().createList(value.trim())
-          handleSelectList(newId)
-        }
-      },
-    })
-  }
-
-  function handleRenameList(id: string, currentName: string): void {
-    if (Platform.OS === 'web') {
-      const name = window.prompt(t('Lists.renameList'), currentName)
-      if (name?.trim()) {
-        useListsMetaStore.getState().renameList(id, name)
-      }
-      return
-    }
-    setTextInputModal({
-      title: t('Lists.renameList'),
-      defaultValue: currentName,
-      onConfirm: (value) => {
-        if (value.trim()) {
-          useListsMetaStore.getState().renameList(id, value.trim())
-        }
-      },
-    })
-  }
-
-  function handleDeleteList(id: string, name: string): void {
-    const { lists: currentLists } = useListsMetaStore.getState()
-    if (currentLists.length <= 1) {
-      Alert.alert(t('Lists.deleteList'), t('Lists.lastList'))
-      return
-    }
-    Alert.alert(
-      t('Lists.deleteList'),
-      t('Lists.deleteListConfirm', { name }),
-      [
-        { text: t('ShoppingList.cancel'), style: 'cancel' },
-        {
-          text: t('ShoppingList.delete'),
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const wasSelected = selectedListId === id
-              await useListsMetaStore.getState().deleteList(id)
-              if (wasSelected) {
-                const { selectedListId: newId } = useListsMetaStore.getState()
-                if (newId) {
-                  await handleSelectList(newId)
-                }
-              }
-            } catch (error) {
-              console.warn('[ShoppingListScreen] Delete list failed:', error)
-            }
-          },
-        },
-      ],
-    )
-  }
-}
-
-interface ListPickerModalProps {
-  visible: boolean
-  lists: ShoppingListMeta[]
-  selectedListId: string | null
-  onSelect: (id: string) => void
-  onRename: (id: string, name: string) => void
-  onDelete: (id: string, name: string) => void
-  onAdd: () => void
-  onJoin: () => void
-  onShare?: () => void
-  onClose: () => void
-  t: (key: string, options?: Record<string, unknown>) => string
-}
-
-function ListPickerModal({ visible, lists, selectedListId, onSelect, onRename, onDelete, onAdd, onJoin, onShare, onClose, t }: ListPickerModalProps): React.ReactElement {
-  return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable style={pickerStyles.overlay} onPress={onClose}>
-        <Pressable style={pickerStyles.container} onPress={() => {}}>
-          <Text style={pickerStyles.title}>{t('ShoppingList.title')}</Text>
-          <FlatList
-            data={lists}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <Pressable
-                style={[pickerStyles.listItem, item.id === selectedListId && pickerStyles.listItemSelected]}
-                onPress={() => onSelect(item.id)}
-                onLongPress={() => onRename(item.id, item.name)}
-              >
-                <View style={pickerStyles.listItemContent}>
-                  <Text style={[pickerStyles.listItemName, item.id === selectedListId && pickerStyles.listItemNameSelected]} numberOfLines={1}>
-                    {item.name}
-                  </Text>
-                  {item.isShared && (
-                    <Ionicons name="people-outline" size={14} color={pickerStyles.sharedIcon.color as string} />
-                  )}
-                </View>
-                {lists.length > 1 && (
-                  <Pressable onPress={() => onDelete(item.id, item.name)} hitSlop={8} style={pickerStyles.deleteButton}>
-                    <Ionicons name="trash-outline" size={16} color={pickerStyles.deleteIcon.color as string} />
-                  </Pressable>
-                )}
-              </Pressable>
-            )}
-            style={pickerStyles.list}
-          />
-          <Pressable style={pickerStyles.addButton} onPress={onAdd}>
-            <Ionicons name="add-circle-outline" size={20} color={pickerStyles.addButtonText.color as string} />
-            <Text style={pickerStyles.addButtonText}>{t('Lists.newList')}</Text>
-          </Pressable>
-          {onShare !== undefined && (
-            <Pressable style={pickerStyles.addButton} onPress={onShare}>
-              <Ionicons name="share-outline" size={20} color={pickerStyles.addButtonText.color as string} />
-              <Text style={pickerStyles.addButtonText}>{t('Sharing.shareButton')}</Text>
-            </Pressable>
-          )}
-          <Pressable style={pickerStyles.joinButton} onPress={onJoin}>
-            <Ionicons name="people-outline" size={20} color={pickerStyles.joinButtonText.color as string} />
-            <Text style={pickerStyles.joinButtonText}>{t('Sharing.joinSharedList')}</Text>
-          </Pressable>
-        </Pressable>
-      </Pressable>
-    </Modal>
-  )
 }
 
 interface TextInputModalProps {
@@ -619,81 +446,11 @@ const pickerStyles = StyleSheet.create((theme) => ({
     padding: 16,
     width: '100%',
     maxWidth: 360,
-    maxHeight: '70%',
   },
   title: {
     fontSize: theme.typography.fontSizeL,
     fontWeight: 'bold',
     color: theme.colors.text,
     marginBottom: 12,
-  },
-  list: {
-    flexGrow: 0,
-  },
-  listItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderRadius: theme.sizes.radiusSm,
-    marginBottom: 4,
-  },
-  listItemSelected: {
-    backgroundColor: theme.colors.tint + '20',
-  },
-  listItemContent: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  listItemName: {
-    fontSize: theme.typography.fontSizeM,
-    color: theme.colors.text,
-    flexShrink: 1,
-  },
-  listItemNameSelected: {
-    fontWeight: 'bold',
-    color: theme.colors.tint,
-  },
-  sharedIcon: {
-    color: theme.colors.tint,
-  },
-  deleteButton: {
-    padding: 4,
-    marginLeft: 8,
-  },
-  deleteIcon: {
-    color: theme.colors.textSecondary,
-  },
-  addButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 12,
-    marginTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.surfaceBorder,
-  },
-  addButtonText: {
-    fontSize: theme.typography.fontSizeM,
-    color: theme.colors.tint,
-    fontWeight: '600',
-  },
-  joinButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.surfaceBorder,
-  },
-  joinButtonText: {
-    fontSize: theme.typography.fontSizeM,
-    color: theme.colors.textSecondary,
-    fontWeight: '600',
   },
 }))

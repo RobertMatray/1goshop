@@ -147,7 +147,8 @@
     "deleteListConfirm": "Voulez-vous vraiment supprimer \"{{name}}\" ?",
     "listNamePlaceholder": "Nom de la liste",
     "shared": "Partagée",
-    "lastList": "Impossible de supprimer la dernière liste"
+    "lastList": "Impossible de supprimer la dernière liste",
+    "manageTitle": "Mes listes"
   },
   "Sharing": {
     "title": "Partager la liste",
@@ -172,6 +173,7 @@
     "joinSharedList": "Rejoindre une liste partagée",
     "error": "Erreur",
     "offlineWarning": "Modifications enregistrées localement mais ne seront pas synchronisées avec les autres appareils tant que la connexion ne sera pas rétablie.",
-    "offlineTitle": "Hors ligne"
+    "offlineTitle": "Hors ligne",
+    "manageSharing": "Gérer le partage"
   }
 }

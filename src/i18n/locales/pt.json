@@ -147,7 +147,8 @@
     "deleteListConfirm": "Tem certeza que deseja apagar \"{{name}}\"?",
     "listNamePlaceholder": "Nome da lista",
     "shared": "Partilhada",
-    "lastList": "Não é possível apagar a última lista"
+    "lastList": "Não é possível apagar a última lista",
+    "manageTitle": "As minhas listas"
   },
   "Sharing": {
     "title": "Partilhar lista",
@@ -172,6 +173,7 @@
     "joinSharedList": "Juntar-se a uma lista partilhada",
     "error": "Erro",
     "offlineWarning": "Alterações guardadas localmente mas não serão sincronizadas com outros dispositivos até a ligação ser restabelecida.",
-    "offlineTitle": "Offline"
+    "offlineTitle": "Offline",
+    "manageSharing": "Gerir partilha"
   }
 }

@@ -147,7 +147,8 @@
     "deleteListConfirm": "Biztosan törölni szeretnéd a(z) \"{{name}}\" listát?",
     "listNamePlaceholder": "Lista neve",
     "shared": "Megosztott",
-    "lastList": "Az utolsó listát nem lehet törölni"
+    "lastList": "Az utolsó listát nem lehet törölni",
+    "manageTitle": "Listáim"
   },
   "Sharing": {
     "title": "Lista megosztása",
@@ -172,6 +173,7 @@
     "joinSharedList": "Csatlakozás megosztott listához",
     "error": "Hiba",
     "offlineWarning": "A változtatások helyben mentve, de nem szinkronizálódnak a többi eszközzel, amíg a kapcsolat helyre nem áll.",
-    "offlineTitle": "Offline"
+    "offlineTitle": "Offline",
+    "manageSharing": "Megosztás kezelése"
   }
 }

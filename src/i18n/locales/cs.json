@@ -149,7 +149,8 @@
     "deleteListConfirm": "Opravdu chcete smazat \"{{name}}\"?",
     "listNamePlaceholder": "Název seznamu",
     "shared": "Sdílený",
-    "lastList": "Nelze smazat poslední seznam"
+    "lastList": "Nelze smazat poslední seznam",
+    "manageTitle": "Moje seznamy"
   },
   "Sharing": {
     "title": "Sdílení seznamu",
@@ -174,6 +175,7 @@
     "joinSharedList": "Připojit se ke sdílenému seznamu",
     "error": "Chyba",
     "offlineWarning": "Změny byly uloženy lokálně, ale nebudou synchronizovány s ostatními zařízeními, dokud se neobnoví připojení.",
-    "offlineTitle": "Offline"
+    "offlineTitle": "Offline",
+    "manageSharing": "Spravovat sdílení"
   }
 }

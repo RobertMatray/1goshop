@@ -149,7 +149,8 @@
     "deleteListConfirm": "Czy na pewno chcesz usunąć \"{{name}}\"?",
     "listNamePlaceholder": "Nazwa listy",
     "shared": "Udostępniona",
-    "lastList": "Nie można usunąć ostatniej listy"
+    "lastList": "Nie można usunąć ostatniej listy",
+    "manageTitle": "Moje listy"
   },
   "Sharing": {
     "title": "Udostępnij listę",
@@ -174,6 +175,7 @@
     "joinSharedList": "Dołącz do udostępnionej listy",
     "error": "Błąd",
     "offlineWarning": "Zmiany zapisane lokalnie, ale nie zostaną zsynchronizowane z innymi urządzeniami do momentu przywrócenia połączenia.",
-    "offlineTitle": "Offline"
+    "offlineTitle": "Offline",
+    "manageSharing": "Zarządzaj udostępnianiem"
   }
 }
