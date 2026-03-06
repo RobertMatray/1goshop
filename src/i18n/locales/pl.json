@@ -162,7 +162,7 @@
     "codeExpires": "Kod wygasa za {{minutes}}:{{seconds}}",
     "stopSharing": "Opuść listę",
     "unlinkTitle": "Opuść udostępnioną listę",
-    "unlinkConfirm": "Lista pozostanie u innych, ale stracisz ją tutaj.",
+    "unlinkConfirm": "Lista pozostanie na Twoim urządzeniu, ale przestanie synchronizować się z innymi.",
     "alreadyShared": "Lista jest udostępniona",
     "membersCount": "{{count}} połączonych urządzeń",
     "joinTitle": "Dołącz do listy",

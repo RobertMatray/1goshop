@@ -160,7 +160,7 @@
     "codeExpires": "Code expires in {{minutes}}:{{seconds}}",
     "stopSharing": "Leave List",
     "unlinkTitle": "Leave Shared List",
-    "unlinkConfirm": "The list will remain for others, but you will lose it here.",
+    "unlinkConfirm": "The list will remain on your device but will stop syncing with others.",
     "alreadyShared": "List is shared",
     "membersCount": "{{count}} connected devices",
     "joinTitle": "Join Shared List",

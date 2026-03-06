@@ -162,7 +162,7 @@
     "codeExpires": "Kód vyprší o {{minutes}}:{{seconds}}",
     "stopSharing": "Odpojiť sa",
     "unlinkTitle": "Odpojiť sa od zoznamu",
-    "unlinkConfirm": "Zoznam zostane u ostatných, ale ty ho tu stratíš.",
+    "unlinkConfirm": "Zoznam ostane na tvojom zariadení, ale prestane sa synchronizovať s ostatnými.",
     "alreadyShared": "Zoznam je zdieľaný",
     "membersCount": "{{count}} pripojených zariadení",
     "joinTitle": "Pripojiť sa k zoznamu",

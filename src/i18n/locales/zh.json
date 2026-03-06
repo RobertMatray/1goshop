@@ -158,7 +158,7 @@
     "codeExpires": "代码将在 {{minutes}}:{{seconds}} 后过期",
     "stopSharing": "退出清单",
     "unlinkTitle": "退出共享清单",
-    "unlinkConfirm": "清单将保留给其他人，但您将在此处失去它。",
+    "unlinkConfirm": "清单将保留在您的设备上，但将停止与其他人同步。",
     "alreadyShared": "清单已分享",
     "membersCount": "{{count}} 个已连接设备",
     "joinTitle": "加入共享清单",

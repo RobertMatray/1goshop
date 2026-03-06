@@ -160,7 +160,7 @@
     "codeExpires": "A kód lejár: {{minutes}}:{{seconds}}",
     "stopSharing": "Kilépés",
     "unlinkTitle": "Kilépés a listából",
-    "unlinkConfirm": "A lista megmarad másoknál, de Ön elveszíti itt.",
+    "unlinkConfirm": "A lista az eszközén marad, de nem szinkronizálódik tovább a többiekkel.",
     "alreadyShared": "A lista megosztva",
     "membersCount": "{{count}} csatlakozott eszköz",
     "joinTitle": "Csatlakozás megosztott listához",

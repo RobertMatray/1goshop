@@ -160,7 +160,7 @@
     "codeExpires": "O código expira em {{minutes}}:{{seconds}}",
     "stopSharing": "Sair da lista",
     "unlinkTitle": "Sair da lista partilhada",
-    "unlinkConfirm": "A lista permanecerá para os outros, mas perdê-la-á aqui.",
+    "unlinkConfirm": "A lista permanecerá no seu dispositivo mas deixará de sincronizar com os outros.",
     "alreadyShared": "Lista partilhada",
     "membersCount": "{{count}} dispositivos conectados",
     "joinTitle": "Juntar-se a lista partilhada",

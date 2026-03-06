@@ -99,10 +99,11 @@ export async function restoreBackup(jsonString: string): Promise<boolean> {
       return false
     }
 
-    // Validate JSON values for keys that store JSON
+    // Validate JSON values for keys that store JSON objects/arrays (not plain strings)
+    const JSON_KEYS = new Set(['@lists_meta', '@saved_colors'])
     const entries = Object.entries(backup.data)
     for (const [key, value] of entries) {
-      if (value !== null && key.startsWith('@')) {
+      if (value !== null && (JSON_KEYS.has(key) || key.startsWith('@list_'))) {
         try {
           JSON.parse(value)
         } catch {
