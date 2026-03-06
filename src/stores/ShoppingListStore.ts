@@ -142,26 +142,27 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
       order: items.length,
       createdAt: new Date().toISOString(),
     }
-    const updated = [...items, newItem]
-    set({ items: updated })
     const fbId = getFirebaseListId(get().currentListId)
     debugLog('Store', `addItem: "${trimmed}", fbId=${fbId ?? 'null (local)'}`)
     if (fbId) {
+      // Zdieľaný: len Firebase write — UI update príde cez onItems listener echo
       firebaseAddItem(fbId, newItem).catch(logFirebaseError)
     } else {
+      const updated = [...items, newItem]
+      set({ items: updated })
       persistLocal(updated, get().currentListId)
     }
   },
 
   removeItem: (id: string) => {
-    const updated = get()
-      .items.filter((item) => item.id !== id)
-      .map((item, i) => ({ ...item, order: i }))
-    set({ items: updated })
     const fbId = getFirebaseListId(get().currentListId)
     if (fbId) {
-      firebaseRemoveItemsAndReorder(fbId, [id], updated).catch(logFirebaseError)
+      // Zdieľaný: len Firebase write — listener echo aktualizuje UI
+      const remaining = get().items.filter((item) => item.id !== id).map((item, i) => ({ ...item, order: i }))
+      firebaseRemoveItemsAndReorder(fbId, [id], remaining).catch(logFirebaseError)
     } else {
+      const updated = get().items.filter((item) => item.id !== id).map((item, i) => ({ ...item, order: i }))
+      set({ items: updated })
       persistLocal(updated, get().currentListId)
     }
   },
@@ -170,14 +171,13 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
     const item = get().items.find((i) => i.id === id)
     if (!item) return
     const newChecked = !item.isChecked
-    const updated = get().items.map((i) =>
-      i.id === id ? { ...i, isChecked: newChecked } : i,
-    )
-    set({ items: updated })
     const fbId = getFirebaseListId(get().currentListId)
     if (fbId) {
+      // Zdieľaný: len Firebase write — listener echo aktualizuje UI
       firebaseUpdateItem(fbId, id, { isChecked: newChecked }).catch(logFirebaseError)
     } else {
+      const updated = get().items.map((i) => i.id === id ? { ...i, isChecked: newChecked } : i)
+      set({ items: updated })
       persistLocal(updated, get().currentListId)
     }
   },
@@ -185,14 +185,13 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
   editItem: (id: string, name: string) => {
     const trimmed = name.trim()
     if (!trimmed) return
-    const updated = get().items.map((item) =>
-      item.id === id ? { ...item, name: trimmed } : item,
-    )
-    set({ items: updated })
     const fbId = getFirebaseListId(get().currentListId)
     if (fbId) {
+      // Zdieľaný: len Firebase write — listener echo aktualizuje UI
       firebaseUpdateItem(fbId, id, { name: trimmed }).catch(logFirebaseError)
     } else {
+      const updated = get().items.map((item) => item.id === id ? { ...item, name: trimmed } : item)
+      set({ items: updated })
       persistLocal(updated, get().currentListId)
     }
   },
@@ -201,14 +200,13 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
     const item = get().items.find((i) => i.id === id)
     if (!item) return
     const newQty = item.quantity + 1
-    const updated = get().items.map((i) =>
-      i.id === id ? { ...i, quantity: newQty } : i,
-    )
-    set({ items: updated })
     const fbId = getFirebaseListId(get().currentListId)
     if (fbId) {
+      // Zdieľaný: len Firebase write — listener echo aktualizuje UI
       firebaseUpdateItem(fbId, id, { quantity: newQty }).catch(logFirebaseError)
     } else {
+      const updated = get().items.map((i) => i.id === id ? { ...i, quantity: newQty } : i)
+      set({ items: updated })
       persistLocal(updated, get().currentListId)
     }
   },
@@ -217,14 +215,13 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
     const item = get().items.find((i) => i.id === id)
     if (!item) return
     const newQty = Math.max(1, item.quantity - 1)
-    const updated = get().items.map((i) =>
-      i.id === id ? { ...i, quantity: newQty } : i,
-    )
-    set({ items: updated })
     const fbId = getFirebaseListId(get().currentListId)
     if (fbId) {
+      // Zdieľaný: len Firebase write — listener echo aktualizuje UI
       firebaseUpdateItem(fbId, id, { quantity: newQty }).catch(logFirebaseError)
     } else {
+      const updated = get().items.map((i) => i.id === id ? { ...i, quantity: newQty } : i)
+      set({ items: updated })
       persistLocal(updated, get().currentListId)
     }
   },
@@ -236,11 +233,14 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
     items.splice(fromIndex, 1)
     items.splice(toIndex, 0, moved)
     const updated = items.map((item, i) => ({ ...item, order: i }))
-    set({ items: updated })
     const fbId = getFirebaseListId(get().currentListId)
     if (fbId) {
+      // Zdieľaný: optimistický update pre plynulý drag UX + Firebase write
+      // Reorder je vizuálna akcia — okamžitá odozva je dôležitá pre UX
+      set({ items: updated })
       firebaseBatchUpdateOrder(fbId, updated).catch(logFirebaseError)
     } else {
+      set({ items: updated })
       persistLocal(updated, get().currentListId)
     }
   },
@@ -256,40 +256,40 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
   },
 
   uncheckItems: (ids: string[]) => {
-    const idSet = new Set(ids)
-    const updated = get().items.map((item) =>
-      idSet.has(item.id) ? { ...item, isChecked: false } : item,
-    )
-    set({ items: updated })
     const fbId = getFirebaseListId(get().currentListId)
     if (fbId) {
+      // Zdieľaný: len Firebase write — listener echo aktualizuje UI
       firebaseBatchUncheckItems(fbId, ids).catch(logFirebaseError)
     } else {
+      const idSet = new Set(ids)
+      const updated = get().items.map((item) => idSet.has(item.id) ? { ...item, isChecked: false } : item)
+      set({ items: updated })
       persistLocal(updated, get().currentListId)
     }
   },
 
   clearChecked: () => {
     const checkedIds = get().items.filter((item) => item.isChecked).map((item) => item.id)
-    const updated = get()
-      .items.filter((item) => !item.isChecked)
-      .map((item, i) => ({ ...item, order: i }))
-    set({ items: updated })
     const fbId = getFirebaseListId(get().currentListId)
     if (fbId) {
-      firebaseRemoveItemsAndReorder(fbId, checkedIds, updated).catch(logFirebaseError)
+      // Zdieľaný: len Firebase write — listener echo aktualizuje UI
+      const remaining = get().items.filter((item) => !item.isChecked).map((item, i) => ({ ...item, order: i }))
+      firebaseRemoveItemsAndReorder(fbId, checkedIds, remaining).catch(logFirebaseError)
     } else {
+      const updated = get().items.filter((item) => !item.isChecked).map((item, i) => ({ ...item, order: i }))
+      set({ items: updated })
       persistLocal(updated, get().currentListId)
     }
   },
 
   clearAll: () => {
     const allIds = get().items.map((item) => item.id)
-    set({ items: [] })
     const fbId = getFirebaseListId(get().currentListId)
     if (fbId) {
+      // Zdieľaný: len Firebase write — listener echo aktualizuje UI
       firebaseRemoveItemsAndReorder(fbId, allIds, []).catch(logFirebaseError)
     } else {
+      set({ items: [] })
       persistLocal([], get().currentListId)
     }
   },
@@ -319,11 +319,8 @@ function logFirebaseError(e: unknown): void {
   debugLog('Store', `Firebase operation FAILED: ${msg}`)
   console.warn('[ShoppingListStore] Firebase operation failed:', msg)
 
-  // Persist locally as fallback so changes survive app restart
-  const { items, currentListId } = useShoppingListStore.getState()
-  if (currentListId) {
-    persistLocal(items, currentListId)
-  }
+  // Pre zdieľané listy: NEVOLÁME persistLocal — Firebase je jediný zdroj pravdy.
+  // Lokálny stav je len cache z Firebase listenera, nie authoritative stav.
 
   const now = Date.now()
   if (now - lastOfflineAlertAt > OFFLINE_ALERT_COOLDOWN_MS) {

@@ -18,7 +18,7 @@ export interface ListsMetaStoreState {
   deleteList: (id: string) => Promise<void>
   selectList: (id: string) => void
   markListAsShared: (id: string, firebaseListId: string, shareCode: string) => void
-  unlinkList: (id: string) => void
+  unlinkList: (id: string) => Promise<void>
   getSelectedList: () => ShoppingListMeta | undefined
 }
 
@@ -129,12 +129,11 @@ export const useListsMetaStore = create<ListsMetaStoreState>((set, get) => ({
 
     const listToDelete = lists.find((l) => l.id === id)
 
-    // Leave Firebase list if shared (unsubscribe listener + remove from members)
+    // Leave Firebase list if shared — must succeed before local deletion
     if (listToDelete?.isShared && listToDelete.firebaseListId) {
       unsubscribeFromList(listToDelete.firebaseListId)
-      await firebaseLeaveList(listToDelete.firebaseListId).catch((e) =>
-        console.warn('[ListsMetaStore] Firebase leave failed:', e),
-      )
+      await firebaseLeaveList(listToDelete.firebaseListId)
+      // If firebaseLeaveList throws, the error propagates to caller — list is NOT deleted locally
     }
 
     const updated = lists.filter((l) => l.id !== id)
@@ -162,7 +161,14 @@ export const useListsMetaStore = create<ListsMetaStoreState>((set, get) => ({
     persist(get())
   },
 
-  unlinkList: (id: string) => {
+  unlinkList: async (id: string) => {
+    const meta = get().lists.find((l) => l.id === id)
+    if (meta?.isShared && meta.firebaseListId) {
+      // Zdieľaný list: Firebase MUSÍ uspieť pred lokálnou zmenou
+      // Caller je zodpovedný za unsubscribeFromList() pred zavolaním unlinkList()
+      await firebaseLeaveList(meta.firebaseListId)
+      // Ak firebaseLeaveList hodí error, propaguje sa ku callerovi — lokálny stav sa NEZMENÍ
+    }
     const updated = get().lists.map((l) =>
       l.id === id ? { ...l, isShared: false, firebaseListId: null, shareCode: null } : l,
     )

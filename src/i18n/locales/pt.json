@@ -174,6 +174,8 @@
     "error": "Erro",
     "offlineWarning": "Alterações guardadas localmente mas não serão sincronizadas com outros dispositivos até a ligação ser restabelecida.",
     "offlineTitle": "Offline",
-    "manageSharing": "Gerir partilha"
+    "manageSharing": "Gerir partilha",
+    "unlinkError": "Falha ao desconectar. Verifique a conexão e tente novamente.",
+    "deleteError": "Falha ao excluir a lista. Verifique a conexão e tente novamente."
   }
 }

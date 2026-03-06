@@ -176,6 +176,8 @@
     "error": "Błąd",
     "offlineWarning": "Zmiany zapisane lokalnie, ale nie zostaną zsynchronizowane z innymi urządzeniami do momentu przywrócenia połączenia.",
     "offlineTitle": "Offline",
-    "manageSharing": "Zarządzaj udostępnianiem"
+    "manageSharing": "Zarządzaj udostępnianiem",
+    "unlinkError": "Nie udało się rozłączyć. Sprawdź połączenie i spróbuj ponownie.",
+    "deleteError": "Nie udało się usunąć listy. Sprawdź połączenie i spróbuj ponownie."
   }
 }

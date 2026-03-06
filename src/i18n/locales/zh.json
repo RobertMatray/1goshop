@@ -172,6 +172,8 @@
     "error": "错误",
     "offlineWarning": "更改已保存到本地，但在恢复连接之前不会与其他设备同步。",
     "offlineTitle": "离线",
-    "manageSharing": "管理共享"
+    "manageSharing": "管理共享",
+    "unlinkError": "断开连接失败。请检查网络连接后重试。",
+    "deleteError": "删除列表失败。请检查网络连接后重试。"
   }
 }

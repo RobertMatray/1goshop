@@ -1,8 +1,6 @@
 import { create } from 'zustand'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { Alert } from 'react-native'
 import { randomUUID } from 'expo-crypto'
-import i18n from '../i18n/i18n'
 import type { ShoppingItem, ActiveShoppingItem, ShoppingSession } from '../types/shopping'
 import { debouncedPersist } from '../services/debouncedPersist'
 import { useListsMetaStore } from './ListsMetaStore'
@@ -298,25 +296,16 @@ function persistSession(session: ShoppingSession, listId: string | null): void {
 // (Zustand set() is not synchronous enough to guard against rapid consecutive calls)
 let isFinishingInProgress = false
 
-let lastOfflineAlertAt = 0
-const OFFLINE_ALERT_COOLDOWN_MS = 60_000
-
 function logFirebaseError(e: unknown): void {
   const msg = e instanceof Error ? e.message : String(e)
-  console.warn('[ActiveShoppingStore] Firebase operation failed:', msg)
+  console.warn('[ActiveShoppingStore] Firebase session sync failed (offline?):', msg)
 
-  // Persist session locally as fallback
+  // Persist session locally as fallback — offline nakupovanie musí fungovať
   const { session, currentListId } = useActiveShoppingStore.getState()
   if (currentListId && session) {
     debouncedPersist(`@list_${currentListId}_session`, session)
   }
 
-  const now = Date.now()
-  if (now - lastOfflineAlertAt > OFFLINE_ALERT_COOLDOWN_MS) {
-    lastOfflineAlertAt = now
-    Alert.alert(
-      i18n.t('Sharing.offlineTitle'),
-      i18n.t('Sharing.offlineWarning'),
-    )
-  }
+  // BEZ Alert — session sync je best-effort, offline nakupovanie (toggleBought) musí byť tiché
+  // Alert sa zobrazuje len v finishShopping() catch bloku kde je to kritické
 }

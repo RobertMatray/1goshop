@@ -18,7 +18,6 @@ import {
   createFirebaseList,
   createSharingCode,
   firebaseGetMemberCount,
-  firebaseLeaveList,
   unsubscribeFromList,
   DEVICE_NAME,
 } from '../../services/FirebaseSyncService'
@@ -373,8 +372,9 @@ export function ListManagementScreen(): React.ReactElement {
                   ])
                 }
               }
-            } catch (error) {
-              console.warn('[ListManagementScreen] Delete list failed:', error)
+              setContextMenu(null)
+            } catch {
+              Alert.alert(t('Sharing.error'), t('Sharing.deleteError'))
             }
           },
         },
@@ -389,14 +389,23 @@ export function ListManagementScreen(): React.ReactElement {
         text: t('Sharing.stopSharing'),
         style: 'destructive',
         onPress: async () => {
-          if (list.firebaseListId) {
-            unsubscribeFromList(list.firebaseListId)
-            await firebaseLeaveList(list.firebaseListId).catch(() => {})
-          }
-          useListsMetaStore.getState().unlinkList(list.id)
-          const { selectedListId: currentId } = useListsMetaStore.getState()
-          if (currentId === list.id) {
-            await useShoppingListStore.getState().switchToList(list.id)
+          try {
+            // unsubscribe pred unlinkList — listener nesmie bežať počas Firebase leave
+            if (list.firebaseListId) {
+              unsubscribeFromList(list.firebaseListId)
+            }
+            await useListsMetaStore.getState().unlinkList(list.id)
+            const { selectedListId: currentId } = useListsMetaStore.getState()
+            if (currentId === list.id) {
+              await useShoppingListStore.getState().switchToList(list.id)
+            }
+            setContextMenu(null)
+          } catch {
+            // Firebase leave zlyhalo — obnov subscription a zobraz error
+            Alert.alert(t('Sharing.error'), t('Sharing.unlinkError'))
+            if (list.firebaseListId) {
+              void useShoppingListStore.getState().switchToList(list.id)
+            }
           }
         },
       },
