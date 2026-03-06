@@ -19,6 +19,11 @@ import {
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'ListManagementScreen'>
 
+interface ContextMenuState {
+  list: ShoppingListMeta
+  canDelete: boolean
+}
+
 export function ListManagementScreen(): React.ReactElement {
   const { t } = useTranslation()
   const navigation = useNavigation<NavigationProp>()
@@ -30,6 +35,7 @@ export function ListManagementScreen(): React.ReactElement {
     defaultValue: string
     onConfirm: (value: string) => void
   } | null>(null)
+  const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
 
   const keyExtractor = useCallback((item: ShoppingListMeta) => item.id, [])
 
@@ -59,7 +65,7 @@ export function ListManagementScreen(): React.ReactElement {
             )}
           </View>
           <Pressable
-            onPress={() => openContextMenu(item)}
+            onPress={() => setContextMenu({ list: item, canDelete: lists.length > 1 })}
             hitSlop={12}
             style={styles.moreButton}
           >
@@ -68,7 +74,7 @@ export function ListManagementScreen(): React.ReactElement {
         </Pressable>
       )
     },
-    [selectedListId, t],
+    [selectedListId, lists.length],
   )
 
   return (
@@ -100,6 +106,30 @@ export function ListManagementScreen(): React.ReactElement {
             confirm(value)
           }}
           onCancel={() => setTextInputModal(null)}
+          t={t}
+        />
+      )}
+      {contextMenu !== null && (
+        <ContextMenuModal
+          list={contextMenu.list}
+          canDelete={contextMenu.canDelete}
+          onClose={() => setContextMenu(null)}
+          onRename={() => {
+            setContextMenu(null)
+            openRenameModal(contextMenu.list)
+          }}
+          onShare={() => {
+            setContextMenu(null)
+            navigation.navigate('ShareListScreen', { listId: contextMenu.list.id })
+          }}
+          onStopSharing={() => {
+            setContextMenu(null)
+            confirmUnlink(contextMenu.list)
+          }}
+          onDelete={() => {
+            setContextMenu(null)
+            confirmDelete(contextMenu.list)
+          }}
           t={t}
         />
       )}
@@ -159,47 +189,6 @@ export function ListManagementScreen(): React.ReactElement {
     })
   }
 
-  function openContextMenu(list: ShoppingListMeta): void {
-    const buttons: Parameters<typeof Alert.alert>[2] = []
-
-    buttons.push({
-      text: t('Lists.renameList'),
-      onPress: () => openRenameModal(list),
-    })
-
-    if (list.isShared) {
-      buttons.push({
-        text: t('Sharing.manageSharing'),
-        onPress: () => navigation.navigate('ShareListScreen', { listId: list.id }),
-      })
-      buttons.push({
-        text: t('Sharing.stopSharing'),
-        style: 'destructive',
-        onPress: () => confirmUnlink(list),
-      })
-    } else {
-      buttons.push({
-        text: t('Sharing.shareButton'),
-        onPress: () => navigation.navigate('ShareListScreen', { listId: list.id }),
-      })
-    }
-
-    if (lists.length > 1) {
-      buttons.push({
-        text: t('Lists.deleteList'),
-        style: 'destructive',
-        onPress: () => confirmDelete(list),
-      })
-    }
-
-    buttons.push({
-      text: t('ShoppingList.cancel'),
-      style: 'cancel',
-    })
-
-    Alert.alert(list.name, undefined, buttons)
-  }
-
   function confirmDelete(list: ShoppingListMeta): void {
     Alert.alert(
       t('Lists.deleteList'),
@@ -252,6 +241,63 @@ export function ListManagementScreen(): React.ReactElement {
       },
     ])
   }
+}
+
+interface ContextMenuModalProps {
+  list: ShoppingListMeta
+  canDelete: boolean
+  onClose: () => void
+  onRename: () => void
+  onShare: () => void
+  onStopSharing: () => void
+  onDelete: () => void
+  t: (key: string) => string
+}
+
+function ContextMenuModal({ list, canDelete, onClose, onRename, onShare, onStopSharing, onDelete, t }: ContextMenuModalProps): React.ReactElement {
+  return (
+    <Modal visible transparent animationType="fade" onRequestClose={onClose}>
+      <Pressable style={menuStyles.overlay} onPress={onClose}>
+        <Pressable style={menuStyles.container} onPress={() => {}}>
+          <Text style={menuStyles.title} numberOfLines={1}>{list.name}</Text>
+
+          <Pressable style={menuStyles.menuItem} onPress={onRename}>
+            <Ionicons name="pencil-outline" size={20} color={menuStyles.menuItemText.color as string} />
+            <Text style={menuStyles.menuItemText}>{t('Lists.renameList')}</Text>
+          </Pressable>
+
+          {list.isShared ? (
+            <>
+              <Pressable style={menuStyles.menuItem} onPress={onShare}>
+                <Ionicons name="share-outline" size={20} color={menuStyles.menuItemText.color as string} />
+                <Text style={menuStyles.menuItemText}>{t('Sharing.manageSharing')}</Text>
+              </Pressable>
+              <Pressable style={menuStyles.menuItem} onPress={onStopSharing}>
+                <Ionicons name="link-outline" size={20} color={menuStyles.menuItemDestructiveText.color as string} />
+                <Text style={menuStyles.menuItemDestructiveText}>{t('Sharing.stopSharing')}</Text>
+              </Pressable>
+            </>
+          ) : (
+            <Pressable style={menuStyles.menuItem} onPress={onShare}>
+              <Ionicons name="share-outline" size={20} color={menuStyles.menuItemText.color as string} />
+              <Text style={menuStyles.menuItemText}>{t('Sharing.shareButton')}</Text>
+            </Pressable>
+          )}
+
+          {canDelete && (
+            <Pressable style={menuStyles.menuItem} onPress={onDelete}>
+              <Ionicons name="trash-outline" size={20} color={menuStyles.menuItemDestructiveText.color as string} />
+              <Text style={menuStyles.menuItemDestructiveText}>{t('Lists.deleteList')}</Text>
+            </Pressable>
+          )}
+
+          <Pressable style={[menuStyles.menuItem, menuStyles.cancelItem]} onPress={onClose}>
+            <Text style={menuStyles.cancelText}>{t('ShoppingList.cancel')}</Text>
+          </Pressable>
+        </Pressable>
+      </Pressable>
+    </Modal>
+  )
 }
 
 interface TextInputModalProps {
@@ -384,6 +430,58 @@ const styles = StyleSheet.create((theme) => ({
     borderColor: theme.colors.surfaceBorder,
   },
   joinButtonText: {
+    fontSize: theme.typography.fontSizeM,
+    color: theme.colors.textSecondary,
+    fontWeight: '600',
+  },
+}))
+
+const menuStyles = StyleSheet.create((theme) => ({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
+  },
+  container: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.sizes.radiusLg,
+    width: '100%',
+    maxWidth: 360,
+    overflow: 'hidden',
+  },
+  title: {
+    fontSize: theme.typography.fontSizeM,
+    fontWeight: 'bold',
+    color: theme.colors.textSecondary,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.surfaceBorder,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.surfaceBorder,
+  },
+  menuItemText: {
+    fontSize: theme.typography.fontSizeM,
+    color: theme.colors.text,
+  },
+  menuItemDestructiveText: {
+    fontSize: theme.typography.fontSizeM,
+    color: theme.colors.danger,
+  },
+  cancelItem: {
+    justifyContent: 'center',
+    borderBottomWidth: 0,
+  },
+  cancelText: {
     fontSize: theme.typography.fontSizeM,
     color: theme.colors.textSecondary,
     fontWeight: '600',
