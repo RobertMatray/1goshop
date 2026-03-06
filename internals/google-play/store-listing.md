@@ -56,8 +56,8 @@ All data stays on your device. No registration, no server.
 ## Contact details
 
 **Email:** robert.matray@gmail.com
-**Privacy policy URL:** https://robertmatray.github.io/1goshop/privacy-policy.html
-**Support URL:** https://robertmatray.github.io/1goshop/
+**Privacy policy URL:** https://1goshop.realise.sk/privacy-policy.html
+**Support URL:** https://1goshop.realise.sk/
 
 ---
 

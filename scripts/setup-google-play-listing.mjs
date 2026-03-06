@@ -162,7 +162,7 @@ async function main() {
   console.log('\nRemaining manual steps in Play Console:');
   console.log('  1. Content rating questionnaire');
   console.log('  2. Data safety form (no data collected)');
-  console.log('  3. Privacy policy URL: https://robertmatray.github.io/1goshop/privacy-policy.html');
+  console.log('  3. Privacy policy URL: https://1goshop.realise.sk/privacy-policy.html');
   console.log('  4. Feature graphic 1024x500 (optional)');
   console.log('  5. Target audience & category: Shopping');
   console.log('  6. Create production release');
