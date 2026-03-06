@@ -6,7 +6,6 @@ import { SettingsScreen } from '../screens/SettingsScreen/SettingsScreen'
 import { ActiveShoppingScreen } from '../screens/ActiveShoppingScreen/ActiveShoppingScreen'
 import { ShoppingHistoryScreen } from '../screens/ShoppingHistoryScreen/ShoppingHistoryScreen'
 import { ColorPickerScreen } from '../screens/ColorPickerScreen/ColorPickerScreen'
-import { ShareListScreen } from '../screens/ShareListScreen/ShareListScreen'
 import { JoinListScreen } from '../screens/JoinListScreen/JoinListScreen'
 import { DebugLogScreen } from '../screens/DebugLogScreen/DebugLogScreen'
 import { ListManagementScreen } from '../screens/ListManagementScreen/ListManagementScreen'
@@ -20,7 +19,6 @@ export type RootStackParamList = {
   ActiveShoppingScreen: { listId: string }
   ShoppingHistoryScreen: { listId: string }
   ColorPickerScreen: undefined
-  ShareListScreen: { listId: string }
   JoinListScreen: undefined
   DebugLogScreen: undefined
 }
@@ -81,13 +79,6 @@ export function AppNavigator(): React.ReactElement {
         component={ColorPickerScreen}
         options={{
           title: t('ColorPicker.title'),
-        }}
-      />
-      <Stack.Screen
-        name="ShareListScreen"
-        component={ShareListScreen}
-        options={{
-          title: t('Sharing.title'),
         }}
       />
       <Stack.Screen
