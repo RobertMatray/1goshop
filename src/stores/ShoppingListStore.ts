@@ -339,8 +339,14 @@ function logFirebaseError(e: unknown): void {
   debugLog('Store', `Firebase operation FAILED: ${msg}`)
   console.warn('[ShoppingListStore] Firebase operation failed:', msg)
 
-  // Pre zdieľané listy: NEVOLÁME persistLocal — Firebase je jediný zdroj pravdy.
-  // Lokálny stav je len cache z Firebase listenera, nie authoritative stav.
+  // Persist current in-memory items to AsyncStorage as offline fallback cache.
+  // This ensures optimistic changes (visible in RAM) survive an app restart before
+  // the Firebase listener reconnects and delivers the authoritative state.
+  // On reconnect, the onItems listener will overwrite this cache with the Firebase truth.
+  const { items, currentListId } = useShoppingListStore.getState()
+  if (currentListId) {
+    persistLocal(items, currentListId)
+  }
 
   const now = Date.now()
   if (now - lastOfflineAlertAt > OFFLINE_ALERT_COOLDOWN_MS) {

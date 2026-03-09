@@ -153,7 +153,13 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
   },
 
   toggleBought: (id: string) => {
-    // Use functional update to read latest state — prevents double-tap from toggling back.
+    // Per-item in-progress guard: prevents double-tap from firing two concurrent Firebase writes
+    // with opposite isBought values. The functional set() below handles local state correctly,
+    // but two rapid persistSession() calls would race on the Firebase side.
+    if (togglingItemIds.has(id)) return
+    togglingItemIds.add(id)
+
+    // Use functional update to read latest state — prevents stale closure from toggling wrong value.
     // Capture the resulting session inside set() so persistSession uses the exact committed state.
     let committedSession: ShoppingSession | null = null
     set((state) => {
@@ -169,6 +175,10 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
     if (committedSession) {
       persistSession(committedSession, get().currentListId)
     }
+
+    // Release the guard after a short delay — long enough to prevent double-tap,
+    // short enough to allow intentional re-toggle after ~300ms
+    setTimeout(() => togglingItemIds.delete(id), 300)
   },
 
   toggleShowBought: () => {
@@ -264,20 +274,61 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
   },
 
   setSessionFromFirebase: (session: ShoppingSession | null) => {
-    set({ session })
     const { currentListId } = get()
-    if (!currentListId) return
-    if (session) {
-      // Cache Firebase session locally so restart doesn't lose state before listener reconnects
-      debouncedPersist(`@list_${currentListId}_session`, session)
-    } else {
-      // When Firebase clears the session, also remove local cache to prevent stale session on restart
-      AsyncStorage.removeItem(`@list_${currentListId}_session`).catch(() => {})
+
+    if (!session) {
+      set({ session: null })
+      if (currentListId) {
+        // Firebase cleared session (another device finished) — remove local cache too
+        AsyncStorage.removeItem(`@list_${currentListId}_session`).catch(() => {})
+      }
+      return
+    }
+
+    // Merge strategy: if Firebase session ID matches local, preserve offline isBought/purchasedAt changes.
+    // This prevents the Firebase listener from overwriting items toggled offline before sync completes.
+    // If session IDs differ (another user started a new session), use Firebase version as-is.
+    const localSession = get().session
+    let mergedSession = session
+    if (localSession && localSession.id === session.id) {
+      // Build a map of local item states — these contain any offline toggleBought changes
+      const localItemMap = new Map(localSession.items.map((item) => [item.id, item]))
+      mergedSession = {
+        ...session,
+        items: session.items.map((firebaseItem) => {
+          const localItem = localItemMap.get(firebaseItem.id)
+          // If local item was toggled more recently (purchasedAt is set locally but not in Firebase,
+          // or local purchasedAt is newer), keep the local isBought/purchasedAt state.
+          if (localItem) {
+            const localTime = localItem.purchasedAt ?? ''
+            const firebaseTime = firebaseItem.purchasedAt ?? ''
+            if (localTime > firebaseTime) {
+              return { ...firebaseItem, isBought: localItem.isBought, purchasedAt: localItem.purchasedAt }
+            }
+          }
+          return firebaseItem
+        }),
+      }
+    }
+
+    set({ session: mergedSession })
+    if (currentListId) {
+      // Cache merged session locally so restart preserves state before listener reconnects
+      debouncedPersist(`@list_${currentListId}_session`, mergedSession)
     }
   },
 
   setHistoryFromFirebase: (sessions: ShoppingSession[]) => {
-    set({ history: sessions })
+    // Merge Firebase sessions with any in-memory sessions not yet propagated to Firebase listener.
+    // This prevents finishShopping's optimistic history entry from being lost if the onHistory
+    // listener fires before Firebase has propagated the just-written session.
+    const localHistory = get().history
+    const firebaseIds = new Set(sessions.map((s) => s.id))
+    const localOnly = localHistory.filter((s) => !firebaseIds.has(s.id))
+    const merged = [...localOnly, ...sessions].sort(
+      (a, b) => (b.finishedAt ?? '').localeCompare(a.finishedAt ?? ''),
+    )
+    set({ history: merged })
   },
 }))
 
@@ -301,6 +352,9 @@ function persistSession(session: ShoppingSession, listId: string | null): void {
 // Module-level flag for finishShopping — prevents double-tap from creating duplicate history entries
 // (Zustand set() is not synchronous enough to guard against rapid consecutive calls)
 let isFinishingInProgress = false
+
+// Per-item toggle guard — prevents double-tap from firing two concurrent Firebase writes
+const togglingItemIds = new Set<string>()
 
 function logFirebaseError(e: unknown): void {
   const msg = e instanceof Error ? e.message : String(e)

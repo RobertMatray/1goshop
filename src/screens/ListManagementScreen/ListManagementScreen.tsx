@@ -251,13 +251,20 @@ export function ListManagementScreen(): React.ReactElement {
       }
 
       const firebaseListId = await createFirebaseList(list.name, DEVICE_NAME, items, session, history)
-      const code = await createSharingCode(firebaseListId, list.name)
 
-      useListsMetaStore.getState().markListAsShared(list.id, firebaseListId, code)
+      // Mark list as shared and subscribe BEFORE generating the code.
+      // If createSharingCode fails, the list is already linked locally and the user
+      // can generate a new code via the "Zdieľať" button (handleGenerateCode).
+      // This prevents orphaned Firebase lists that the app doesn't know about.
+      useListsMetaStore.getState().markListAsShared(list.id, firebaseListId, '')
       await Promise.allSettled([
         useShoppingListStore.getState().switchToList(list.id),
         useActiveShoppingStore.getState().switchToList(list.id),
       ])
+
+      const code = await createSharingCode(firebaseListId, list.name)
+      // Update local meta with the generated code
+      useListsMetaStore.getState().markListAsShared(list.id, firebaseListId, code)
 
       if (!isMountedRef.current) return
       const expiresAt = Date.now() + 15 * 60 * 1000
