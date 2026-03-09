@@ -178,6 +178,7 @@
     "offlineTitle": "Offline",
     "manageSharing": "Spravovat sdílení",
     "unlinkError": "Odpojení se nezdařilo. Zkontroluj připojení a zkus to znovu.",
-    "deleteError": "Smazání seznamu se nezdařilo. Zkontroluj připojení a zkus to znovu."
+    "deleteError": "Smazání seznamu se nezdařilo. Zkontroluj připojení a zkus to znovu.",
+    "lastMemberDeleteWarning": "Jsi posledním členem tohoto sdíleného seznamu. Smazáním se trvale odstraní všechna data včetně historie nákupů. Pokračovat?"
   }
 }

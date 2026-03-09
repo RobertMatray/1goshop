@@ -178,6 +178,7 @@
     "offlineTitle": "Offline",
     "manageSharing": "Zarządzaj udostępnianiem",
     "unlinkError": "Nie udało się rozłączyć. Sprawdź połączenie i spróbuj ponownie.",
-    "deleteError": "Nie udało się usunąć listy. Sprawdź połączenie i spróbuj ponownie."
+    "deleteError": "Nie udało się usunąć listy. Sprawdź połączenie i spróbuj ponownie.",
+    "lastMemberDeleteWarning": "Jesteś ostatnim członkiem tej udostępnionej listy. Usunięcie jej spowoduje trwałe usunięcie wszystkich danych, w tym historii zakupów. Kontynuować?"
   }
 }

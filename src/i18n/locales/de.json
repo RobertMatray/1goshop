@@ -176,6 +176,7 @@
     "offlineTitle": "Offline",
     "manageSharing": "Freigabe verwalten",
     "unlinkError": "Trennung fehlgeschlagen. Überprüfe die Verbindung und versuche es erneut.",
-    "deleteError": "Liste konnte nicht gelöscht werden. Überprüfe die Verbindung und versuche es erneut."
+    "deleteError": "Liste konnte nicht gelöscht werden. Überprüfe die Verbindung und versuche es erneut.",
+    "lastMemberDeleteWarning": "Du bist das letzte Mitglied dieser geteilten Liste. Das Löschen löscht alle Daten einschließlich des Einkaufsverlaufs dauerhaft. Fortfahren?"
   }
 }

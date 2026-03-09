@@ -350,15 +350,35 @@ export function ListManagementScreen(): React.ReactElement {
   }
 
   function confirmDelete(list: ShoppingListMeta): void {
+    if (list.isShared && list.firebaseListId) {
+      // Check if user is the last member — if so, warn that all data will be permanently deleted
+      firebaseGetMemberCount(list.firebaseListId)
+        .then((memberCount) => {
+          const message = memberCount <= 1
+            ? t('Sharing.lastMemberDeleteWarning')
+            : t('Lists.deleteListConfirm', { name: list.name })
+          showDeleteAlert(list, message)
+        })
+        .catch(() => {
+          // Offline or error — show standard confirmation without member count check
+          showDeleteAlert(list, t('Lists.deleteListConfirm', { name: list.name }))
+        })
+    } else {
+      showDeleteAlert(list, t('Lists.deleteListConfirm', { name: list.name }))
+    }
+  }
+
+  function showDeleteAlert(list: ShoppingListMeta, message: string): void {
     Alert.alert(
       t('Lists.deleteList'),
-      t('Lists.deleteListConfirm', { name: list.name }),
+      message,
       [
         { text: t('ShoppingList.cancel'), style: 'cancel' },
         {
           text: t('ShoppingList.delete'),
           style: 'destructive',
           onPress: async () => {
+            setContextMenu(null)
             try {
               const wasSelected = selectedListId === list.id
               await useListsMetaStore.getState().deleteList(list.id)
@@ -372,9 +392,12 @@ export function ListManagementScreen(): React.ReactElement {
                   ])
                 }
               }
-              setContextMenu(null)
             } catch {
+              // deleteList zlyhalo (Firebase offline) — obnov subscription a zobraz error
               Alert.alert(t('Sharing.error'), t('Sharing.deleteError'))
+              if (list.firebaseListId) {
+                void useShoppingListStore.getState().switchToList(list.id)
+              }
             }
           },
         },
@@ -389,6 +412,7 @@ export function ListManagementScreen(): React.ReactElement {
         text: t('Sharing.stopSharing'),
         style: 'destructive',
         onPress: async () => {
+          setContextMenu(null)
           try {
             // unsubscribe pred unlinkList — listener nesmie bežať počas Firebase leave
             if (list.firebaseListId) {
@@ -399,7 +423,6 @@ export function ListManagementScreen(): React.ReactElement {
             if (currentId === list.id) {
               await useShoppingListStore.getState().switchToList(list.id)
             }
-            setContextMenu(null)
           } catch {
             // Firebase leave zlyhalo — obnov subscription a zobraz error
             Alert.alert(t('Sharing.error'), t('Sharing.unlinkError'))

@@ -31,6 +31,7 @@ export interface ActiveShoppingStoreState {
   removeSession: (id: string) => Promise<void>
   clearHistory: () => Promise<void>
   setSessionFromFirebase: (session: ShoppingSession | null) => void
+  setHistoryFromFirebase: (sessions: ShoppingSession[]) => void
 }
 
 export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get) => ({
@@ -215,7 +216,8 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
       }
 
       // Only clear session after successful persistence; update history in-memory for immediate UI update
-      const updatedHistory = [finishedSession, ...get().history]
+      // Deduplicate by id — prevents double entry if two devices finish simultaneously (idempotent Firebase write)
+      const updatedHistory = [finishedSession, ...get().history.filter((s) => s.id !== finishedSession.id)]
       set({ session: null, showBought: true, history: updatedHistory })
     } catch (error) {
       console.warn('[ActiveShoppingStore] Failed to finish shopping, keeping session:', error)
@@ -272,6 +274,10 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
       // When Firebase clears the session, also remove local cache to prevent stale session on restart
       AsyncStorage.removeItem(`@list_${currentListId}_session`).catch(() => {})
     }
+  },
+
+  setHistoryFromFirebase: (sessions: ShoppingSession[]) => {
+    set({ history: sessions })
   },
 }))
 

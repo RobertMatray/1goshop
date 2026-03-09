@@ -14,10 +14,7 @@ import {
   firebaseBatchUpdateOrder,
   firebaseBatchUncheckItems,
   firebaseRemoveItemsAndReorder,
-  firebaseUpdateListName,
   subscribeToList,
-  unsubscribeFromList,
-  type FirebaseListMeta,
 } from '../services/FirebaseSyncService'
 import { useActiveShoppingStore } from './ActiveShoppingStore'
 
@@ -123,6 +120,12 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
             }
           }
         },
+        onHistory: (sessions) => {
+          if (get().currentListId === listId) {
+            debugLog('Store', `onHistory callback: ${sessions.length} sessions`)
+            useActiveShoppingStore.getState().setHistoryFromFirebase(sessions)
+          }
+        },
       })
     } else {
       debugLog('Store', 'List is NOT shared — local only')
@@ -145,7 +148,10 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
     const fbId = getFirebaseListId(get().currentListId)
     debugLog('Store', `addItem: "${trimmed}", fbId=${fbId ?? 'null (local)'}`)
     if (fbId) {
-      // Zdieľaný: len Firebase write — UI update príde cez onItems listener echo
+      // Zdieľaný: optimistický update pre okamžitú odozvu + Firebase write
+      // Ak Firebase zlyhá (offline), listener pri reconnecte vráti správny stav
+      const updated = [...items, newItem]
+      set({ items: updated })
       firebaseAddItem(fbId, newItem).catch(logFirebaseError)
     } else {
       const updated = [...items, newItem]
@@ -157,9 +163,10 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
   removeItem: (id: string) => {
     const fbId = getFirebaseListId(get().currentListId)
     if (fbId) {
-      // Zdieľaný: len Firebase write — listener echo aktualizuje UI
-      const remaining = get().items.filter((item) => item.id !== id).map((item, i) => ({ ...item, order: i }))
-      firebaseRemoveItemsAndReorder(fbId, [id], remaining).catch(logFirebaseError)
+      // Zdieľaný: optimistický update + Firebase write
+      const updated = get().items.filter((item) => item.id !== id).map((item, i) => ({ ...item, order: i }))
+      set({ items: updated })
+      firebaseRemoveItemsAndReorder(fbId, [id], updated).catch(logFirebaseError)
     } else {
       const updated = get().items.filter((item) => item.id !== id).map((item, i) => ({ ...item, order: i }))
       set({ items: updated })
@@ -173,7 +180,9 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
     const newChecked = !item.isChecked
     const fbId = getFirebaseListId(get().currentListId)
     if (fbId) {
-      // Zdieľaný: len Firebase write — listener echo aktualizuje UI
+      // Zdieľaný: optimistický update + Firebase write
+      const updated = get().items.map((i) => i.id === id ? { ...i, isChecked: newChecked } : i)
+      set({ items: updated })
       firebaseUpdateItem(fbId, id, { isChecked: newChecked }).catch(logFirebaseError)
     } else {
       const updated = get().items.map((i) => i.id === id ? { ...i, isChecked: newChecked } : i)
@@ -187,7 +196,9 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
     if (!trimmed) return
     const fbId = getFirebaseListId(get().currentListId)
     if (fbId) {
-      // Zdieľaný: len Firebase write — listener echo aktualizuje UI
+      // Zdieľaný: optimistický update + Firebase write
+      const updated = get().items.map((item) => item.id === id ? { ...item, name: trimmed } : item)
+      set({ items: updated })
       firebaseUpdateItem(fbId, id, { name: trimmed }).catch(logFirebaseError)
     } else {
       const updated = get().items.map((item) => item.id === id ? { ...item, name: trimmed } : item)
@@ -202,7 +213,9 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
     const newQty = item.quantity + 1
     const fbId = getFirebaseListId(get().currentListId)
     if (fbId) {
-      // Zdieľaný: len Firebase write — listener echo aktualizuje UI
+      // Zdieľaný: optimistický update + Firebase write
+      const updated = get().items.map((i) => i.id === id ? { ...i, quantity: newQty } : i)
+      set({ items: updated })
       firebaseUpdateItem(fbId, id, { quantity: newQty }).catch(logFirebaseError)
     } else {
       const updated = get().items.map((i) => i.id === id ? { ...i, quantity: newQty } : i)
@@ -217,7 +230,9 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
     const newQty = Math.max(1, item.quantity - 1)
     const fbId = getFirebaseListId(get().currentListId)
     if (fbId) {
-      // Zdieľaný: len Firebase write — listener echo aktualizuje UI
+      // Zdieľaný: optimistický update + Firebase write
+      const updated = get().items.map((i) => i.id === id ? { ...i, quantity: newQty } : i)
+      set({ items: updated })
       firebaseUpdateItem(fbId, id, { quantity: newQty }).catch(logFirebaseError)
     } else {
       const updated = get().items.map((i) => i.id === id ? { ...i, quantity: newQty } : i)
@@ -258,7 +273,10 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
   uncheckItems: (ids: string[]) => {
     const fbId = getFirebaseListId(get().currentListId)
     if (fbId) {
-      // Zdieľaný: len Firebase write — listener echo aktualizuje UI
+      // Zdieľaný: optimistický update + Firebase write
+      const idSet = new Set(ids)
+      const updated = get().items.map((item) => idSet.has(item.id) ? { ...item, isChecked: false } : item)
+      set({ items: updated })
       firebaseBatchUncheckItems(fbId, ids).catch(logFirebaseError)
     } else {
       const idSet = new Set(ids)
@@ -272,9 +290,10 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
     const checkedIds = get().items.filter((item) => item.isChecked).map((item) => item.id)
     const fbId = getFirebaseListId(get().currentListId)
     if (fbId) {
-      // Zdieľaný: len Firebase write — listener echo aktualizuje UI
-      const remaining = get().items.filter((item) => !item.isChecked).map((item, i) => ({ ...item, order: i }))
-      firebaseRemoveItemsAndReorder(fbId, checkedIds, remaining).catch(logFirebaseError)
+      // Zdieľaný: optimistický update + Firebase write
+      const updated = get().items.filter((item) => !item.isChecked).map((item, i) => ({ ...item, order: i }))
+      set({ items: updated })
+      firebaseRemoveItemsAndReorder(fbId, checkedIds, updated).catch(logFirebaseError)
     } else {
       const updated = get().items.filter((item) => !item.isChecked).map((item, i) => ({ ...item, order: i }))
       set({ items: updated })
@@ -286,7 +305,8 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
     const allIds = get().items.map((item) => item.id)
     const fbId = getFirebaseListId(get().currentListId)
     if (fbId) {
-      // Zdieľaný: len Firebase write — listener echo aktualizuje UI
+      // Zdieľaný: optimistický update + Firebase write
+      set({ items: [] })
       firebaseRemoveItemsAndReorder(fbId, allIds, []).catch(logFirebaseError)
     } else {
       set({ items: [] })

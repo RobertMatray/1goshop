@@ -176,6 +176,7 @@
     "offlineTitle": "Offline",
     "manageSharing": "Gerir partilha",
     "unlinkError": "Falha ao desconectar. Verifique a conexão e tente novamente.",
-    "deleteError": "Falha ao excluir a lista. Verifique a conexão e tente novamente."
+    "deleteError": "Falha ao excluir a lista. Verifique a conexão e tente novamente.",
+    "lastMemberDeleteWarning": "Você é o último membro desta lista compartilhada. Excluí-la apagará permanentemente todos os dados, incluindo o histórico de compras. Continuar?"
   }
 }

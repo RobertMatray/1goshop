@@ -130,10 +130,11 @@ export const useListsMetaStore = create<ListsMetaStoreState>((set, get) => ({
     const listToDelete = lists.find((l) => l.id === id)
 
     // Leave Firebase list if shared — must succeed before local deletion
+    // unsubscribe AFTER Firebase leave: if leave fails, listener stays active so user still sees live data
     if (listToDelete?.isShared && listToDelete.firebaseListId) {
-      unsubscribeFromList(listToDelete.firebaseListId)
       await firebaseLeaveList(listToDelete.firebaseListId)
-      // If firebaseLeaveList throws, the error propagates to caller — list is NOT deleted locally
+      // If firebaseLeaveList throws, error propagates to caller — list is NOT deleted locally, listener stays active
+      unsubscribeFromList(listToDelete.firebaseListId)
     }
 
     const updated = lists.filter((l) => l.id !== id)

@@ -176,6 +176,7 @@
     "offlineTitle": "Offline",
     "manageSharing": "Gestisci condivisione",
     "unlinkError": "Disconnessione non riuscita. Controlla la connessione e riprova.",
-    "deleteError": "Impossibile eliminare la lista. Controlla la connessione e riprova."
+    "deleteError": "Impossibile eliminare la lista. Controlla la connessione e riprova.",
+    "lastMemberDeleteWarning": "Sei l'ultimo membro di questa lista condivisa. Eliminarla cancellerà definitivamente tutti i dati inclusa la cronologia degli acquisti. Continuare?"
   }
 }

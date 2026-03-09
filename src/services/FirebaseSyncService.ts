@@ -263,6 +263,7 @@ interface ListCallbacks {
   onItems: (items: ShoppingItem[]) => void
   onSession: (session: ShoppingSession | null) => void
   onMeta: (meta: FirebaseListMeta) => void
+  onHistory?: (sessions: ShoppingSession[]) => void
 }
 
 // Keys: firebaseListId → real Firebase onValue unsubs
@@ -433,7 +434,39 @@ export function subscribeToList(firebaseListId: string, callbacks: ListCallbacks
         onListenerError,
       )
       unsubs.push(metaUnsub)
-      debugLog('Sync', `All 3 listeners attached for ${firebaseListId}`)
+
+      // History listener (optional — only if caller subscribes to history updates)
+      if (callbacks.onHistory) {
+        const historyPath = `lists/${firebaseListId}/history`
+        debugLog('Sync', `Setting up onValue for: ${historyPath}`)
+        const historyRef = ref(db, historyPath)
+        const historyUnsub = onValue(
+          historyRef,
+          (snap) => {
+            try {
+              if (!snap.exists()) {
+                debugLog('Sync', 'onHistory: snapshot empty')
+                callbacks.onHistory?.([])
+                return
+              }
+              const val = snap.val() as Record<string, ShoppingSession>
+              const sessions = Object.values(val).sort(
+                (a, b) => (b.finishedAt ?? '').localeCompare(a.finishedAt ?? ''),
+              )
+              debugLog('Sync', `onHistory: received ${sessions.length} sessions`)
+              callbacks.onHistory?.(sessions)
+            } catch (error) {
+              debugLog('Sync', `onHistory CALLBACK ERROR: ${error}`)
+              console.warn('[FirebaseSyncService] Error in onHistory callback:', error)
+            }
+          },
+          onListenerError,
+        )
+        unsubs.push(historyUnsub)
+        debugLog('Sync', 'History listener attached')
+      }
+
+      debugLog('Sync', `All listeners attached for ${firebaseListId}`)
 
       // Final iifeCancelled check — cleanup may have been called while listeners were being set up.
       // Also check if a newer subscribe call already registered its own listeners (stale IIFE scenario).

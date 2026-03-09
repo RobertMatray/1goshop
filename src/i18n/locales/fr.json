@@ -176,6 +176,7 @@
     "offlineTitle": "Hors ligne",
     "manageSharing": "Gérer le partage",
     "unlinkError": "Échec de la déconnexion. Vérifiez votre connexion et réessayez.",
-    "deleteError": "Échec de la suppression de la liste. Vérifiez votre connexion et réessayez."
+    "deleteError": "Échec de la suppression de la liste. Vérifiez votre connexion et réessayez.",
+    "lastMemberDeleteWarning": "Vous êtes le dernier membre de cette liste partagée. La suppression effacera définitivement toutes les données, y compris l'historique des achats. Continuer ?"
   }
 }

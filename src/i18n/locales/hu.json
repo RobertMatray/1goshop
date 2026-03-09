@@ -176,6 +176,7 @@
     "offlineTitle": "Offline",
     "manageSharing": "Megosztás kezelése",
     "unlinkError": "Sikertelen leválasztás. Ellenőrizd a kapcsolatot és próbáld újra.",
-    "deleteError": "A lista törlése sikertelen. Ellenőrizd a kapcsolatot és próbáld újra."
+    "deleteError": "A lista törlése sikertelen. Ellenőrizd a kapcsolatot és próbáld újra.",
+    "lastMemberDeleteWarning": "Te vagy az utolsó tagja ennek a megosztott listának. A törlés véglegesen eltávolítja az összes adatot, beleértve a vásárlási előzményeket. Folytatod?"
   }
 }
