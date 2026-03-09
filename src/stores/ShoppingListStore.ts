@@ -92,7 +92,7 @@ export const useShoppingListStore = create<ShoppingListStoreState>((set, get) =>
         if (Array.isArray(parsed)) {
           localItems = (parsed as ShoppingItem[])
             .sort((a, b) => a.order - b.order)
-            .map((item, i) => ({ ...item, order: i }))
+            .map((item, i) => ({ ...item, createdAt: item.createdAt ?? new Date(0).toISOString(), order: i }))
         }
       }
       debugLog('Store', `Local items loaded: ${localItems.length}`)

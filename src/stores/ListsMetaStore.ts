@@ -146,6 +146,8 @@ export const useListsMetaStore = create<ListsMetaStoreState>((set, get) => ({
       `@list_${id}_items`,
       `@list_${id}_session`,
       `@list_${id}_history`,
+      `@list_${id}_snapshotTs`,
+      `@list_${id}_hasLocalChanges`,
     ]).catch((e) => console.warn('[ListsMetaStore] Failed to remove list data:', e))
   },
 
