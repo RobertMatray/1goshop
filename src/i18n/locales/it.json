@@ -177,6 +177,11 @@
     "manageSharing": "Gestisci condivisione",
     "unlinkError": "Disconnessione non riuscita. Controlla la connessione e riprova.",
     "deleteError": "Impossibile eliminare la lista. Controlla la connessione e riprova.",
-    "lastMemberDeleteWarning": "Sei l'ultimo membro di questa lista condivisa. Eliminarla cancellerà definitivamente tutti i dati inclusa la cronologia degli acquisti. Continuare?"
+    "lastMemberDeleteWarning": "Sei l'ultimo membro di questa lista condivisa. Eliminarla cancellerà definitivamente tutti i dati inclusa la cronologia degli acquisti. Continuare?",
+    "offlineBannerShared": "Offline — modifiche in attesa di sincronizzazione",
+    "conflictTitle": "Conflitto di modifiche",
+    "conflictMessage": "La lista è stata modificata da un altro dispositivo mentre eri offline. Quale versione vuoi mantenere?",
+    "conflictKeepLocal": "La mia versione",
+    "conflictTakeFirebase": "Versione cloud"
   }
 }

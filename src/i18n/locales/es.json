@@ -177,6 +177,11 @@
     "manageSharing": "Gestionar compartición",
     "unlinkError": "No se pudo desconectar. Comprueba la conexión e inténtalo de nuevo.",
     "deleteError": "No se pudo eliminar la lista. Comprueba la conexión e inténtalo de nuevo.",
-    "lastMemberDeleteWarning": "¿Eres el último miembro de esta lista compartida. Al eliminarla se borrarán permanentemente todos los datos, incluido el historial de compras. ¿Continuar?"
+    "lastMemberDeleteWarning": "¿Eres el último miembro de esta lista compartida. Al eliminarla se borrarán permanentemente todos los datos, incluido el historial de compras. ¿Continuar?",
+    "offlineBannerShared": "Sin conexión — cambios pendientes de sincronización",
+    "conflictTitle": "Conflicto de cambios",
+    "conflictMessage": "La lista fue modificada por otro dispositivo mientras estabas sin conexión. ¿Qué versión quieres conservar?",
+    "conflictKeepLocal": "Mi versión",
+    "conflictTakeFirebase": "Versión en la nube"
   }
 }

@@ -177,6 +177,11 @@
     "manageSharing": "Manage Sharing",
     "unlinkError": "Failed to disconnect. Check your connection and try again.",
     "deleteError": "Failed to delete the list. Check your connection and try again.",
-    "lastMemberDeleteWarning": "You are the last member of this shared list. Deleting it will permanently erase all data including shopping history. Continue?"
+    "lastMemberDeleteWarning": "You are the last member of this shared list. Deleting it will permanently erase all data including shopping history. Continue?",
+    "offlineBannerShared": "Offline — changes pending sync",
+    "conflictTitle": "Changes conflict",
+    "conflictMessage": "The list was changed by another device while you were offline. Which version do you want to keep?",
+    "conflictKeepLocal": "My version",
+    "conflictTakeFirebase": "Cloud version"
   }
 }

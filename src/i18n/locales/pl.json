@@ -179,6 +179,11 @@
     "manageSharing": "Zarządzaj udostępnianiem",
     "unlinkError": "Nie udało się rozłączyć. Sprawdź połączenie i spróbuj ponownie.",
     "deleteError": "Nie udało się usunąć listy. Sprawdź połączenie i spróbuj ponownie.",
-    "lastMemberDeleteWarning": "Jesteś ostatnim członkiem tej udostępnionej listy. Usunięcie jej spowoduje trwałe usunięcie wszystkich danych, w tym historii zakupów. Kontynuować?"
+    "lastMemberDeleteWarning": "Jesteś ostatnim członkiem tej udostępnionej listy. Usunięcie jej spowoduje trwałe usunięcie wszystkich danych, w tym historii zakupów. Kontynuować?",
+    "offlineBannerShared": "Offline — zmiany oczekują na synchronizację",
+    "conflictTitle": "Konflikt zmian",
+    "conflictMessage": "Lista została zmieniona przez inne urządzenie, gdy byłeś offline. Którą wersję chcesz zachować?",
+    "conflictKeepLocal": "Moja wersja",
+    "conflictTakeFirebase": "Wersja z chmury"
   }
 }

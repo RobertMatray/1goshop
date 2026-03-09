@@ -175,6 +175,11 @@
     "manageSharing": "管理共享",
     "unlinkError": "断开连接失败。请检查网络连接后重试。",
     "deleteError": "删除列表失败。请检查网络连接后重试。",
-    "lastMemberDeleteWarning": "您是此共享列表的最后一位成员。删除将永久清除所有数据，包括购物历史记录。是否继续？"
+    "lastMemberDeleteWarning": "您是此共享列表的最后一位成员。删除将永久清除所有数据，包括购物历史记录。是否继续？",
+    "offlineBannerShared": "离线 — 更改等待同步",
+    "conflictTitle": "更改冲突",
+    "conflictMessage": "您离线时，列表已被另一台设备修改。您想保留哪个版本？",
+    "conflictKeepLocal": "我的版本",
+    "conflictTakeFirebase": "云端版本"
   }
 }

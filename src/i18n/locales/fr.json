@@ -177,6 +177,11 @@
     "manageSharing": "Gérer le partage",
     "unlinkError": "Échec de la déconnexion. Vérifiez votre connexion et réessayez.",
     "deleteError": "Échec de la suppression de la liste. Vérifiez votre connexion et réessayez.",
-    "lastMemberDeleteWarning": "Vous êtes le dernier membre de cette liste partagée. La suppression effacera définitivement toutes les données, y compris l'historique des achats. Continuer ?"
+    "lastMemberDeleteWarning": "Vous êtes le dernier membre de cette liste partagée. La suppression effacera définitivement toutes les données, y compris l'historique des achats. Continuer ?",
+    "offlineBannerShared": "Hors ligne — modifications en attente de synchronisation",
+    "conflictTitle": "Conflit de modifications",
+    "conflictMessage": "La liste a été modifiée par un autre appareil pendant que vous étiez hors ligne. Quelle version souhaitez-vous conserver ?",
+    "conflictKeepLocal": "Ma version",
+    "conflictTakeFirebase": "Version du cloud"
   }
 }

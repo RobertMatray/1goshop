@@ -179,6 +179,11 @@
     "manageSharing": "Spravovať zdieľanie",
     "unlinkError": "Nepodarilo sa odpojiť. Skontroluj pripojenie a skús znova.",
     "deleteError": "Nepodarilo sa vymazať zoznam. Skontroluj pripojenie a skús znova.",
-    "lastMemberDeleteWarning": "Si posledný člen tohto zdieľaného zoznamu. Vymazaním sa natrvalo zmažú všetky dáta vrátane histórie nakupovania. Pokračovať?"
+    "lastMemberDeleteWarning": "Si posledný člen tohto zdieľaného zoznamu. Vymazaním sa natrvalo zmažú všetky dáta vrátane histórie nakupovania. Pokračovať?",
+    "offlineBannerShared": "Offline — zmeny čakajú na synchronizáciu",
+    "conflictTitle": "Konflikt zmien",
+    "conflictMessage": "Zoznam bol zmenený iným zariadením kým si bol offline. Ktorú verziu chceš použiť?",
+    "conflictKeepLocal": "Moja verzia",
+    "conflictTakeFirebase": "Verzia z cloudu"
   }
 }

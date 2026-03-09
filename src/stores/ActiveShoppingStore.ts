@@ -139,6 +139,7 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
       isBought: false,
       order: index,
       purchasedAt: null,
+      toggledAt: null,
     }))
 
     const session: ShoppingSession = {
@@ -164,9 +165,10 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
     let committedSession: ShoppingSession | null = null
     set((state) => {
       if (!state.session) return state
+      const now = new Date().toISOString()
       const updatedItems = state.session.items.map((item) =>
         item.id === id
-          ? { ...item, isBought: !item.isBought, purchasedAt: !item.isBought ? new Date().toISOString() : null }
+          ? { ...item, isBought: !item.isBought, purchasedAt: !item.isBought ? now : null, toggledAt: now }
           : item,
       )
       committedSession = { ...state.session, items: updatedItems }
@@ -300,10 +302,18 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
           // If local item was toggled more recently (purchasedAt is set locally but not in Firebase,
           // or local purchasedAt is newer), keep the local isBought/purchasedAt state.
           if (localItem) {
-            const localTime = localItem.purchasedAt ?? ''
-            const firebaseTime = firebaseItem.purchasedAt ?? ''
+            // Compare toggledAt timestamps to determine which state is more recent.
+            // toggledAt is set on every toggle AND un-toggle, so it correctly handles
+            // the case where purchasedAt=null (un-toggle offline) vs an older Firebase purchasedAt.
+            const localTime = localItem.toggledAt ?? localItem.purchasedAt ?? ''
+            const firebaseTime = firebaseItem.toggledAt ?? firebaseItem.purchasedAt ?? ''
             if (localTime > firebaseTime) {
-              return { ...firebaseItem, isBought: localItem.isBought, purchasedAt: localItem.purchasedAt }
+              return {
+                ...firebaseItem,
+                isBought: localItem.isBought,
+                purchasedAt: localItem.purchasedAt,
+                toggledAt: localItem.toggledAt,
+              }
             }
           }
           return firebaseItem
@@ -322,9 +332,17 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
     // Merge Firebase sessions with any in-memory sessions not yet propagated to Firebase listener.
     // This prevents finishShopping's optimistic history entry from being lost if the onHistory
     // listener fires before Firebase has propagated the just-written session.
+    //
+    // Time-bounded localOnly: only keep local-only sessions finished within the last 30 seconds.
+    // This covers the propagation delay window (finishShopping writes Firebase, onHistory fires before
+    // Firebase delivers the new session back). Sessions older than 30s that are absent from Firebase
+    // were genuinely deleted (removeSession/clearHistory) — we must not keep them.
     const localHistory = get().history
     const firebaseIds = new Set(sessions.map((s) => s.id))
-    const localOnly = localHistory.filter((s) => !firebaseIds.has(s.id))
+    const thirtySecondsAgo = new Date(Date.now() - 30_000).toISOString()
+    const localOnly = localHistory.filter(
+      (s) => !firebaseIds.has(s.id) && (s.finishedAt ?? '') >= thirtySecondsAgo,
+    )
     const merged = [...localOnly, ...sessions].sort(
       (a, b) => (b.finishedAt ?? '').localeCompare(a.finishedAt ?? ''),
     )

@@ -177,6 +177,11 @@
     "manageSharing": "Megosztás kezelése",
     "unlinkError": "Sikertelen leválasztás. Ellenőrizd a kapcsolatot és próbáld újra.",
     "deleteError": "A lista törlése sikertelen. Ellenőrizd a kapcsolatot és próbáld újra.",
-    "lastMemberDeleteWarning": "Te vagy az utolsó tagja ennek a megosztott listának. A törlés véglegesen eltávolítja az összes adatot, beleértve a vásárlási előzményeket. Folytatod?"
+    "lastMemberDeleteWarning": "Te vagy az utolsó tagja ennek a megosztott listának. A törlés véglegesen eltávolítja az összes adatot, beleértve a vásárlási előzményeket. Folytatod?",
+    "offlineBannerShared": "Offline — a változások szinkronizálásra várnak",
+    "conflictTitle": "Változáskonfliktus",
+    "conflictMessage": "A listát egy másik eszköz módosította, miközben offline voltál. Melyik verziót szeretnéd megtartani?",
+    "conflictKeepLocal": "Az én verzióm",
+    "conflictTakeFirebase": "Felhő verzió"
   }
 }

@@ -177,6 +177,11 @@
     "manageSharing": "Gerir partilha",
     "unlinkError": "Falha ao desconectar. Verifique a conexão e tente novamente.",
     "deleteError": "Falha ao excluir a lista. Verifique a conexão e tente novamente.",
-    "lastMemberDeleteWarning": "Você é o último membro desta lista compartilhada. Excluí-la apagará permanentemente todos os dados, incluindo o histórico de compras. Continuar?"
+    "lastMemberDeleteWarning": "Você é o último membro desta lista compartilhada. Excluí-la apagará permanentemente todos os dados, incluindo o histórico de compras. Continuar?",
+    "offlineBannerShared": "Offline — alterações aguardando sincronização",
+    "conflictTitle": "Conflito de alterações",
+    "conflictMessage": "A lista foi alterada por outro dispositivo enquanto você estava offline. Qual versão deseja manter?",
+    "conflictKeepLocal": "Minha versão",
+    "conflictTakeFirebase": "Versão da nuvem"
   }
 }

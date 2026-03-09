@@ -177,6 +177,11 @@
     "manageSharing": "Freigabe verwalten",
     "unlinkError": "Trennung fehlgeschlagen. Überprüfe die Verbindung und versuche es erneut.",
     "deleteError": "Liste konnte nicht gelöscht werden. Überprüfe die Verbindung und versuche es erneut.",
-    "lastMemberDeleteWarning": "Du bist das letzte Mitglied dieser geteilten Liste. Das Löschen löscht alle Daten einschließlich des Einkaufsverlaufs dauerhaft. Fortfahren?"
+    "lastMemberDeleteWarning": "Du bist das letzte Mitglied dieser geteilten Liste. Das Löschen löscht alle Daten einschließlich des Einkaufsverlaufs dauerhaft. Fortfahren?",
+    "offlineBannerShared": "Offline — Änderungen warten auf Synchronisierung",
+    "conflictTitle": "Änderungskonflikt",
+    "conflictMessage": "Die Liste wurde von einem anderen Gerät geändert, während du offline warst. Welche Version möchtest du behalten?",
+    "conflictKeepLocal": "Meine Version",
+    "conflictTakeFirebase": "Cloud-Version"
   }
 }

@@ -14,6 +14,10 @@ export interface ActiveShoppingItem {
   isBought: boolean
   order: number
   purchasedAt: string | null
+  // toggledAt tracks when isBought last changed (both toggle and un-toggle).
+  // Used in setSessionFromFirebase merge to preserve offline un-toggles,
+  // where purchasedAt alone is insufficient (un-toggle sets purchasedAt=null).
+  toggledAt: string | null
 }
 
 export interface ShoppingSession {

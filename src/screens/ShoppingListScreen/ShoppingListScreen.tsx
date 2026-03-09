@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react'
+import React, { useState, useMemo, useCallback, useEffect } from 'react'
 import { View, Text, Pressable, Alert, Modal, Platform, TextInput as TextInputField } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -28,6 +28,10 @@ export function ShoppingListScreen(): React.ReactElement {
   const [filterText, setFilterText] = useState('')
   const [textInputModal, setTextInputModal] = useState<{ title: string; defaultValue: string; onConfirm: (value: string) => void } | null>(null)
   const items = useShoppingListStore((s) => s.items)
+  const hasLocalOfflineChanges = useShoppingListStore((s) => s.hasLocalOfflineChanges)
+  const conflictPending = useShoppingListStore((s) => s.conflictPending)
+  const resolveConflictKeepLocal = useShoppingListStore((s) => s.resolveConflictKeepLocal)
+  const resolveConflictTakeFirebase = useShoppingListStore((s) => s.resolveConflictTakeFirebase)
   const startShopping = useActiveShoppingStore((s) => s.startShopping)
   const lists = useListsMetaStore((s) => s.lists)
   const selectedListId = useListsMetaStore((s) => s.selectedListId)
@@ -47,6 +51,20 @@ export function ShoppingListScreen(): React.ReactElement {
   }, [sortedItems, trimmedFilter, isFiltering])
 
   const checkedCount = useMemo(() => items.filter((i) => i.isChecked).length, [items])
+
+  // Show conflict resolution dialog when Firebase reconnects with a newer version
+  useEffect(() => {
+    if (!conflictPending) return
+    Alert.alert(
+      t('Sharing.conflictTitle'),
+      t('Sharing.conflictMessage'),
+      [
+        { text: t('Sharing.conflictTakeFirebase'), onPress: resolveConflictTakeFirebase },
+        { text: t('Sharing.conflictKeepLocal'), style: 'destructive', onPress: resolveConflictKeepLocal },
+      ],
+      { cancelable: false },
+    )
+  }, [conflictPending, t, resolveConflictKeepLocal, resolveConflictTakeFirebase])
 
   const handleRequestEdit = useCallback((item: ShoppingItem): void => {
     setTextInputModal({
@@ -105,6 +123,12 @@ export function ShoppingListScreen(): React.ReactElement {
 
   return (
     <View style={styles.container}>
+      {selectedList?.isShared && hasLocalOfflineChanges && !conflictPending && (
+        <View style={styles.offlineBanner}>
+          <Ionicons name="cloud-offline-outline" size={14} color={styles.offlineBannerText.color as string} />
+          <Text style={styles.offlineBannerText}>{t('Sharing.offlineBannerShared')}</Text>
+        </View>
+      )}
       <AddItemInput filterText={filterText} onFilterTextChange={setFilterText} onClearFilter={handleClearFilter} />
       <View style={styles.listWrapper}>
         {filteredItems.length === 0 ? (
@@ -429,6 +453,19 @@ const styles = StyleSheet.create((theme) => ({
   },
   headerButton: {
     padding: 4,
+  },
+  offlineBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: theme.sizes.screenPadding,
+    paddingVertical: 6,
+    backgroundColor: '#F59E0B',
+  },
+  offlineBannerText: {
+    fontSize: theme.typography.fontSizeS,
+    color: '#fff',
+    fontWeight: '600',
   },
 }))
 
