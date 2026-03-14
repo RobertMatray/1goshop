@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1GoShop — Terms of Service</title>
+    <meta name="description" content="Terms of Service for 1GoShop shopping list app.">
+    <meta name="theme-color" content="#4CAF50">
+    <link rel="icon" type="image/png" href="./assets/icon.png">
+    <style>
+        :root {
+            --green-primary: #4CAF50;
+            --green-dark: #388E3C;
+            --green-bg: #E8F5E9;
+            --bg: #ffffff;
+            --bg-alt: #f5f5f5;
+            --text: #212121;
+            --text-secondary: #616161;
+            --card-bg: #ffffff;
+            --border: #e0e0e0;
+            --header-bg: rgba(255,255,255,0.95);
+            --radius: 12px;
+            --max-width: 800px;
+        }
+
+        [data-theme="dark"] {
+            --bg: #121212;
+            --bg-alt: #1e1e1e;
+            --text: #e0e0e0;
+            --text-secondary: #aaaaaa;
+            --card-bg: #1e1e1e;
+            --border: #333333;
+            --header-bg: rgba(18,18,18,0.95);
+            --green-bg: #1b2e1c;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) {
+                --bg: #121212;
+                --bg-alt: #1e1e1e;
+                --text: #e0e0e0;
+                --text-secondary: #aaaaaa;
+                --card-bg: #1e1e1e;
+                --border: #333333;
+                --header-bg: rgba(18,18,18,0.95);
+                --green-bg: #1b2e1c;
+            }
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: var(--header-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            height: 64px;
+        }
+
+        .header-inner {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            padding: 0 24px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        .header-logo img {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text);
+            transition: background 0.2s;
+        }
+
+        .theme-toggle:hover {
+            background: var(--bg-alt);
+        }
+
+        .lang-select {
+            background: var(--card-bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .lang-select:focus {
+            border-color: var(--green-primary);
+        }
+
+        .main {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            padding: 100px 24px 60px;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--green-primary);
+        }
+
+        .page-app {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+        }
+
+        .terms-content h3 {
+            font-size: 1.2rem;
+            margin: 32px 0 12px;
+            color: var(--text);
+        }
+
+        .terms-content h3:first-child {
+            margin-top: 0;
+        }
+
+        .terms-content p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+
+        .terms-content ul {
+            margin: 0 0 16px 24px;
+            color: var(--text-secondary);
+        }
+
+        .terms-content li {
+            margin-bottom: 6px;
+        }
+
+        .terms-content a {
+            color: var(--green-primary);
+        }
+
+        .terms-updated {
+            font-style: italic;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 24px;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 40px;
+            color: var(--green-primary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            padding: 10px 20px;
+            border: 1px solid var(--green-primary);
+            border-radius: 8px;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .back-link:hover {
+            background: var(--green-primary);
+            color: #ffffff;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 32px 24px;
+            border-top: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 600px) {
+            .main { padding: 88px 20px 40px; }
+            .page-title { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-inner">
+            <a href="./index.html" class="header-logo">
+                <img src="./assets/icon.png" alt="1GoShop">
+                <span>1GoShop</span>
+            </a>
+            <div class="header-controls">
+                <select class="lang-select" id="langSelect" aria-label="Language">
+                    <option value="sk">&#127480;&#127472; Slovencina</option>
+                    <option value="en">&#127468;&#127463; English</option>
+                    <option value="de">&#127465;&#127466; Deutsch</option>
+                    <option value="hu">&#127469;&#127482; Magyar</option>
+                    <option value="cs">&#127464;&#127487; Cestina</option>
+                    <option value="uk">&#127482;&#127462; Ukrainska</option>
+                    <option value="zh">&#127464;&#127475; Zhongwen</option>
+                    <option value="fr">&#127467;&#127479; Francais</option>
+                    <option value="es">&#127466;&#127480; Espanol</option>
+                    <option value="it">&#127470;&#127481; Italiano</option>
+                    <option value="pl">&#127477;&#127473; Polski</option>
+                    <option value="pt">&#127477;&#127481; Portugues</option>
+                </select>
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">&#9790;</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <h1 class="page-title" data-i18n="terms_title">Podmienky pouzivania</h1>
+        <p class="page-app">1GoShop</p>
+        <div class="terms-content" id="termsContent"></div>
+        <a href="./index.html" class="back-link" data-i18n="back_home">&larr; Spat na hlavnu stranku</a>
+    </main>
+
+    <footer class="footer" data-i18n="footer">&copy; 2026 Robert Matray &mdash; Realise s.r.o.</footer>
+
+    <script>
+    var T = {
+        sk: {
+            terms_title: "Podmienky pou\u017e\u00edvania",
+            back_home: "\u2190 Sp\u00e4\u0165 na hlavn\u00fa str\u00e1nku",
+            footer: "\u00a9 2026 Robert Matray \u2014 Realise s.r.o.",
+            terms_html: '<h3>Podmienky pou\u017e\u00edvania \u2014 1GoShop</h3><p>Pou\u017e\u00edvan\u00edm aplik\u00e1cie 1GoShop s\u00fahlas\u00edte s nasleduj\u00facimi podmienkami.</p><h3>Pou\u017e\u00edvanie aplik\u00e1cie</h3><p>1GoShop je bezplatn\u00e1 aplik\u00e1cia na spr\u00e1vu n\u00e1kupn\u00fdch zoznamov. Aplik\u00e1cia je poskytovan\u00e1 \u201etak ako je\u201c bez ak\u00fdchko\u013evek z\u00e1ruk. M\u00f4\u017eete ju pou\u017e\u00edva\u0165 na osobn\u00e9 a nekomer\u010dn\u00e9 \u00fa\u010dely.</p><h3>D\u00e1ta a \u00falo\u017eisko</h3><p>Va\u0161e d\u00e1ta s\u00fa ulo\u017een\u00e9 lok\u00e1lne na va\u0161om zariaden\u00ed. Pri pou\u017eit\u00ed funkcie zdie\u013eania s\u00fa d\u00e1ta ulo\u017een\u00e9 v slu\u017ebe Firebase (Google). Za z\u00e1lohovanie d\u00e1t ste zodpovedn\u00fd vy.</p><h3>Obmedzenie zodpovednosti</h3><p>Autor aplik\u00e1cie nenesie zodpovednos\u0165 za stratu d\u00e1t, preru\u0161enie slu\u017eby ani \u0161kody vzniknut\u00e9 pou\u017e\u00edvan\u00edm aplik\u00e1cie. Aplik\u00e1cia neposkytuje \u017eiadne z\u00e1ruky dostupnosti ani nepretrit\u00e9ho fungovania.</p><h3>Du\u0161evn\u00e9 vlastn\u00edctvo</h3><p>Aplik\u00e1cia 1GoShop, vr\u00e1tane jej dizajnu, k\u00f3du a obsahu, je majetkom Roberta Matraya / Realise s.r.o. Nesmiete aplik\u00e1ciu kop\u00edrova\u0165, upravova\u0165 ani redistribuova\u0165.</p><h3>Zmeny podmienok</h3><p>Vyhradzujeme si pr\u00e1vo tieto podmienky kedyko\u013evek zmeni\u0165. Aktualizovan\u00e9 podmienky bud\u00fa zverejnen\u00e9 na tejto str\u00e1nke.</p><h3>Kontakt</h3><p>V pr\u00edpade ot\u00e1zok n\u00e1s kontaktujte: <a href="mailto:matray@realise.sk">matray@realise.sk</a></p><p class="terms-updated">Posledn\u00e1 aktualiz\u00e1cia: 14. marca 2026</p>'
+        },
+        en: {
+            terms_title: "Terms of Service",
+            back_home: "\u2190 Back to homepage",
+            footer: "\u00a9 2026 Robert Matray \u2014 Realise s.r.o.",
+            terms_html: '<h3>Terms of Service \u2014 1GoShop</h3><p>By using the 1GoShop app, you agree to the following terms.</p><h3>Use of the App</h3><p>1GoShop is a free shopping list management app. The app is provided "as is" without any warranties. You may use it for personal and non-commercial purposes.</p><h3>Data and Storage</h3><p>Your data is stored locally on your device. When using the sharing feature, data is stored in Firebase (Google). You are responsible for backing up your data.</p><h3>Limitation of Liability</h3><p>The app author is not liable for data loss, service interruption, or damages resulting from the use of the app. The app provides no guarantees of availability or uninterrupted operation.</p><h3>Intellectual Property</h3><p>The 1GoShop app, including its design, code, and content, is the property of Robert Matray / Realise s.r.o. You may not copy, modify, or redistribute the app.</p><h3>Changes to Terms</h3><p>We reserve the right to modify these terms at any time. Updated terms will be published on this page.</p><h3>Contact</h3><p>For questions, contact us at: <a href="mailto:matray@realise.sk">matray@realise.sk</a></p><p class="terms-updated">Last updated: March 14, 2026</p>'
+        },
+        de: {
+            terms_title: "Nutzungsbedingungen",
+            back_home: "\u2190 Zur\u00fcck zur Startseite",
+            footer: "\u00a9 2026 Robert Matray \u2014 Realise s.r.o.",
+            terms_html: '<h3>Nutzungsbedingungen \u2014 1GoShop</h3><p>Durch die Nutzung der App 1GoShop stimmen Sie den folgenden Bedingungen zu.</p><h3>Nutzung der App</h3><p>1GoShop ist eine kostenlose Einkaufslisten-App. Die App wird ohne jegliche Garantien bereitgestellt. Sie d\u00fcrfen sie f\u00fcr pers\u00f6nliche und nicht-kommerzielle Zwecke nutzen.</p><h3>Daten und Speicherung</h3><p>Ihre Daten werden lokal auf Ihrem Ger\u00e4t gespeichert. Bei Nutzung der Freigabefunktion werden Daten in Firebase (Google) gespeichert. Sie sind f\u00fcr die Sicherung Ihrer Daten verantwortlich.</p><h3>Haftungsbeschr\u00e4nkung</h3><p>Der App-Autor haftet nicht f\u00fcr Datenverlust, Dienstunterbrechungen oder Sch\u00e4den durch die Nutzung der App.</p><h3>Geistiges Eigentum</h3><p>Die App 1GoShop, einschlie\u00dflich Design, Code und Inhalt, ist Eigentum von Robert Matray / Realise s.r.o.</p><h3>Kontakt</h3><p>Bei Fragen kontaktieren Sie uns: <a href="mailto:matray@realise.sk">matray@realise.sk</a></p><p class="terms-updated">Letzte Aktualisierung: 14. M\u00e4rz 2026</p>'
+        },
+        hu: {
+            terms_title: "Felhaszn\u00e1l\u00e1si felt\u00e9telek",
+            back_home: "\u2190 Vissza a f\u0151oldalra",
+            footer: "\u00a9 2026 Robert Matray \u2014 Realise s.r.o.",
+            terms_html: '<h3>Felhaszn\u00e1l\u00e1si felt\u00e9telek \u2014 1GoShop</h3><p>Az 1GoShop alkalmaz\u00e1s haszn\u00e1lat\u00e1val elfogadja a k\u00f6vetkez\u0151 felt\u00e9teleket.</p><h3>Az alkalmaz\u00e1s haszn\u00e1lata</h3><p>Az 1GoShop egy ingyenes bev\u00e1s\u00e1rl\u00f3lista alkalmaz\u00e1s. Az alkalmaz\u00e1s \u201e\u00fagy ahogy van\u201d alapon ker\u00fcl biztos\u00edt\u00e1sra, garanci\u00e1k n\u00e9lk\u00fcl. Szem\u00e9lyes \u00e9s nem kereskedelmi c\u00e9lokra haszn\u00e1lhatja.</p><h3>Adatok \u00e9s t\u00e1rol\u00e1s</h3><p>Az adatai helyben, az eszk\u00f6z\u00e9n ker\u00fclnek t\u00e1rol\u00e1sra. A megoszt\u00e1si funkci\u00f3 haszn\u00e1latakor az adatok a Firebase-ben (Google) t\u00e1rol\u00f3dnak. Az adatok biztons\u00e1gi ment\u00e9s\u00e9\u00e9rt \u00d6n felel\u0151s.</p><h3>Felel\u0151ss\u00e9g korl\u00e1toz\u00e1sa</h3><p>Az alkalmaz\u00e1s szerz\u0151je nem felel\u0151s az adatveszt\u00e9s\u00e9rt, a szolg\u00e1ltat\u00e1s megszak\u00edt\u00e1s\u00e1\u00e9rt vagy az alkalmaz\u00e1s haszn\u00e1lat\u00e1b\u00f3l ered\u0151 k\u00e1rok\u00e9rt.</p><h3>Szellemi tulajdon</h3><p>Az 1GoShop alkalmaz\u00e1s Robert Matray / Realise s.r.o. tulajdona.</p><h3>Kapcsolat</h3><p>K\u00e9rd\u00e9sek eset\u00e9n: <a href="mailto:matray@realise.sk">matray@realise.sk</a></p><p class="terms-updated">Utols\u00f3 friss\u00edt\u00e9s: 2026. m\u00e1rcius 14.</p>'
+        },
+        cs: {
+            terms_title: "Podm\u00ednky pou\u017e\u00edv\u00e1n\u00ed",
+            back_home: "\u2190 Zp\u011bt na hlavn\u00ed str\u00e1nku",
+            footer: "\u00a9 2026 Robert Matray \u2014 Realise s.r.o.",
+            terms_html: '<h3>Podm\u00ednky pou\u017e\u00edv\u00e1n\u00ed \u2014 1GoShop</h3><p>Pou\u017e\u00edv\u00e1n\u00edm aplikace 1GoShop souhlas\u00edte s n\u00e1sleduj\u00edc\u00edmi podm\u00ednkami.</p><h3>Pou\u017e\u00edv\u00e1n\u00ed aplikace</h3><p>1GoShop je bezplatn\u00e1 aplikace pro spr\u00e1vu n\u00e1kupn\u00edch seznam\u016f. Aplikace je poskytov\u00e1na \u201etak jak je\u201c bez jak\u00fdchkoli z\u00e1ruk.</p><h3>Data a \u00falo\u017ei\u0161t\u011b</h3><p>Va\u0161e data jsou ulo\u017eena lok\u00e1ln\u011b na va\u0161em za\u0159\u00edzen\u00ed. P\u0159i pou\u017eit\u00ed sd\u00edlen\u00ed jsou data ulo\u017eena ve Firebase (Google). Za z\u00e1lohov\u00e1n\u00ed dat odpov\u00edd\u00e1te vy.</p><h3>Omezen\u00ed odpov\u011bdnosti</h3><p>Autor aplikace nenese odpov\u011bdnost za ztr\u00e1tu dat, p\u0159eru\u0161en\u00ed slu\u017eby ani \u0161kody vznikl\u00e9 pou\u017e\u00edv\u00e1n\u00edm aplikace.</p><h3>Du\u0161evn\u00ed vlastnictv\u00ed</h3><p>Aplikace 1GoShop je majetkem Roberta Matraye / Realise s.r.o.</p><h3>Kontakt</h3><p>V p\u0159\u00edpad\u011b dotaz\u016f: <a href="mailto:matray@realise.sk">matray@realise.sk</a></p><p class="terms-updated">Posledn\u00ed aktualizace: 14. b\u0159ezna 2026</p>'
+        },
+        uk: {
+            terms_title: "\u0423\u043c\u043e\u0432\u0438 \u0432\u0438\u043a\u043e\u0440\u0438\u0441\u0442\u0430\u043d\u043d\u044f",
+            back_home: "\u2190 \u041d\u0430\u0437\u0430\u0434 \u043d\u0430 \u0433\u043e\u043b\u043e\u0432\u043d\u0443 \u0441\u0442\u043e\u0440\u0456\u043d\u043a\u0443",
+            footer: "\u00a9 2026 Robert Matray \u2014 Realise s.r.o.",
+            terms_html: '<h3>\u0423\u043c\u043e\u0432\u0438 \u0432\u0438\u043a\u043e\u0440\u0438\u0441\u0442\u0430\u043d\u043d\u044f \u2014 1GoShop</h3><p>\u0412\u0438\u043a\u043e\u0440\u0438\u0441\u0442\u043e\u0432\u0443\u044e\u0447\u0438 \u0434\u043e\u0434\u0430\u0442\u043e\u043a 1GoShop, \u0432\u0438 \u043f\u043e\u0433\u043e\u0434\u0436\u0443\u0454\u0442\u0435\u0441\u044f \u0437 \u043d\u0430\u0441\u0442\u0443\u043f\u043d\u0438\u043c\u0438 \u0443\u043c\u043e\u0432\u0430\u043c\u0438.</p><h3>\u0412\u0438\u043a\u043e\u0440\u0438\u0441\u0442\u0430\u043d\u043d\u044f \u0434\u043e\u0434\u0430\u0442\u043a\u0443</h3><p>1GoShop \u2014 \u0431\u0435\u0437\u043a\u043e\u0448\u0442\u043e\u0432\u043d\u0438\u0439 \u0434\u043e\u0434\u0430\u0442\u043e\u043a \u0434\u043b\u044f \u043a\u0435\u0440\u0443\u0432\u0430\u043d\u043d\u044f \u0441\u043f\u0438\u0441\u043a\u0430\u043c\u0438 \u043f\u043e\u043a\u0443\u043f\u043e\u043a. \u0414\u043e\u0434\u0430\u0442\u043e\u043a \u043d\u0430\u0434\u0430\u0454\u0442\u044c\u0441\u044f \u00ab\u044f\u043a \u0454\u00bb \u0431\u0435\u0437 \u0431\u0443\u0434\u044c-\u044f\u043a\u0438\u0445 \u0433\u0430\u0440\u0430\u043d\u0442\u0456\u0439.</p><h3>\u0414\u0430\u043d\u0456 \u0442\u0430 \u0441\u0445\u043e\u0432\u0438\u0449\u0435</h3><p>\u0412\u0430\u0448\u0456 \u0434\u0430\u043d\u0456 \u0437\u0431\u0435\u0440\u0456\u0433\u0430\u044e\u0442\u044c\u0441\u044f \u043b\u043e\u043a\u0430\u043b\u044c\u043d\u043e \u043d\u0430 \u0432\u0430\u0448\u043e\u043c\u0443 \u043f\u0440\u0438\u0441\u0442\u0440\u043e\u0457. \u041f\u0440\u0438 \u0432\u0438\u043a\u043e\u0440\u0438\u0441\u0442\u0430\u043d\u043d\u0456 \u0444\u0443\u043d\u043a\u0446\u0456\u0457 \u043e\u0431\u043c\u0456\u043d\u0443 \u0434\u0430\u043d\u0456 \u0437\u0431\u0435\u0440\u0456\u0433\u0430\u044e\u0442\u044c\u0441\u044f \u0443 Firebase (Google). \u0412\u0456\u0434\u043f\u043e\u0432\u0456\u0434\u0430\u043b\u044c\u043d\u0456\u0441\u0442\u044c \u0437\u0430 \u0440\u0435\u0437\u0435\u0440\u0432\u043d\u0435 \u043a\u043e\u043f\u0456\u044e\u0432\u0430\u043d\u043d\u044f \u043d\u0435\u0441\u0435\u0442\u0435 \u0432\u0438.</p><h3>\u041e\u0431\u043c\u0435\u0436\u0435\u043d\u043d\u044f \u0432\u0456\u0434\u043f\u043e\u0432\u0456\u0434\u0430\u043b\u044c\u043d\u043e\u0441\u0442\u0456</h3><p>\u0410\u0432\u0442\u043e\u0440 \u0434\u043e\u0434\u0430\u0442\u043a\u0443 \u043d\u0435 \u043d\u0435\u0441\u0435 \u0432\u0456\u0434\u043f\u043e\u0432\u0456\u0434\u0430\u043b\u044c\u043d\u043e\u0441\u0442\u0456 \u0437\u0430 \u0432\u0442\u0440\u0430\u0442\u0443 \u0434\u0430\u043d\u0438\u0445, \u043f\u0435\u0440\u0435\u0440\u0432\u0443 \u0432 \u043e\u0431\u0441\u043b\u0443\u0433\u043e\u0432\u0443\u0432\u0430\u043d\u043d\u0456 \u0430\u0431\u043e \u0437\u0431\u0438\u0442\u043a\u0438.</p><h3>\u0406\u043d\u0442\u0435\u043b\u0435\u043a\u0442\u0443\u0430\u043b\u044c\u043d\u0430 \u0432\u043b\u0430\u0441\u043d\u0456\u0441\u0442\u044c</h3><p>\u0414\u043e\u0434\u0430\u0442\u043e\u043a 1GoShop \u0454 \u0432\u043b\u0430\u0441\u043d\u0456\u0441\u0442\u044e Robert Matray / Realise s.r.o.</p><h3>\u041a\u043e\u043d\u0442\u0430\u043a\u0442\u0438</h3><p>\u0417 \u043f\u0438\u0442\u0430\u043d\u044c: <a href="mailto:matray@realise.sk">matray@realise.sk</a></p><p class="terms-updated">\u041e\u0441\u0442\u0430\u043d\u043d\u0454 \u043e\u043d\u043e\u0432\u043b\u0435\u043d\u043d\u044f: 14 \u0431\u0435\u0440\u0435\u0437\u043d\u044f 2026</p>'
+        },
+        zh: {
+            terms_title: "\u670d\u52a1\u6761\u6b3e",
+            back_home: "\u2190 \u8fd4\u56de\u9996\u9875",
+            footer: "\u00a9 2026 Robert Matray \u2014 Realise s.r.o.",
+            terms_html: '<h3>\u670d\u52a1\u6761\u6b3e \u2014 1GoShop</h3><p>\u4f7f\u7528 1GoShop \u5e94\u7528\u7a0b\u5e8f\u5373\u8868\u793a\u60a8\u540c\u610f\u4ee5\u4e0b\u6761\u6b3e\u3002</p><h3>\u5e94\u7528\u7a0b\u5e8f\u7684\u4f7f\u7528</h3><p>1GoShop \u662f\u4e00\u6b3e\u514d\u8d39\u7684\u8d2d\u7269\u6e05\u5355\u7ba1\u7406\u5e94\u7528\u3002\u5e94\u7528\u7a0b\u5e8f\u6309\u201c\u539f\u6837\u201d\u63d0\u4f9b\uff0c\u4e0d\u63d0\u4f9b\u4efb\u4f55\u4fdd\u8bc1\u3002</p><h3>\u6570\u636e\u548c\u5b58\u50a8</h3><p>\u60a8\u7684\u6570\u636e\u5b58\u50a8\u5728\u8bbe\u5907\u672c\u5730\u3002\u4f7f\u7528\u5171\u4eab\u529f\u80fd\u65f6\uff0c\u6570\u636e\u5b58\u50a8\u5728 Firebase\uff08Google\uff09\u4e2d\u3002\u60a8\u8d1f\u8d23\u5907\u4efd\u6570\u636e\u3002</p><h3>\u8d23\u4efb\u9650\u5236</h3><p>\u5e94\u7528\u7a0b\u5e8f\u4f5c\u8005\u4e0d\u5bf9\u6570\u636e\u4e22\u5931\u3001\u670d\u52a1\u4e2d\u65ad\u6216\u635f\u5bb3\u627f\u62c5\u8d23\u4efb\u3002</p><h3>\u77e5\u8bc6\u4ea7\u6743</h3><p>1GoShop \u5e94\u7528\u7a0b\u5e8f\u662f Robert Matray / Realise s.r.o. \u7684\u8d22\u4ea7\u3002</p><h3>\u8054\u7cfb\u65b9\u5f0f</h3><p>\u5982\u6709\u7591\u95ee\uff1a<a href="mailto:matray@realise.sk">matray@realise.sk</a></p><p class="terms-updated">\u6700\u540e\u66f4\u65b0\uff1a2026\u5e743\u670814\u65e5</p>'
+        },
+        fr: {
+            terms_title: "Conditions d'utilisation",
+            back_home: "\u2190 Retour \u00e0 l'accueil",
+            footer: "\u00a9 2026 Robert Matray \u2014 Realise s.r.o.",
+            terms_html: '<h3>Conditions d\'utilisation \u2014 1GoShop</h3><p>En utilisant l\'application 1GoShop, vous acceptez les conditions suivantes.</p><h3>Utilisation de l\'application</h3><p>1GoShop est une application gratuite de gestion de listes de courses. L\'application est fournie "telle quelle" sans aucune garantie.</p><h3>Donn\u00e9es et stockage</h3><p>Vos donn\u00e9es sont stock\u00e9es localement sur votre appareil. Lors de l\'utilisation du partage, les donn\u00e9es sont stock\u00e9es dans Firebase (Google). Vous \u00eates responsable de la sauvegarde de vos donn\u00e9es.</p><h3>Limitation de responsabilit\u00e9</h3><p>L\'auteur de l\'application n\'est pas responsable de la perte de donn\u00e9es, de l\'interruption de service ou des dommages.</p><h3>Propri\u00e9t\u00e9 intellectuelle</h3><p>L\'application 1GoShop est la propri\u00e9t\u00e9 de Robert Matray / Realise s.r.o.</p><h3>Contact</h3><p>Pour toute question : <a href="mailto:matray@realise.sk">matray@realise.sk</a></p><p class="terms-updated">Derni\u00e8re mise \u00e0 jour : 14 mars 2026</p>'
+        },
+        es: {
+            terms_title: "T\u00e9rminos de servicio",
+            back_home: "\u2190 Volver a la p\u00e1gina principal",
+            footer: "\u00a9 2026 Robert Matray \u2014 Realise s.r.o.",
+            terms_html: '<h3>T\u00e9rminos de servicio \u2014 1GoShop</h3><p>Al usar la aplicaci\u00f3n 1GoShop, acepta los siguientes t\u00e9rminos.</p><h3>Uso de la aplicaci\u00f3n</h3><p>1GoShop es una aplicaci\u00f3n gratuita para gestionar listas de compras. Se proporciona "tal cual" sin garant\u00edas.</p><h3>Datos y almacenamiento</h3><p>Sus datos se almacenan localmente en su dispositivo. Al usar la funci\u00f3n de compartir, los datos se almacenan en Firebase (Google). Usted es responsable de las copias de seguridad.</p><h3>Limitaci\u00f3n de responsabilidad</h3><p>El autor no es responsable por p\u00e9rdida de datos, interrupciones o da\u00f1os.</p><h3>Propiedad intelectual</h3><p>1GoShop es propiedad de Robert Matray / Realise s.r.o.</p><h3>Contacto</h3><p>Para consultas: <a href="mailto:matray@realise.sk">matray@realise.sk</a></p><p class="terms-updated">\u00daltima actualizaci\u00f3n: 14 de marzo de 2026</p>'
+        },
+        it: {
+            terms_title: "Termini di servizio",
+            back_home: "\u2190 Torna alla homepage",
+            footer: "\u00a9 2026 Robert Matray \u2014 Realise s.r.o.",
+            terms_html: '<h3>Termini di servizio \u2014 1GoShop</h3><p>Utilizzando l\'app 1GoShop, accetti i seguenti termini.</p><h3>Uso dell\'app</h3><p>1GoShop \u00e8 un\'app gratuita per gestire liste della spesa. L\'app \u00e8 fornita "cos\u00ec com\'\u00e8" senza alcuna garanzia.</p><h3>Dati e archiviazione</h3><p>I tuoi dati sono memorizzati localmente sul tuo dispositivo. Quando usi la condivisione, i dati sono memorizzati in Firebase (Google). Sei responsabile del backup dei tuoi dati.</p><h3>Limitazione di responsabilit\u00e0</h3><p>L\'autore dell\'app non \u00e8 responsabile per perdita di dati, interruzioni del servizio o danni.</p><h3>Propriet\u00e0 intellettuale</h3><p>1GoShop \u00e8 propriet\u00e0 di Robert Matray / Realise s.r.o.</p><h3>Contatti</h3><p>Per domande: <a href="mailto:matray@realise.sk">matray@realise.sk</a></p><p class="terms-updated">Ultimo aggiornamento: 14 marzo 2026</p>'
+        },
+        pl: {
+            terms_title: "Warunki korzystania",
+            back_home: "\u2190 Powr\u00f3t na stron\u0119 g\u0142\u00f3wn\u0105",
+            footer: "\u00a9 2026 Robert Matray \u2014 Realise s.r.o.",
+            terms_html: '<h3>Warunki korzystania \u2014 1GoShop</h3><p>Korzystaj\u0105c z aplikacji 1GoShop, zgadzasz si\u0119 na poni\u017csze warunki.</p><h3>U\u017cytkowanie aplikacji</h3><p>1GoShop to bezp\u0142atna aplikacja do zarz\u0105dzania listami zakup\u00f3w. Aplikacja jest dostarczana "tak jak jest" bez \u017cadnych gwarancji.</p><h3>Dane i przechowywanie</h3><p>Twoje dane s\u0105 przechowywane lokalnie na urz\u0105dzeniu. Przy udost\u0119pnianiu dane trafiaj\u0105 do Firebase (Google). Odpowiadasz za kopie zapasowe.</p><h3>Ograniczenie odpowiedzialno\u015bci</h3><p>Autor aplikacji nie ponosi odpowiedzialno\u015bci za utrat\u0119 danych, przerwy w dzia\u0142aniu lub szkody.</p><h3>W\u0142asno\u015b\u0107 intelektualna</h3><p>1GoShop jest w\u0142asno\u015bci\u0105 Roberta Matraya / Realise s.r.o.</p><h3>Kontakt</h3><p>W razie pyta\u0144: <a href="mailto:matray@realise.sk">matray@realise.sk</a></p><p class="terms-updated">Ostatnia aktualizacja: 14 marca 2026</p>'
+        },
+        pt: {
+            terms_title: "Termos de servi\u00e7o",
+            back_home: "\u2190 Voltar \u00e0 p\u00e1gina inicial",
+            footer: "\u00a9 2026 Robert Matray \u2014 Realise s.r.o.",
+            terms_html: '<h3>Termos de servi\u00e7o \u2014 1GoShop</h3><p>Ao usar a aplica\u00e7\u00e3o 1GoShop, concorda com os seguintes termos.</p><h3>Uso da aplica\u00e7\u00e3o</h3><p>1GoShop \u00e9 uma aplica\u00e7\u00e3o gratuita de gest\u00e3o de listas de compras. A aplica\u00e7\u00e3o \u00e9 fornecida "tal como est\u00e1" sem quaisquer garantias.</p><h3>Dados e armazenamento</h3><p>Os seus dados s\u00e3o armazenados localmente no seu dispositivo. Ao usar a partilha, os dados s\u00e3o armazenados no Firebase (Google). \u00c9 respons\u00e1vel pelas c\u00f3pias de seguran\u00e7a.</p><h3>Limita\u00e7\u00e3o de responsabilidade</h3><p>O autor da aplica\u00e7\u00e3o n\u00e3o \u00e9 respons\u00e1vel por perda de dados, interrup\u00e7\u00f5es ou danos.</p><h3>Propriedade intelectual</h3><p>1GoShop \u00e9 propriedade de Robert Matray / Realise s.r.o.</p><h3>Contacto</h3><p>Para quest\u00f5es: <a href="mailto:matray@realise.sk">matray@realise.sk</a></p><p class="terms-updated">\u00daltima atualiza\u00e7\u00e3o: 14 de mar\u00e7o de 2026</p>'
+        }
+    };
+
+    function setLanguage(lang) {
+        if (!T[lang]) return;
+        var strings = T[lang];
+        var elements = document.querySelectorAll('[data-i18n]');
+        for (var i = 0; i < elements.length; i++) {
+            var key = elements[i].getAttribute('data-i18n');
+            if (strings[key]) {
+                elements[i].textContent = strings[key];
+            }
+        }
+        var tc = document.getElementById('termsContent');
+        if (tc && strings.terms_html) {
+            tc.innerHTML = strings.terms_html;
+        }
+        document.documentElement.lang = lang;
+        localStorage.setItem('1goshop-lang', lang);
+    }
+
+    function getSystemTheme() {
+        return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+
+    function setTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('1goshop-theme', theme);
+        var btn = document.getElementById('themeToggle');
+        if (btn) btn.textContent = theme === 'dark' ? '\u2600' : '\u263E';
+    }
+
+    (function() {
+        var savedTheme = localStorage.getItem('1goshop-theme');
+        if (savedTheme) {
+            setTheme(savedTheme);
+        } else {
+            setTheme(getSystemTheme());
+        }
+
+        var savedLang = localStorage.getItem('1goshop-lang') || 'sk';
+        var select = document.getElementById('langSelect');
+        if (select) {
+            select.value = savedLang;
+            select.addEventListener('change', function() {
+                setLanguage(this.value);
+            });
+        }
+        setLanguage(savedLang);
+
+        var themeBtn = document.getElementById('themeToggle');
+        if (themeBtn) {
+            themeBtn.addEventListener('click', function() {
+                var current = document.documentElement.getAttribute('data-theme') || getSystemTheme();
+                setTheme(current === 'dark' ? 'light' : 'dark');
+            });
+        }
+    })();
+    </script>
+</body>
+</html>

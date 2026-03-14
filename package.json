@@ -27,6 +27,7 @@
     "expo-status-bar": "~3.0.9",
     "firebase": "^12.9.0",
     "i18next": "^25.8.10",
+    "jsonwebtoken": "^9.0.3",
     "react": "19.1.0",
     "react-i18next": "^16.5.4",
     "react-native": "0.81.5",

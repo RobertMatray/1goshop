@@ -1,0 +1,2000 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1GoShop — Shopping List App</title>
+    <meta name="description" content="Simple and fast shopping list app. Share with family, track shopping history, and shop efficiently.">
+    <meta name="theme-color" content="#4CAF50">
+    <link rel="icon" type="image/png" href="./assets/icon.png">
+    <style>
+        /* ===== CSS Variables & Reset ===== */
+        :root {
+            --green-primary: #4CAF50;
+            --green-dark: #388E3C;
+            --green-light: #66BB6A;
+            --green-bg: #E8F5E9;
+            --bg: #ffffff;
+            --bg-alt: #f5f5f5;
+            --text: #212121;
+            --text-secondary: #616161;
+            --card-bg: #ffffff;
+            --card-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            --border: #e0e0e0;
+            --header-bg: rgba(255,255,255,0.95);
+            --radius: 12px;
+            --max-width: 1100px;
+        }
+
+        [data-theme="dark"] {
+            --bg: #121212;
+            --bg-alt: #1e1e1e;
+            --text: #e0e0e0;
+            --text-secondary: #aaaaaa;
+            --card-bg: #1e1e1e;
+            --card-shadow: 0 2px 12px rgba(0,0,0,0.3);
+            --border: #333333;
+            --header-bg: rgba(18,18,18,0.95);
+            --green-bg: #1b2e1c;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) {
+                --bg: #121212;
+                --bg-alt: #1e1e1e;
+                --text: #e0e0e0;
+                --text-secondary: #aaaaaa;
+                --card-bg: #1e1e1e;
+                --card-shadow: 0 2px 12px rgba(0,0,0,0.3);
+                --border: #333333;
+                --header-bg: rgba(18,18,18,0.95);
+                --green-bg: #1b2e1c;
+            }
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ===== Header ===== */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: var(--header-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            height: 64px;
+        }
+
+        .header-inner {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            padding: 0 24px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        .header-logo img {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+        }
+
+        .header-nav {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-nav a {
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: color 0.2s, background 0.2s;
+        }
+
+        .header-nav a:hover {
+            color: var(--green-primary);
+            background: var(--green-bg);
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text);
+            transition: background 0.2s;
+        }
+
+        .theme-toggle:hover {
+            background: var(--bg-alt);
+        }
+
+        .lang-select {
+            background: var(--card-bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .lang-select:focus {
+            border-color: var(--green-primary);
+        }
+
+        /* Mobile menu */
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            font-size: 1.3rem;
+            color: var(--text);
+            align-items: center;
+            justify-content: center;
+        }
+
+        @media (max-width: 768px) {
+            .header-nav {
+                display: none;
+                position: absolute;
+                top: 64px;
+                left: 0;
+                right: 0;
+                flex-direction: column;
+                background: var(--header-bg);
+                backdrop-filter: blur(12px);
+                border-bottom: 1px solid var(--border);
+                padding: 12px 24px;
+                gap: 4px;
+            }
+
+            .header-nav.open {
+                display: flex;
+            }
+
+            .header-nav a {
+                padding: 12px;
+                width: 100%;
+            }
+
+            .menu-toggle {
+                display: flex;
+            }
+        }
+
+        /* ===== Hero ===== */
+        .hero {
+            padding: 140px 24px 80px;
+            background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%);
+            text-align: center;
+            color: #ffffff;
+        }
+
+        .hero-icon {
+            width: 128px;
+            height: 128px;
+            border-radius: 28px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            margin-bottom: 24px;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .hero-subtitle {
+            font-size: 1.4rem;
+            font-weight: 400;
+            opacity: 0.95;
+            margin-bottom: 16px;
+        }
+
+        .hero-description {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto 32px;
+            line-height: 1.7;
+        }
+
+        .hero-cta {
+            display: inline-block;
+            background: #ffffff;
+            color: #388E3C;
+            text-decoration: none;
+            padding: 14px 36px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+
+        .hero-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(0,0,0,0.2);
+        }
+
+        @media (max-width: 600px) {
+            .hero { padding: 120px 20px 60px; }
+            .hero h1 { font-size: 2.2rem; }
+            .hero-subtitle { font-size: 1.15rem; }
+            .hero-description { font-size: 1rem; }
+            .hero-icon { width: 96px; height: 96px; border-radius: 22px; }
+        }
+
+        /* ===== Sections ===== */
+        .section {
+            padding: 80px 24px;
+        }
+
+        .section-alt {
+            background: var(--bg-alt);
+        }
+
+        .section-inner {
+            max-width: var(--max-width);
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 48px;
+            color: var(--text);
+        }
+
+        @media (max-width: 600px) {
+            .section { padding: 60px 20px; }
+            .section-title { font-size: 1.6rem; margin-bottom: 32px; }
+        }
+
+        /* ===== Features ===== */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .feature-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 32px 24px;
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--card-shadow);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        .feature-title {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+
+        .feature-desc {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        @media (max-width: 900px) {
+            .features-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 550px) {
+            .features-grid { grid-template-columns: 1fr; gap: 16px; }
+            .feature-card { padding: 24px 20px; }
+        }
+
+        /* ===== Download ===== */
+        .download-section {
+            text-align: center;
+        }
+
+        .download-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+        }
+
+        .download-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .download-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 32px;
+            border-radius: var(--radius);
+            text-decoration: none;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+            min-width: 200px;
+            justify-content: center;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+
+        .btn-appstore {
+            background: #000000;
+            color: #ffffff;
+        }
+
+        .btn-playstore {
+            background: var(--green-primary);
+            color: #ffffff;
+        }
+
+        .download-btn-icon {
+            font-size: 1.5rem;
+        }
+
+        .download-btn-text {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            line-height: 1.2;
+        }
+
+        .download-btn-text small {
+            font-size: 0.7rem;
+            font-weight: 400;
+            opacity: 0.8;
+        }
+
+        /* ===== Privacy ===== */
+        .privacy-content {
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.8;
+        }
+
+        .privacy-content h3 {
+            font-size: 1.2rem;
+            margin: 32px 0 12px;
+            color: var(--text);
+        }
+
+        .privacy-content p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .privacy-content ul {
+            margin: 0 0 16px 24px;
+            color: var(--text-secondary);
+        }
+
+        .privacy-content li {
+            margin-bottom: 6px;
+        }
+
+        .privacy-content a {
+            color: var(--green-primary);
+        }
+
+        .privacy-updated {
+            font-style: italic;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 24px;
+        }
+
+        /* ===== Contact ===== */
+        .contact-section {
+            text-align: center;
+        }
+
+        .contact-text {
+            font-size: 1.05rem;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+
+        .contact-email {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--green-primary);
+            font-size: 1.2rem;
+            font-weight: 600;
+            text-decoration: none;
+            padding: 12px 28px;
+            border: 2px solid var(--green-primary);
+            border-radius: 50px;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .contact-email:hover {
+            background: var(--green-primary);
+            color: #ffffff;
+        }
+
+        /* ===== Gesture Guide ===== */
+        .gesture-intro {
+            text-align: center;
+            max-width: 700px;
+            margin: 0 auto 48px;
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+            line-height: 1.7;
+        }
+
+        .gesture-item-demo {
+            max-width: 600px;
+            margin: 0 auto 48px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+        }
+
+        .gesture-item-row {
+            display: flex;
+            align-items: center;
+            height: 56px;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+            border: 2px solid var(--border);
+        }
+
+        .gesture-half {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            position: relative;
+        }
+
+        .gesture-half-left {
+            background: var(--green-bg);
+            border-right: 2px dashed var(--green-primary);
+        }
+
+        .gesture-half-right {
+            background: var(--bg-alt);
+        }
+
+        .gesture-half-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            position: absolute;
+            top: 4px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .gesture-half-left .gesture-half-label { left: 8px; }
+        .gesture-half-right .gesture-half-label { right: 8px; }
+
+        .gesture-item-name {
+            font-weight: 600;
+            color: var(--text);
+            font-size: 0.95rem;
+        }
+
+        .gesture-item-qty {
+            font-weight: 600;
+            color: var(--green-primary);
+            font-size: 0.95rem;
+        }
+
+        .gesture-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .gesture-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px 20px;
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .gesture-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--card-shadow);
+        }
+
+        .gesture-icon-wrap {
+            width: 48px;
+            height: 48px;
+            min-width: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+        }
+
+        .gesture-icon-delete { background: #FFEBEE; color: #D32F2F; }
+        .gesture-icon-edit { background: #E3F2FD; color: #1976D2; }
+        .gesture-icon-plus { background: #E8F5E9; color: #388E3C; }
+        .gesture-icon-minus { background: #FFF3E0; color: #F57C00; }
+        .gesture-icon-tap { background: #F3E5F5; color: #7B1FA2; }
+        .gesture-icon-long { background: #E0F7FA; color: #00838F; }
+        .gesture-icon-drag { background: #FFF8E1; color: #F9A825; }
+
+        .gesture-info h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+
+        .gesture-info p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        .gesture-zone-badge {
+            display: inline-block;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .zone-left { background: #E8F5E9; color: #2E7D32; }
+        .zone-right { background: #FFF3E0; color: #E65100; }
+        .zone-any { background: #F3E5F5; color: #6A1B9A; }
+
+        [data-theme="dark"] .gesture-icon-delete { background: #4E1515; }
+        [data-theme="dark"] .gesture-icon-edit { background: #0D2B4A; }
+        [data-theme="dark"] .gesture-icon-plus { background: #1b2e1c; }
+        [data-theme="dark"] .gesture-icon-minus { background: #3E2200; }
+        [data-theme="dark"] .gesture-icon-tap { background: #2A0E3A; }
+        [data-theme="dark"] .gesture-icon-long { background: #003038; }
+        [data-theme="dark"] .gesture-icon-drag { background: #3E3000; }
+        [data-theme="dark"] .zone-left { background: #1b2e1c; color: #66BB6A; }
+        [data-theme="dark"] .zone-right { background: #3E2200; color: #FFB74D; }
+        [data-theme="dark"] .zone-any { background: #2A0E3A; color: #CE93D8; }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) .gesture-icon-delete { background: #4E1515; }
+            :root:not([data-theme="light"]) .gesture-icon-edit { background: #0D2B4A; }
+            :root:not([data-theme="light"]) .gesture-icon-plus { background: #1b2e1c; }
+            :root:not([data-theme="light"]) .gesture-icon-minus { background: #3E2200; }
+            :root:not([data-theme="light"]) .gesture-icon-tap { background: #2A0E3A; }
+            :root:not([data-theme="light"]) .gesture-icon-long { background: #003038; }
+            :root:not([data-theme="light"]) .gesture-icon-drag { background: #3E3000; }
+            :root:not([data-theme="light"]) .zone-left { background: #1b2e1c; color: #66BB6A; }
+            :root:not([data-theme="light"]) .zone-right { background: #3E2200; color: #FFB74D; }
+            :root:not([data-theme="light"]) .zone-any { background: #2A0E3A; color: #CE93D8; }
+        }
+
+        @media (max-width: 650px) {
+            .gesture-grid { grid-template-columns: 1fr; }
+        }
+
+        /* ===== What's New / Roadmap ===== */
+        .version-badge {
+            display: inline-block;
+            background: var(--green-primary);
+            color: #ffffff;
+            font-size: 0.85rem;
+            font-weight: 700;
+            padding: 4px 14px;
+            border-radius: 20px;
+            margin-bottom: 24px;
+        }
+
+        .whatsnew-subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+            margin-bottom: 32px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .current-features {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            max-width: 900px;
+            margin: 0 auto 64px;
+        }
+
+        .current-feature-item {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .current-feature-check {
+            color: var(--green-primary);
+            font-size: 1.2rem;
+            font-weight: 700;
+            line-height: 1.4;
+            flex-shrink: 0;
+        }
+
+        .current-feature-text {
+            font-size: 0.95rem;
+            color: var(--text);
+            line-height: 1.5;
+        }
+
+        @media (max-width: 900px) {
+            .current-features { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 550px) {
+            .current-features { grid-template-columns: 1fr; gap: 12px; }
+        }
+
+        .roadmap-title-sub {
+            text-align: center;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 32px;
+        }
+
+        .roadmap-timeline {
+            max-width: 700px;
+            margin: 0 auto;
+            position: relative;
+            padding-left: 40px;
+        }
+
+        .roadmap-timeline::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(to bottom, var(--green-primary), var(--green-light), var(--border));
+            border-radius: 3px;
+        }
+
+        .roadmap-item {
+            position: relative;
+            margin-bottom: 32px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .roadmap-item:hover {
+            transform: translateX(4px);
+            box-shadow: var(--card-shadow);
+        }
+
+        .roadmap-item::before {
+            content: '';
+            position: absolute;
+            left: -33px;
+            top: 28px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--green-primary);
+            border: 3px solid var(--bg);
+            box-shadow: 0 0 0 2px var(--green-primary);
+        }
+
+        .roadmap-item-icon {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .roadmap-item h4 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 6px;
+        }
+
+        .roadmap-item p {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        .coming-soon-badge {
+            display: inline-block;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 4px;
+            background: #FFF3E0;
+            color: #E65100;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        [data-theme="dark"] .coming-soon-badge { background: #3E2200; color: #FFB74D; }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) .coming-soon-badge { background: #3E2200; color: #FFB74D; }
+        }
+
+        @media (max-width: 550px) {
+            .roadmap-timeline { padding-left: 32px; }
+            .roadmap-item::before { left: -25px; width: 12px; height: 12px; }
+            .roadmap-item { padding: 20px; }
+        }
+
+        /* ===== Footer ===== */
+        .footer {
+            text-align: center;
+            padding: 32px 24px;
+            border-top: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-inner">
+            <a href="#" class="header-logo">
+                <img src="./assets/icon.png" alt="1GoShop">
+                <span>1GoShop</span>
+            </a>
+            <nav class="header-nav" id="navMenu">
+                <a href="#features" data-i18n="nav_features">Funkcie</a>
+                <a href="#howto" data-i18n="nav_howto">Ako pouzivat</a>
+                <a href="#whatsnew" data-i18n="nav_whatsnew">Novinky</a>
+                <a href="#download" data-i18n="nav_download">Stiahnuť</a>
+                <a href="#privacy" data-i18n="nav_privacy">Sukromie</a>
+                <a href="#contact" data-i18n="nav_contact">Kontakt</a>
+            </nav>
+            <div class="header-controls">
+                <select class="lang-select" id="langSelect" aria-label="Language">
+                    <option value="sk">&#127480;&#127472; Slovencina</option>
+                    <option value="en">&#127468;&#127463; English</option>
+                    <option value="de">&#127465;&#127466; Deutsch</option>
+                    <option value="hu">&#127469;&#127482; Magyar</option>
+                    <option value="cs">&#127464;&#127487; Cestina</option>
+                    <option value="uk">&#127482;&#127462; Ukrainska</option>
+                    <option value="zh">&#127464;&#127475; Zhongwen</option>
+                    <option value="fr">&#127467;&#127479; Francais</option>
+                    <option value="es">&#127466;&#127480; Espanol</option>
+                    <option value="it">&#127470;&#127481; Italiano</option>
+                    <option value="pl">&#127477;&#127473; Polski</option>
+                    <option value="pt">&#127477;&#127481; Portugues</option>
+                </select>
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">&#9790;</button>
+                <button class="menu-toggle" id="menuToggle" aria-label="Menu">&#9776;</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero -->
+    <section class="hero" id="hero">
+        <img src="./assets/icon.png" alt="1GoShop" class="hero-icon">
+        <h1>1GoShop</h1>
+        <p class="hero-subtitle" data-i18n="hero_subtitle">Jednoduchy a rychly nakupny zoznam</p>
+        <p class="hero-description" data-i18n="hero_description">Spravujte svoje nakupne zoznamy jednoducho. Zdielajte s rodinou, sledujte historiu nakupov a nakupujte efektivne.</p>
+        <a href="#download" class="hero-cta" data-i18n="nav_download">Stiahnut</a>
+    </section>
+
+    <!-- Features -->
+    <section class="section section-alt" id="features">
+        <div class="section-inner">
+            <h2 class="section-title" data-i18n="features_title">Funkcie</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <span class="feature-icon">&#128203;</span>
+                    <h3 class="feature-title" data-i18n="f1_title">Viacero zoznamov</h3>
+                    <p class="feature-desc" data-i18n="f1_desc">Vytvorte si zoznamy pre rozne obchody.</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">&#128260;</span>
+                    <h3 class="feature-title" data-i18n="f2_title">Zdielanie v realnom case</h3>
+                    <p class="feature-desc" data-i18n="f2_desc">Zdielajte zoznamy s rodinou alebo priatelmi.</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">&#128722;</span>
+                    <h3 class="feature-title" data-i18n="f3_title">Aktivny nakup</h3>
+                    <p class="feature-desc" data-i18n="f3_desc">Rezim nakupovania s historiou.</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">&#127758;</span>
+                    <h3 class="feature-title" data-i18n="f4_title">12 jazykov</h3>
+                    <p class="feature-desc" data-i18n="f4_desc">Dostupne v slovencine, anglictine a dalsich.</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">&#127769;</span>
+                    <h3 class="feature-title" data-i18n="f5_title">Tmavy rezim</h3>
+                    <p class="feature-desc" data-i18n="f5_desc">Prisposobte si vzhad aplikacie.</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">&#128190;</span>
+                    <h3 class="feature-title" data-i18n="f6_title">Zaloha a export</h3>
+                    <p class="feature-desc" data-i18n="f6_desc">Exportujte a importujte zoznamy.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How to Use -->
+    <section class="section" id="howto">
+        <div class="section-inner">
+            <h2 class="section-title" data-i18n="howto_title">Ako pouzivat</h2>
+            <p class="gesture-intro" data-i18n="howto_intro">Polozka v zozname je rozdelena na lavu a pravu polovicu. Kazda polovica reaguje na ine gesto.</p>
+
+            <!-- Visual demo of the item row -->
+            <div class="gesture-item-demo">
+                <div class="gesture-item-row">
+                    <div class="gesture-half gesture-half-left">
+                        <span class="gesture-half-label" data-i18n="howto_zone_left">Lava strana</span>
+                        <span class="gesture-item-name">Mlieko</span>
+                    </div>
+                    <div class="gesture-half gesture-half-right">
+                        <span class="gesture-half-label" data-i18n="howto_zone_right">Prava strana</span>
+                        <span class="gesture-item-qty">x2</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="gesture-grid">
+                <!-- Swipe LEFT on left half = Delete -->
+                <div class="gesture-card">
+                    <div class="gesture-icon-wrap gesture-icon-delete">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                    </div>
+                    <div class="gesture-info">
+                        <span class="gesture-zone-badge zone-left" data-i18n="howto_zone_left">Lava strana</span>
+                        <h4 data-i18n="howto_g1_title">Swipe dolava &mdash; Vymazat</h4>
+                        <p data-i18n="howto_g1_desc">Potiahnite polozku dolava na lavej strane pre jej vymazanie zo zoznamu.</p>
+                    </div>
+                </div>
+                <!-- Swipe RIGHT on left half = Edit -->
+                <div class="gesture-card">
+                    <div class="gesture-icon-wrap gesture-icon-edit">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M11 4H4v16h16v-7"/><path d="M18.5 2.5l3 3L12 15H9v-3l9.5-9.5z"/></svg>
+                    </div>
+                    <div class="gesture-info">
+                        <span class="gesture-zone-badge zone-left" data-i18n="howto_zone_left">Lava strana</span>
+                        <h4 data-i18n="howto_g2_title">Swipe doprava &mdash; Upravit</h4>
+                        <p data-i18n="howto_g2_desc">Potiahnite polozku doprava na lavej strane pre upravu jej nazvu.</p>
+                    </div>
+                </div>
+                <!-- Swipe RIGHT on right half = +1 qty -->
+                <div class="gesture-card">
+                    <div class="gesture-icon-wrap gesture-icon-plus">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+                    </div>
+                    <div class="gesture-info">
+                        <span class="gesture-zone-badge zone-right" data-i18n="howto_zone_right">Prava strana</span>
+                        <h4 data-i18n="howto_g3_title">Swipe doprava &mdash; +1 mnozstvo</h4>
+                        <p data-i18n="howto_g3_desc">Potiahnite doprava na pravej strane pre zvysenie mnozstva o 1.</p>
+                    </div>
+                </div>
+                <!-- Swipe LEFT on right half = -1 qty -->
+                <div class="gesture-card">
+                    <div class="gesture-icon-wrap gesture-icon-minus">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14"/></svg>
+                    </div>
+                    <div class="gesture-info">
+                        <span class="gesture-zone-badge zone-right" data-i18n="howto_zone_right">Prava strana</span>
+                        <h4 data-i18n="howto_g4_title">Swipe dolava &mdash; -1 mnozstvo</h4>
+                        <p data-i18n="howto_g4_desc">Potiahnite dolava na pravej strane pre znizenie mnozstva. Ak je mnozstvo 1, polozka sa vymaze.</p>
+                    </div>
+                </div>
+                <!-- Tap anywhere = Toggle checked -->
+                <div class="gesture-card">
+                    <div class="gesture-icon-wrap gesture-icon-tap">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                    </div>
+                    <div class="gesture-info">
+                        <span class="gesture-zone-badge zone-any" data-i18n="howto_zone_any">Kdekovlek</span>
+                        <h4 data-i18n="howto_g5_title">Klepnutie &mdash; Kupene / Nekupene</h4>
+                        <p data-i18n="howto_g5_desc">Klepnite na polozku pre oznacenie ako kupena alebo nekupena.</p>
+                    </div>
+                </div>
+                <!-- Long press = Edit name -->
+                <div class="gesture-card">
+                    <div class="gesture-icon-wrap gesture-icon-long">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 18a6 6 0 100-12 6 6 0 000 12z"/><path d="M12 8v4l2 2"/></svg>
+                    </div>
+                    <div class="gesture-info">
+                        <span class="gesture-zone-badge zone-any" data-i18n="howto_zone_any">Kdekovlek</span>
+                        <h4 data-i18n="howto_g6_title">Dlhe podrzanie &mdash; Upravit nazov</h4>
+                        <p data-i18n="howto_g6_desc">Podrzte polozku 500ms pre rychlu upravu nazvu polozky.</p>
+                    </div>
+                </div>
+                <!-- Long press drag handle = Reorder -->
+                <div class="gesture-card" style="grid-column: 1 / -1; max-width: 440px; margin: 0 auto;">
+                    <div class="gesture-icon-wrap gesture-icon-drag">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M3 8h18M3 16h18M3 12h18"/></svg>
+                    </div>
+                    <div class="gesture-info">
+                        <span class="gesture-zone-badge zone-any" data-i18n="howto_zone_drag">Ikona &#9776;</span>
+                        <h4 data-i18n="howto_g7_title">Podrzte a potiahnite &mdash; Zmena poradia</h4>
+                        <p data-i18n="howto_g7_desc">Podrzte ikonu &#9776; a potiahnite hore alebo dole pre zmenu poradia poloziek.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- What's New -->
+    <section class="section section-alt" id="whatsnew">
+        <div class="section-inner" style="text-align: center;">
+            <h2 class="section-title" data-i18n="whatsnew_title">Novinky</h2>
+            <span class="version-badge">v1.2.1</span>
+            <p class="whatsnew-subtitle" data-i18n="whatsnew_subtitle">Aktualna verzia obsahuje tieto funkcie:</p>
+
+            <div class="current-features">
+                <div class="current-feature-item">
+                    <span class="current-feature-check">&#10003;</span>
+                    <span class="current-feature-text" data-i18n="wn_f1">Viacero nakupnych zoznamov</span>
+                </div>
+                <div class="current-feature-item">
+                    <span class="current-feature-check">&#10003;</span>
+                    <span class="current-feature-text" data-i18n="wn_f2">Zdielanie zoznamov s rodinou a priatelmi v realnom case</span>
+                </div>
+                <div class="current-feature-item">
+                    <span class="current-feature-check">&#10003;</span>
+                    <span class="current-feature-text" data-i18n="wn_f3">Aktivny rezim nakupovania</span>
+                </div>
+                <div class="current-feature-item">
+                    <span class="current-feature-check">&#10003;</span>
+                    <span class="current-feature-text" data-i18n="wn_f4">Historia nakupov a statistiky</span>
+                </div>
+                <div class="current-feature-item">
+                    <span class="current-feature-check">&#10003;</span>
+                    <span class="current-feature-text" data-i18n="wn_f5">Gesticke ovladanie (swipe, tap, drag)</span>
+                </div>
+                <div class="current-feature-item">
+                    <span class="current-feature-check">&#10003;</span>
+                    <span class="current-feature-text" data-i18n="wn_f6">12 jazykov</span>
+                </div>
+                <div class="current-feature-item">
+                    <span class="current-feature-check">&#10003;</span>
+                    <span class="current-feature-text" data-i18n="wn_f7">Tmavy / svetly rezim</span>
+                </div>
+                <div class="current-feature-item">
+                    <span class="current-feature-check">&#10003;</span>
+                    <span class="current-feature-text" data-i18n="wn_f8">Nastavenie vlastnych farieb a akcentov</span>
+                </div>
+                <div class="current-feature-item">
+                    <span class="current-feature-check">&#10003;</span>
+                    <span class="current-feature-text" data-i18n="wn_f9">Zaloha a export zoznamov</span>
+                </div>
+                <div class="current-feature-item">
+                    <span class="current-feature-check">&#10003;</span>
+                    <span class="current-feature-text" data-i18n="wn_f10">Import zo schranky (Apple Notes, Google Sheets...)</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Privacy -->
+    <section class="section" id="privacy">
+        <div class="section-inner">
+            <h2 class="section-title" data-i18n="privacy_title">Ochrana sukromia</h2>
+            <div class="privacy-content" id="privacyContent">
+                <!-- Filled by JS based on language -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Download -->
+    <section class="section section-alt download-section" id="download">
+        <div class="section-inner">
+            <h2 class="section-title" data-i18n="download_title">Stiahnut</h2>
+            <p class="download-subtitle" data-i18n="download_subtitle">Dostupne pre iOS a Android</p>
+            <div class="download-buttons">
+                <a href="https://apps.apple.com/app/1goshop/id6759269751" class="download-btn btn-appstore" target="_blank" rel="noopener">
+                    <span class="download-btn-icon">&#63743;</span>
+                    <span class="download-btn-text">
+                        <small data-i18n="download_get">Download on the</small>
+                        <span>App Store</span>
+                    </span>
+                </a>
+                <a href="https://play.google.com/store/apps/details?id=com.realise.onegoshop" class="download-btn btn-playstore" target="_blank" rel="noopener">
+                    <span class="download-btn-icon">&#9654;</span>
+                    <span class="download-btn-text">
+                        <small data-i18n="download_get2">Get it on</small>
+                        <span>Google Play</span>
+                    </span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact -->
+    <section class="section contact-section" id="contact">
+        <div class="section-inner">
+            <h2 class="section-title" data-i18n="contact_title">Kontakt</h2>
+            <p class="contact-text" data-i18n="contact_text">Ak mate otazky alebo potrebujete pomoc, kontaktujte nas:</p>
+            <a href="mailto:matray@realise.sk" class="contact-email">&#9993; matray@realise.sk</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div data-i18n="footer">&copy; 2026 Robert Matray &mdash; Realise s.r.o.</div>
+        <div style="margin-top: 8px; font-size: 0.85rem;">
+            <a href="./privacy-policy.html" style="color: var(--green-primary); text-decoration: none;" data-i18n="footer_privacy">Ochrana sukromia</a>
+            &nbsp;&middot;&nbsp;
+            <a href="./terms.html" style="color: var(--green-primary); text-decoration: none;" data-i18n="footer_terms">Podmienky pouzivania</a>
+        </div>
+    </footer>
+
+    <script>
+    /* ===== Translations ===== */
+    var T = {
+        sk: {
+            nav_features: "Funkcie",
+            nav_howto: "N\u00e1vod",
+            nav_whatsnew: "Novinky",
+            nav_download: "Stiahnu\u0165",
+            nav_privacy: "S\u00fakromie",
+            nav_contact: "Kontakt",
+            hero_subtitle: "Jednoduch\u00fd a r\u00fdchly n\u00e1kupn\u00fd zoznam",
+            hero_description: "Spravujte svoje n\u00e1kupn\u00e9 zoznamy jednoducho. Zdie\u013eajte s rodinou, sledujte hist\u00f3riu n\u00e1kupov a nakupujte efekt\u00edvne.",
+            features_title: "Funkcie",
+            f1_title: "Viacero zoznamov",
+            f1_desc: "Vytvorte si zoznamy pre r\u00f4zne obchody \u2014 Lidl, Tesco, Billa a \u010fal\u0161ie.",
+            f2_title: "Zdie\u013eanie v re\u00e1lnom \u010dase",
+            f2_desc: "Zdie\u013eajte zoznamy s rodinou alebo priate\u013emi. Zmeny sa synchronizuj\u00fa okam\u017eite.",
+            f3_title: "Akt\u00edvny n\u00e1kup",
+            f3_desc: "Re\u017eim nakupovania s hist\u00f3riou \u2014 sledujte, \u010do ste k\u00fapili a kedy.",
+            f4_title: "12 jazykov",
+            f4_desc: "Dostupn\u00e9 v sloven\u010dine, angli\u010dtine, nem\u010dine, ma\u010far\u010dine a \u010fal\u0161\u00edch 8 jazykoch.",
+            f5_title: "Tmav\u00fd re\u017eim",
+            f5_desc: "Prisp\u00f4sobte si vzh\u013ead s plnou podporou tmav\u00e9ho re\u017eimu a vlastn\u00fdch farieb.",
+            f6_title: "Z\u00e1loha a export",
+            f6_desc: "Exportujte a importujte zoznamy. Va\u0161e d\u00e1ta s\u00fa v\u017edy bezpe\u010dn\u00e9.",
+            download_title: "Stiahnu\u0165",
+            download_subtitle: "Dostupn\u00e9 pre iOS a Android",
+            download_get: "Stiahnu\u0165 z",
+            download_get2: "Stiahnu\u0165 z",
+            privacy_title: "Ochrana s\u00fakromia",
+            contact_title: "Kontakt",
+            contact_text: "Ak m\u00e1te ot\u00e1zky alebo potrebujete pomoc, kontaktujte n\u00e1s:",
+            footer: "\u00a9 2026 Robert Matray \u2014 Realise s.r.o.",
+            footer_privacy: "Ochrana s\u00fakromia",
+            footer_terms: "Podmienky pou\u017e\u00edvania",
+            howto_title: "Ako pou\u017e\u00edva\u0165",
+            howto_intro: "Polo\u017eka v zozname je rozdelen\u00e1 na \u013eav\u00fa a prav\u00fa polovicu. Ka\u017ed\u00e1 polovica reaguje na in\u00e9 gesto.",
+            howto_zone_left: "\u013dav\u00e1 strana",
+            howto_zone_right: "Prav\u00e1 strana",
+            howto_zone_any: "Kdeko\u013evek",
+            howto_zone_drag: "Ikona \u2630",
+            howto_g1_title: "Swipe do\u013eava \u2014 Vymaza\u0165",
+            howto_g1_desc: "Potiahnite polo\u017eku do\u013eava na \u013eavej strane pre jej vymazanie zo zoznamu.",
+            howto_g2_title: "Swipe doprava \u2014 Upravi\u0165",
+            howto_g2_desc: "Potiahnite polo\u017eku doprava na \u013eavej strane pre \u00fapravu jej n\u00e1zvu.",
+            howto_g3_title: "Swipe doprava \u2014 +1 mno\u017estvo",
+            howto_g3_desc: "Potiahnite doprava na pravej strane pre zv\u00fd\u0161enie mno\u017estva o 1.",
+            howto_g4_title: "Swipe do\u013eava \u2014 -1 mno\u017estvo",
+            howto_g4_desc: "Potiahnite do\u013eava na pravej strane pre zn\u00ed\u017eenie mno\u017estva. Ak je mno\u017estvo 1, polo\u017eka sa vyma\u017ee.",
+            howto_g5_title: "Klepnutie \u2014 K\u00fapen\u00e9 / Nek\u00fapen\u00e9",
+            howto_g5_desc: "Klepnite na polo\u017eku pre ozna\u010denie ako k\u00fapen\u00e1 alebo nek\u00fapen\u00e1.",
+            howto_g6_title: "Dlh\u00e9 podr\u017eanie \u2014 Upravi\u0165 n\u00e1zov",
+            howto_g6_desc: "Podr\u017ete polo\u017eku 500ms pre r\u00fdchlu \u00fapravu n\u00e1zvu polo\u017eky.",
+            howto_g7_title: "Podr\u017ete a potiahnite \u2014 Zmena poradia",
+            howto_g7_desc: "Podr\u017ete ikonu \u2630 a potiahnite hore alebo dole pre zmenu poradia polo\u017eiek.",
+            whatsnew_title: "Novinky",
+            whatsnew_subtitle: "Aktu\u00e1lna verzia obsahuje tieto funkcie:",
+            wn_f1: "Viacero n\u00e1kupn\u00fdch zoznamov",
+            wn_f2: "Zdie\u013eanie zoznamov s rodinou a priate\u013emi v re\u00e1lnom \u010dase",
+            wn_f3: "Akt\u00edvny re\u017eim nakupovania",
+            wn_f4: "Hist\u00f3ria n\u00e1kupov a \u0161tatistiky",
+            wn_f5: "Gestick\u00e9 ovl\u00e1danie (swipe, tap, drag)",
+            wn_f6: "12 jazykov",
+            wn_f7: "Tmav\u00fd / svetl\u00fd re\u017eim",
+            wn_f8: "Nastavenie vlastn\u00fdch farieb a akcentov",
+            wn_f9: "Z\u00e1loha a export zoznamov",
+            wn_f10: "Import zo schr\u00e1nky (Apple Notes, Google Sheets...)",
+            privacy_html: '<h3>Ochrana s\u00fakromia \u2014 1GoShop</h3><p>Aplik\u00e1cia 1GoShop re\u0161pektuje va\u0161e s\u00fakromie. T\u00e1to str\u00e1nka popisuje, ak\u00e9 \u00fadaje aplik\u00e1cia sprac\u00fava a ako s nimi naklad\u00e1.</p><h3>Lok\u00e1lne ulo\u017een\u00e9 d\u00e1ta</h3><p>V\u0161etky \u00fadaje o n\u00e1kupn\u00fdch zoznamoch s\u00fa prim\u00e1rne ulo\u017een\u00e9 lok\u00e1lne na va\u0161om zariaden\u00ed. Aplik\u00e1cia nepotrebuje registr\u00e1ciu ani prihl\u00e1senie.</p><h3>Zdie\u013eanie d\u00e1t cez Firebase</h3><p>Ak pou\u017eijete funkciu zdie\u013eania zoznamov, d\u00e1ta sa pren\u00e1\u0161aj\u00fa do Firebase Realtime Database (servery spolo\u010dnosti Google). Pri zdie\u013ean\u00ed sa pou\u017e\u00edva anonymn\u00e1 autentifik\u00e1cia \u2014 nezhroma\u017e\u010fuj\u00fa sa \u017eiadne osobn\u00e9 \u00fadaje.</p><p>Zdie\u013ean\u00e9 \u00fadaje zah\u0155\u0148aj\u00fa:</p><ul><li>Polo\u017eky n\u00e1kupn\u00e9ho zoznamu a mno\u017estv\u00e1</li><li>Hist\u00f3ria n\u00e1kupn\u00fdch rel\u00e1ci\u00ed</li></ul><p>Zdie\u013eanie m\u00f4\u017eete kedyko\u013evek zastavi\u0165, \u010d\u00edm sa va\u0161e d\u00e1ta odstr\u00e1nia zo zdie\u013ean\u00e9ho \u00falo\u017eiska.</p><h3>Analytika a sledovanie</h3><p>Aplik\u00e1cia nepou\u017e\u00edva \u017eiadnu analytiku, sledovanie pou\u017e\u00edvate\u013eov ani reklamy.</p><h3>Export d\u00e1t</h3><p>D\u00e1ta m\u00f4\u017eete kedyko\u013evek exportova\u0165 pre osobn\u00fa z\u00e1lohu.</p><h3>Kontakt</h3><p>V pr\u00edpade ot\u00e1zok oh\u013eadom ochrany s\u00fakromia n\u00e1s kontaktujte: <a href="mailto:matray@realise.sk">matray@realise.sk</a></p><p class="privacy-updated">Posledn\u00e1 aktualiz\u00e1cia: 27. febru\u00e1ra 2026</p>'
+        },
+        en: {
+            nav_features: "Features",
+            nav_howto: "How to Use",
+            nav_whatsnew: "What's New",
+            nav_download: "Download",
+            nav_privacy: "Privacy",
+            nav_contact: "Contact",
+            hero_subtitle: "Simple and fast shopping list",
+            hero_description: "Manage your shopping lists with ease. Share with family, track shopping history, and shop efficiently.",
+            features_title: "Features",
+            f1_title: "Multiple Lists",
+            f1_desc: "Create lists for different stores \u2014 Lidl, Tesco, Billa and more.",
+            f2_title: "Real-time Sharing",
+            f2_desc: "Share lists with family or friends. Changes sync instantly.",
+            f3_title: "Active Shopping",
+            f3_desc: "Shopping mode with history \u2014 track what you bought and when.",
+            f4_title: "12 Languages",
+            f4_desc: "Available in Slovak, English, German, Hungarian, and 8 more languages.",
+            f5_title: "Dark Mode",
+            f5_desc: "Customize the look with full dark mode support and custom colors.",
+            f6_title: "Backup & Export",
+            f6_desc: "Export and import lists. Your data is always safe.",
+            download_title: "Download",
+            download_subtitle: "Available for iOS and Android",
+            download_get: "Download on the",
+            download_get2: "Get it on",
+            privacy_title: "Privacy Policy",
+            contact_title: "Contact",
+            contact_text: "If you have questions or need help, contact us:",
+            footer: "\u00a9 2026 Robert Matray \u2014 Realise s.r.o.",
+            footer_privacy: "Privacy Policy",
+            footer_terms: "Terms of Service",
+            howto_title: "How to Use",
+            howto_intro: "Each item row is split into a left half and a right half. Each half responds to different gestures.",
+            howto_zone_left: "Left side",
+            howto_zone_right: "Right side",
+            howto_zone_any: "Anywhere",
+            howto_zone_drag: "\u2630 icon",
+            howto_g1_title: "Swipe left \u2014 Delete",
+            howto_g1_desc: "Swipe an item left on the left side to delete it from the list.",
+            howto_g2_title: "Swipe right \u2014 Edit",
+            howto_g2_desc: "Swipe an item right on the left side to edit its name.",
+            howto_g3_title: "Swipe right \u2014 +1 quantity",
+            howto_g3_desc: "Swipe right on the right side to increase quantity by 1.",
+            howto_g4_title: "Swipe left \u2014 -1 quantity",
+            howto_g4_desc: "Swipe left on the right side to decrease quantity. If quantity is 1, the item is deleted.",
+            howto_g5_title: "Tap \u2014 Bought / Not bought",
+            howto_g5_desc: "Tap an item to mark it as bought or not bought.",
+            howto_g6_title: "Long press \u2014 Edit name",
+            howto_g6_desc: "Hold an item for 500ms to quickly edit its name.",
+            howto_g7_title: "Hold and drag \u2014 Reorder",
+            howto_g7_desc: "Hold the \u2630 icon and drag up or down to reorder items.",
+            whatsnew_title: "What's New",
+            whatsnew_subtitle: "Current version includes these features:",
+            wn_f1: "Multiple shopping lists",
+            wn_f2: "Share lists with family and friends in real time",
+            wn_f3: "Active shopping mode",
+            wn_f4: "Shopping history & statistics",
+            wn_f5: "Gesture controls (swipe, tap, drag)",
+            wn_f6: "12 languages",
+            wn_f7: "Dark / light mode",
+            wn_f8: "Custom color and accent settings",
+            wn_f9: "Backup & export lists",
+            wn_f10: "Import from clipboard (Apple Notes, Google Sheets...)",
+            privacy_html: '<h3>Privacy Policy \u2014 1GoShop</h3><p>The 1GoShop app respects your privacy. This page describes what data the app processes and how it handles it.</p><h3>Locally Stored Data</h3><p>All shopping list data is primarily stored locally on your device. The app does not require registration or login.</p><h3>Data Sharing via Firebase</h3><p>When you use the list sharing feature, data is transmitted to Firebase Realtime Database (Google servers). Sharing uses anonymous authentication \u2014 no personal data is collected.</p><p>Shared data includes:</p><ul><li>Shopping list items and quantities</li><li>Shopping session history</li></ul><p>You can stop sharing at any time, which removes your data from shared storage.</p><h3>Analytics and Tracking</h3><p>The app does not use any analytics, user tracking, or advertisements.</p><h3>Data Export</h3><p>You can export your data at any time for personal backup.</p><h3>Contact</h3><p>For privacy-related questions, contact us at: <a href="mailto:matray@realise.sk">matray@realise.sk</a></p><p class="privacy-updated">Last updated: February 27, 2026</p>'
+        },
+        de: {
+            nav_features: "Funktionen",
+            nav_howto: "Anleitung",
+            nav_whatsnew: "Neuigkeiten",
+            nav_download: "Herunterladen",
+            nav_privacy: "Datenschutz",
+            nav_contact: "Kontakt",
+            hero_subtitle: "Einfache und schnelle Einkaufsliste",
+            hero_description: "Verwalten Sie Ihre Einkaufslisten m\u00fchelos. Teilen Sie mit der Familie, verfolgen Sie den Einkaufsverlauf und kaufen Sie effizient ein.",
+            features_title: "Funktionen",
+            f1_title: "Mehrere Listen",
+            f1_desc: "Erstellen Sie Listen f\u00fcr verschiedene Gesch\u00e4fte \u2014 Lidl, Tesco, Billa und mehr.",
+            f2_title: "Echtzeit-Teilen",
+            f2_desc: "\u00c4nderungen werden sofort synchronisiert. Teilen Sie Listen mit Familie oder Freunden.",
+            f3_title: "Aktives Einkaufen",
+            f3_desc: "Einkaufsmodus mit Verlauf \u2014 verfolgen Sie, was Sie wann gekauft haben.",
+            f4_title: "12 Sprachen",
+            f4_desc: "Verf\u00fcgbar in Slowakisch, Englisch, Deutsch, Ungarisch und 8 weiteren Sprachen.",
+            f5_title: "Dunkelmodus",
+            f5_desc: "Passen Sie das Aussehen mit voller Unterst\u00fctzung des Dunkelmodus und benutzerdefinierten Farben an.",
+            f6_title: "Sicherung & Export",
+            f6_desc: "Exportieren und importieren Sie Listen. Ihre Daten sind immer sicher.",
+            download_title: "Herunterladen",
+            download_subtitle: "Verf\u00fcgbar f\u00fcr iOS und Android",
+            download_get: "Laden im",
+            download_get2: "Jetzt bei",
+            privacy_title: "Datenschutz",
+            contact_title: "Kontakt",
+            contact_text: "Wenn Sie Fragen haben oder Hilfe ben\u00f6tigen, kontaktieren Sie uns:",
+            footer: "\u00a9 2026 Robert Matray \u2014 Realise s.r.o.",
+            footer_privacy: "Datenschutz",
+            footer_terms: "Nutzungsbedingungen",
+            howto_title: "Bedienung",
+            howto_intro: "Jede Zeile ist in eine linke und eine rechte H\u00e4lfte geteilt. Jede H\u00e4lfte reagiert auf unterschiedliche Gesten.",
+            howto_zone_left: "Linke Seite",
+            howto_zone_right: "Rechte Seite",
+            howto_zone_any: "\u00dcberall",
+            howto_zone_drag: "\u2630-Symbol",
+            howto_g1_title: "Nach links wischen \u2014 L\u00f6schen",
+            howto_g1_desc: "Wischen Sie einen Eintrag auf der linken Seite nach links, um ihn zu l\u00f6schen.",
+            howto_g2_title: "Nach rechts wischen \u2014 Bearbeiten",
+            howto_g2_desc: "Wischen Sie einen Eintrag auf der linken Seite nach rechts, um den Namen zu bearbeiten.",
+            howto_g3_title: "Nach rechts wischen \u2014 +1 Menge",
+            howto_g3_desc: "Wischen Sie auf der rechten Seite nach rechts, um die Menge um 1 zu erh\u00f6hen.",
+            howto_g4_title: "Nach links wischen \u2014 -1 Menge",
+            howto_g4_desc: "Wischen Sie auf der rechten Seite nach links, um die Menge zu verringern. Bei Menge 1 wird der Eintrag gel\u00f6scht.",
+            howto_g5_title: "Antippen \u2014 Gekauft / Nicht gekauft",
+            howto_g5_desc: "Tippen Sie auf einen Eintrag, um ihn als gekauft oder nicht gekauft zu markieren.",
+            howto_g6_title: "Lange dr\u00fccken \u2014 Name bearbeiten",
+            howto_g6_desc: "Halten Sie einen Eintrag 500ms lang gedr\u00fcckt, um den Namen schnell zu bearbeiten.",
+            howto_g7_title: "Halten und ziehen \u2014 Neu ordnen",
+            howto_g7_desc: "Halten Sie das \u2630-Symbol und ziehen Sie nach oben oder unten, um die Reihenfolge zu \u00e4ndern.",
+            whatsnew_title: "Neuigkeiten",
+            whatsnew_subtitle: "Die aktuelle Version enth\u00e4lt diese Funktionen:",
+            wn_f1: "Mehrere Einkaufslisten",
+            wn_f2: "Listen in Echtzeit mit Familie und Freunden teilen",
+            wn_f3: "Aktiver Einkaufsmodus",
+            wn_f4: "Einkaufsverlauf & Statistiken",
+            wn_f5: "Gestensteuerung (Wischen, Tippen, Ziehen)",
+            wn_f6: "12 Sprachen",
+            wn_f7: "Dunkel- / Hellmodus",
+            wn_f8: "Eigene Farben und Akzente einstellen",
+            wn_f9: "Sicherung und Export von Listen",
+            wn_f10: "Import aus der Zwischenablage (Apple Notes, Google Sheets...)",
+            privacy_html: '<h3>Datenschutzrichtlinie \u2014 1GoShop</h3><p>Die App 1GoShop respektiert Ihre Privatsph\u00e4re. Diese Seite beschreibt, welche Daten die App verarbeitet und wie sie damit umgeht.</p><h3>Lokal gespeicherte Daten</h3><p>Alle Einkaufslistendaten werden prim\u00e4r lokal auf Ihrem Ger\u00e4t gespeichert. Die App erfordert keine Registrierung oder Anmeldung.</p><h3>Datenfreigabe \u00fcber Firebase</h3><p>Wenn Sie die Listenfreigabefunktion nutzen, werden Daten an die Firebase Realtime Database (Google-Server) \u00fcbertragen. Die Freigabe verwendet anonyme Authentifizierung \u2014 es werden keine pers\u00f6nlichen Daten erhoben.</p><p>Geteilte Daten umfassen:</p><ul><li>Einkaufslisteneintr\u00e4ge und Mengen</li><li>Einkaufssitzungsverlauf</li></ul><p>Sie k\u00f6nnen die Freigabe jederzeit beenden, wodurch Ihre Daten aus dem geteilten Speicher entfernt werden.</p><h3>Analytik und Tracking</h3><p>Die App verwendet keine Analytik, kein Benutzer-Tracking und keine Werbung.</p><h3>Datenexport</h3><p>Sie k\u00f6nnen Ihre Daten jederzeit f\u00fcr eine pers\u00f6nliche Sicherung exportieren.</p><h3>Kontakt</h3><p>Bei Fragen zum Datenschutz kontaktieren Sie uns: <a href="mailto:matray@realise.sk">matray@realise.sk</a></p><p class="privacy-updated">Letzte Aktualisierung: 27. Februar 2026</p>'
+        },
+        hu: {
+            nav_features: "Funkci\u00f3k",
+            nav_howto: "Haszn\u00e1lat",
+            nav_whatsnew: "\u00dajdons\u00e1gok",
+            nav_download: "Let\u00f6lt\u00e9s",
+            nav_privacy: "Adatv\u00e9delem",
+            nav_contact: "Kapcsolat",
+            hero_subtitle: "Egyszer\u0171 \u00e9s gyors bev\u00e1s\u00e1rl\u00f3lista",
+            hero_description: "Kezelje bev\u00e1s\u00e1rl\u00f3list\u00e1it egyszer\u0171en. Ossza meg csal\u00e1dj\u00e1val, k\u00f6vesse nyomon a v\u00e1s\u00e1rl\u00e1si el\u0151zm\u00e9nyeket \u00e9s v\u00e1s\u00e1roljon hat\u00e9konyan.",
+            features_title: "Funkci\u00f3k",
+            f1_title: "T\u00f6bb lista",
+            f1_desc: "Hozzon l\u00e9tre list\u00e1kat k\u00fcl\u00f6nb\u00f6z\u0151 boltokhoz \u2014 Lidl, Tesco, Billa \u00e9s m\u00e9g t\u00f6bb.",
+            f2_title: "Val\u00f3s idej\u0171 megoszt\u00e1s",
+            f2_desc: "Ossza meg a list\u00e1kat csal\u00e1dj\u00e1val vagy bar\u00e1taival. A v\u00e1ltoztat\u00e1sok azonnal szinkroniz\u00e1l\u00f3dnak.",
+            f3_title: "Akt\u00edv v\u00e1s\u00e1rl\u00e1s",
+            f3_desc: "V\u00e1s\u00e1rl\u00e1si m\u00f3d el\u0151zm\u00e9nyekkel \u2014 k\u00f6vesse nyomon, mit \u00e9s mikor v\u00e1s\u00e1rolt.",
+            f4_title: "12 nyelv",
+            f4_desc: "El\u00e9rhet\u0151 szlov\u00e1kul, angolul, n\u00e9met\u00fcl, magyarul \u00e9s tov\u00e1bbi 8 nyelven.",
+            f5_title: "S\u00f6t\u00e9t m\u00f3d",
+            f5_desc: "Testreszabott megjelen\u00e9s teljes s\u00f6t\u00e9t m\u00f3d t\u00e1mogat\u00e1ssal \u00e9s egyedi sz\u00ednekkel.",
+            f6_title: "Ment\u00e9s \u00e9s export",
+            f6_desc: "Export\u00e1lja \u00e9s import\u00e1lja a list\u00e1kat. Az adatai mindig biztons\u00e1gban vannak.",
+            download_title: "Let\u00f6lt\u00e9s",
+            download_subtitle: "El\u00e9rhet\u0151 iOS-re \u00e9s Androidra",
+            download_get: "Let\u00f6lt\u00e9s az",
+            download_get2: "Let\u00f6lt\u00e9s a",
+            privacy_title: "Adatv\u00e9delem",
+            contact_title: "Kapcsolat",
+            contact_text: "Ha k\u00e9rd\u00e9se van vagy seg\u00edts\u00e9gre van sz\u00fcks\u00e9ge, l\u00e9pjen kapcsolatba vel\u00fcnk:",
+            footer: "\u00a9 2026 Robert Matray \u2014 Realise s.r.o.",
+            footer_privacy: "Adatv\u00e9delem",
+            footer_terms: "Felhaszn\u00e1l\u00e1si felt\u00e9telek",
+            howto_title: "Hogyan haszn\u00e1lja",
+            howto_intro: "Minden elem sor bal \u00e9s jobb f\u00e9lre van osztva. Minden f\u00e9l m\u00e1s k\u00e9zmozdulatokra reag\u00e1l.",
+            howto_zone_left: "Bal oldal",
+            howto_zone_right: "Jobb oldal",
+            howto_zone_any: "B\u00e1rhol",
+            howto_zone_drag: "\u2630 ikon",
+            howto_g1_title: "Balra h\u00faz\u00e1s \u2014 T\u00f6rl\u00e9s",
+            howto_g1_desc: "H\u00fazza balra az elemet a bal oldalon a t\u00f6rl\u00e9s\u00e9hez.",
+            howto_g2_title: "Jobbra h\u00faz\u00e1s \u2014 Szerkeszt\u00e9s",
+            howto_g2_desc: "H\u00fazza jobbra az elemet a bal oldalon a n\u00e9v szerkeszt\u00e9s\u00e9hez.",
+            howto_g3_title: "Jobbra h\u00faz\u00e1s \u2014 +1 mennyis\u00e9g",
+            howto_g3_desc: "H\u00fazza jobbra a jobb oldalon a mennyis\u00e9g 1-gyel t\u00f6rt\u00e9n\u0151 n\u00f6vel\u00e9s\u00e9hez.",
+            howto_g4_title: "Balra h\u00faz\u00e1s \u2014 -1 mennyis\u00e9g",
+            howto_g4_desc: "H\u00fazza balra a jobb oldalon a mennyis\u00e9g cs\u00f6kkent\u00e9s\u00e9hez. Ha a mennyis\u00e9g 1, az elem t\u00f6rl\u0151dik.",
+            howto_g5_title: "Koppint\u00e1s \u2014 Megv\u00e1s\u00e1rolva / Nem v\u00e1s\u00e1rolva",
+            howto_g5_desc: "Koppintson az elemre a megv\u00e1s\u00e1roltak\u00e9nt vagy nem v\u00e1s\u00e1roltk\u00e9nt val\u00f3 megjel\u00f6l\u00e9shez.",
+            howto_g6_title: "Hossz\u00fa nyom\u00e1s \u2014 N\u00e9v szerkeszt\u00e9se",
+            howto_g6_desc: "Tartsa nyomva az elemet 500ms-ig a n\u00e9v gyors szerkeszt\u00e9s\u00e9hez.",
+            howto_g7_title: "Tartsa \u00e9s h\u00fazza \u2014 \u00c1trendez\u00e9s",
+            howto_g7_desc: "Tartsa nyomva a \u2630 ikont \u00e9s h\u00fazza fel vagy le az elemek \u00e1trendez\u00e9s\u00e9hez.",
+            whatsnew_title: "\u00dajdons\u00e1gok",
+            whatsnew_subtitle: "A jelenlegi verzi\u00f3 ezeket a funkci\u00f3kat tartalmazza:",
+            wn_f1: "T\u00f6bb bev\u00e1s\u00e1rl\u00f3lista",
+            wn_f2: "List\u00e1k megoszt\u00e1sa csal\u00e1ddal \u00e9s bar\u00e1tokkal val\u00f3s id\u0151ben",
+            wn_f3: "Akt\u00edv v\u00e1s\u00e1rl\u00e1si m\u00f3d",
+            wn_f4: "V\u00e1s\u00e1rl\u00e1si el\u0151zm\u00e9nyek \u00e9s statisztik\u00e1k",
+            wn_f5: "K\u00e9zmozdulat-vez\u00e9rl\u00e9s (h\u00faz\u00e1s, koppint\u00e1s, vonszol\u00e1s)",
+            wn_f6: "12 nyelv",
+            wn_f7: "S\u00f6t\u00e9t / vil\u00e1gos m\u00f3d",
+            wn_f8: "Egy\u00e9ni sz\u00ednek \u00e9s akcentusok be\u00e1ll\u00edt\u00e1sa",
+            wn_f9: "List\u00e1k biztons\u00e1gi ment\u00e9se \u00e9s export\u00e1l\u00e1sa",
+            wn_f10: "Import v\u00e1g\u00f3lapr\u00f3l (Apple Notes, Google Sheets...)",
+            privacy_html: '<h3>Adatv\u00e9delmi szab\u00e1lyzat \u2014 1GoShop</h3><p>Az 1GoShop alkalmaz\u00e1s tiszteletben tartja az \u00d6n mag\u00e1n\u00e9let\u00e9t. Ez az oldal le\u00edrja, milyen adatokat kezel az alkalmaz\u00e1s \u00e9s hogyan b\u00e1nik vel\u00fck.</p><h3>Helyben t\u00e1rolt adatok</h3><p>Minden bev\u00e1s\u00e1rl\u00f3lista-adat els\u0151sorban helyben, az \u00d6n eszk\u00f6z\u00e9n ker\u00fcl t\u00e1rol\u00e1sra. Az alkalmaz\u00e1s nem ig\u00e9nyel regisztr\u00e1ci\u00f3t vagy bejelentkez\u00e9st.</p><h3>Adatmegoszt\u00e1s Firebase-en kereszt\u00fcl</h3><p>Ha haszn\u00e1lja a listamegoszt\u00e1si funkci\u00f3t, az adatok a Firebase Realtime Database-be (Google szerverek) ker\u00fclnek \u00e1tvitelre. A megoszt\u00e1s anonim hiteles\u00edt\u00e9st haszn\u00e1l \u2014 szem\u00e9lyes adatokat nem gy\u0171jt\u00fcnk.</p><p>A megosztott adatok tartalmazzák:</p><ul><li>Bev\u00e1s\u00e1rl\u00f3lista t\u00e9telek \u00e9s mennyis\u00e9gek</li><li>V\u00e1s\u00e1rl\u00e1si munkamenet el\u0151zm\u00e9nyek</li></ul><p>A megoszt\u00e1st b\u00e1rmikor le\u00e1ll\u00edthatja, ami elt\u00e1vol\u00edtja adatait a megosztott t\u00e1rol\u00f3b\u00f3l.</p><h3>Analitika \u00e9s k\u00f6vet\u00e9s</h3><p>Az alkalmaz\u00e1s nem haszn\u00e1l semmilyen analitik\u00e1t, felhaszn\u00e1l\u00f3k\u00f6vet\u00e9st vagy hirdet\u00e9seket.</p><h3>Adatexport</h3><p>Adatait b\u00e1rmikor export\u00e1lhatja szem\u00e9lyes biztons\u00e1gi ment\u00e9s c\u00e9lj\u00e1b\u00f3l.</p><h3>Kapcsolat</h3><p>Adatv\u00e9delmi k\u00e9rd\u00e9sek eset\u00e9n l\u00e9pjen kapcsolatba vel\u00fcnk: <a href="mailto:matray@realise.sk">matray@realise.sk</a></p><p class="privacy-updated">Utols\u00f3 friss\u00edt\u00e9s: 2026. febru\u00e1r 27.</p>'
+        },
+        cs: {
+            nav_features: "Funkce",
+            nav_howto: "N\u00e1vod",
+            nav_whatsnew: "Novinky",
+            nav_download: "St\u00e1hnout",
+            nav_privacy: "Soukrom\u00ed",
+            nav_contact: "Kontakt",
+            hero_subtitle: "Jednoduch\u00fd a rychl\u00fd n\u00e1kupn\u00ed seznam",
+            hero_description: "Spravujte sv\u00e9 n\u00e1kupn\u00ed seznamy snadno. Sd\u00edlejte s rodinou, sledujte historii n\u00e1kup\u016f a nakupujte efektivn\u011b.",
+            features_title: "Funkce",
+            f1_title: "V\u00edce seznam\u016f",
+            f1_desc: "Vytvo\u0159te si seznamy pro r\u016fzn\u00e9 obchody \u2014 Lidl, Tesco, Billa a dal\u0161\u00ed.",
+            f2_title: "Sd\u00edlen\u00ed v re\u00e1ln\u00e9m \u010dase",
+            f2_desc: "Sd\u00edlejte seznamy s rodinou nebo p\u0159\u00e1teli. Zm\u011bny se synchronizuj\u00ed okam\u017eit\u011b.",
+            f3_title: "Aktivn\u00ed n\u00e1kup",
+            f3_desc: "Re\u017eim nakupov\u00e1n\u00ed s histori\u00ed \u2014 sledujte, co jste koupili a kdy.",
+            f4_title: "12 jazyk\u016f",
+            f4_desc: "Dostupn\u00e9 ve sloven\u0161tin\u011b, angli\u010dtin\u011b, n\u011bm\u010din\u011b, ma\u010far\u0161tin\u011b a dal\u0161\u00edch 8 jazyc\u00edch.",
+            f5_title: "Tmav\u00fd re\u017eim",
+            f5_desc: "P\u0159izp\u016fsobte si vzhled s plnou podporou tmav\u00e9ho re\u017eimu a vlastn\u00edch barev.",
+            f6_title: "Z\u00e1loha a export",
+            f6_desc: "Exportujte a importujte seznamy. Va\u0161e data jsou v\u017edy v bezpe\u010d\u00ed.",
+            download_title: "St\u00e1hnout",
+            download_subtitle: "Dostupn\u00e9 pro iOS a Android",
+            download_get: "St\u00e1hnout z",
+            download_get2: "St\u00e1hnout z",
+            privacy_title: "Ochrana soukrom\u00ed",
+            contact_title: "Kontakt",
+            contact_text: "M\u00e1te-li dotazy nebo pot\u0159ebujete pomoc, kontaktujte n\u00e1s:",
+            footer: "\u00a9 2026 Robert Matray \u2014 Realise s.r.o.",
+            footer_privacy: "Ochrana soukrom\u00ed",
+            footer_terms: "Podm\u00ednky pou\u017e\u00edv\u00e1n\u00ed",
+            howto_title: "Jak pou\u017e\u00edvat",
+            howto_intro: "Ka\u017ed\u00e1 polo\u017eka je rozd\u011blena na levou a pravou polovinu. Ka\u017ed\u00e1 polovina reaguje na jin\u00e9 gesto.",
+            howto_zone_left: "Lev\u00e1 strana",
+            howto_zone_right: "Prav\u00e1 strana",
+            howto_zone_any: "Kdekoli",
+            howto_zone_drag: "Ikona \u2630",
+            howto_g1_title: "Swipe doleva \u2014 Smazat",
+            howto_g1_desc: "Pot\u00e1hn\u011bte polo\u017eku doleva na lev\u00e9 stran\u011b pro jej smaz\u00e1n\u00ed.",
+            howto_g2_title: "Swipe doprava \u2014 Upravit",
+            howto_g2_desc: "Pot\u00e1hn\u011bte polo\u017eku doprava na lev\u00e9 stran\u011b pro \u00fapravu n\u00e1zvu.",
+            howto_g3_title: "Swipe doprava \u2014 +1 mno\u017estv\u00ed",
+            howto_g3_desc: "Pot\u00e1hn\u011bte doprava na prav\u00e9 stran\u011b pro zv\u00fd\u0161en\u00ed mno\u017estv\u00ed o 1.",
+            howto_g4_title: "Swipe doleva \u2014 -1 mno\u017estv\u00ed",
+            howto_g4_desc: "Pot\u00e1hn\u011bte doleva na prav\u00e9 stran\u011b pro sn\u00ed\u017een\u00ed mno\u017estv\u00ed. P\u0159i mno\u017estv\u00ed 1 se polo\u017eka sma\u017ee.",
+            howto_g5_title: "Klepnut\u00ed \u2014 Koupeno / Nekoupeno",
+            howto_g5_desc: "Klepn\u011bte na polo\u017eku pro ozna\u010den\u00ed jako koupen\u00e1 nebo nekoupen\u00e1.",
+            howto_g6_title: "Dlouh\u00e9 podr\u017een\u00ed \u2014 Upravit n\u00e1zev",
+            howto_g6_desc: "Podr\u017ete polo\u017eku 500ms pro rychlou \u00fapravu n\u00e1zvu.",
+            howto_g7_title: "Podr\u017ete a t\u00e1hn\u011bte \u2014 Zm\u011bna po\u0159ad\u00ed",
+            howto_g7_desc: "Podr\u017ete ikonu \u2630 a t\u00e1hn\u011bte nahoru nebo dol\u016f pro zm\u011bnu po\u0159ad\u00ed polo\u017eek.",
+            whatsnew_title: "Novinky",
+            whatsnew_subtitle: "Aktu\u00e1ln\u00ed verze obsahuje tyto funkce:",
+            wn_f1: "V\u00edce n\u00e1kupn\u00edch seznam\u016f",
+            wn_f2: "Sd\u00edlen\u00ed seznam\u016f s rodinou a p\u0159\u00e1teli v re\u00e1ln\u00e9m \u010dase",
+            wn_f3: "Aktivn\u00ed re\u017eim nakupov\u00e1n\u00ed",
+            wn_f4: "Historie n\u00e1kup\u016f a statistiky",
+            wn_f5: "Ovl\u00e1d\u00e1n\u00ed gesty (swipe, tap, drag)",
+            wn_f6: "12 jazyk\u016f",
+            wn_f7: "Tmav\u00fd / sv\u011btl\u00fd re\u017eim",
+            wn_f8: "Nastaven\u00ed vlastn\u00edch barev a akcentu",
+            wn_f9: "Z\u00e1loha a export seznam\u016f",
+            wn_f10: "Import ze schr\u00e1nky (Apple Notes, Google Sheets...)",
+            privacy_html: '<h3>Ochrana soukrom\u00ed \u2014 1GoShop</h3><p>Aplikace 1GoShop respektuje va\u0161e soukrom\u00ed. Tato str\u00e1nka popisuje, jak\u00e9 \u00fadaje aplikace zpracov\u00e1v\u00e1 a jak s nimi nakl\u00e1d\u00e1.</p><h3>Lok\u00e1ln\u011b ulo\u017een\u00e1 data</h3><p>V\u0161echna data o n\u00e1kupn\u00edch seznamech jsou prim\u00e1rn\u011b ulo\u017eena lok\u00e1ln\u011b na va\u0161em za\u0159\u00edzen\u00ed. Aplikace nevy\u017eaduje registraci ani p\u0159ihl\u00e1\u0161en\u00ed.</p><h3>Sd\u00edlen\u00ed dat p\u0159es Firebase</h3><p>Pokud pou\u017eijete funkci sd\u00edlen\u00ed seznam\u016f, data se p\u0159en\u00e1\u0161ej\u00ed do Firebase Realtime Database (servery spole\u010dnosti Google). P\u0159i sd\u00edlen\u00ed se pou\u017e\u00edv\u00e1 anonymn\u00ed autentizace \u2014 neshroma\u017e\u010fuj\u00ed se \u017e\u00e1dn\u00e9 osobn\u00ed \u00fadaje.</p><p>Sd\u00edlen\u00e1 data zahrnuj\u00ed:</p><ul><li>Polo\u017eky n\u00e1kupn\u00edho seznamu a mno\u017estv\u00ed</li><li>Historie n\u00e1kupn\u00edch relac\u00ed</li></ul><p>Sd\u00edlen\u00ed m\u016f\u017eete kdykoli zastavit, \u010d\u00edm\u017e se va\u0161e data odstran\u00ed ze sd\u00edlen\u00e9ho \u00falo\u017ei\u0161t\u011b.</p><h3>Analytika a sledov\u00e1n\u00ed</h3><p>Aplikace nepou\u017e\u00edv\u00e1 \u017e\u00e1dnou analytiku, sledov\u00e1n\u00ed u\u017eivatel\u016f ani reklamy.</p><h3>Export dat</h3><p>Data m\u016f\u017eete kdykoli exportovat pro osobn\u00ed z\u00e1lohu.</p><h3>Kontakt</h3><p>V p\u0159\u00edpad\u011b dotaz\u016f ohledn\u011b ochrany soukrom\u00ed n\u00e1s kontaktujte: <a href="mailto:matray@realise.sk">matray@realise.sk</a></p><p class="privacy-updated">Posledn\u00ed aktualizace: 27. \u00fanora 2026</p>'
+        },
+        uk: {
+            nav_features: "\u0424\u0443\u043d\u043a\u0446\u0456\u0457",
+            nav_howto: "\u0406\u043d\u0441\u0442\u0440\u0443\u043a\u0446\u0456\u044f",
+            nav_whatsnew: "\u041d\u043e\u0432\u0438\u043d\u043a\u0438",
+            nav_download: "\u0417\u0430\u0432\u0430\u043d\u0442\u0430\u0436\u0438\u0442\u0438",
+            nav_privacy: "\u041a\u043e\u043d\u0444\u0456\u0434\u0435\u043d\u0446\u0456\u0439\u043d\u0456\u0441\u0442\u044c",
+            nav_contact: "\u041a\u043e\u043d\u0442\u0430\u043a\u0442\u0438",
+            hero_subtitle: "\u041f\u0440\u043e\u0441\u0442\u0438\u0439 \u0456 \u0448\u0432\u0438\u0434\u043a\u0438\u0439 \u0441\u043f\u0438\u0441\u043e\u043a \u043f\u043e\u043a\u0443\u043f\u043e\u043a",
+            hero_description: "\u041a\u0435\u0440\u0443\u0439\u0442\u0435 \u0441\u043f\u0438\u0441\u043a\u0430\u043c\u0438 \u043f\u043e\u043a\u0443\u043f\u043e\u043a \u043b\u0435\u0433\u043a\u043e. \u0414\u0456\u043b\u0456\u0442\u044c\u0441\u044f \u0437 \u0440\u043e\u0434\u0438\u043d\u043e\u044e, \u0432\u0456\u0434\u0441\u0442\u0435\u0436\u0443\u0439\u0442\u0435 \u0456\u0441\u0442\u043e\u0440\u0456\u044e \u043f\u043e\u043a\u0443\u043f\u043e\u043a \u0442\u0430 \u043a\u0443\u043f\u0443\u0439\u0442\u0435 \u0435\u0444\u0435\u043a\u0442\u0438\u0432\u043d\u043e.",
+            features_title: "\u0424\u0443\u043d\u043a\u0446\u0456\u0457",
+            f1_title: "\u041a\u0456\u043b\u044c\u043a\u0430 \u0441\u043f\u0438\u0441\u043a\u0456\u0432",
+            f1_desc: "\u0421\u0442\u0432\u043e\u0440\u044e\u0439\u0442\u0435 \u0441\u043f\u0438\u0441\u043a\u0438 \u0434\u043b\u044f \u0440\u0456\u0437\u043d\u0438\u0445 \u043c\u0430\u0433\u0430\u0437\u0438\u043d\u0456\u0432 \u2014 Lidl, Tesco, Billa \u0442\u0430 \u0456\u043d\u0448\u0456.",
+            f2_title: "\u041e\u0431\u043c\u0456\u043d \u0443 \u0440\u0435\u0430\u043b\u044c\u043d\u043e\u043c\u0443 \u0447\u0430\u0441\u0456",
+            f2_desc: "\u0414\u0456\u043b\u0456\u0442\u044c\u0441\u044f \u0441\u043f\u0438\u0441\u043a\u0430\u043c\u0438 \u0437 \u0440\u043e\u0434\u0438\u043d\u043e\u044e \u0430\u0431\u043e \u0434\u0440\u0443\u0437\u044f\u043c\u0438. \u0417\u043c\u0456\u043d\u0438 \u0441\u0438\u043d\u0445\u0440\u043e\u043d\u0456\u0437\u0443\u044e\u0442\u044c\u0441\u044f \u043c\u0438\u0442\u0442\u0454\u0432\u043e.",
+            f3_title: "\u0410\u043a\u0442\u0438\u0432\u043d\u0456 \u043f\u043e\u043a\u0443\u043f\u043a\u0438",
+            f3_desc: "\u0420\u0435\u0436\u0438\u043c \u043f\u043e\u043a\u0443\u043f\u043e\u043a \u0437 \u0456\u0441\u0442\u043e\u0440\u0456\u0454\u044e \u2014 \u0432\u0456\u0434\u0441\u0442\u0435\u0436\u0443\u0439\u0442\u0435, \u0449\u043e \u0456 \u043a\u043e\u043b\u0438 \u0432\u0438 \u043a\u0443\u043f\u0438\u043b\u0438.",
+            f4_title: "12 \u043c\u043e\u0432",
+            f4_desc: "\u0414\u043e\u0441\u0442\u0443\u043f\u043d\u0430 \u0441\u043b\u043e\u0432\u0430\u0446\u044c\u043a\u043e\u044e, \u0430\u043d\u0433\u043b\u0456\u0439\u0441\u044c\u043a\u043e\u044e, \u043d\u0456\u043c\u0435\u0446\u044c\u043a\u043e\u044e, \u0443\u0433\u043e\u0440\u0441\u044c\u043a\u043e\u044e \u0442\u0430 \u0449\u0435 8 \u043c\u043e\u0432\u0430\u043c\u0438.",
+            f5_title: "\u0422\u0435\u043c\u043d\u0438\u0439 \u0440\u0435\u0436\u0438\u043c",
+            f5_desc: "\u041d\u0430\u043b\u0430\u0448\u0442\u0443\u0439\u0442\u0435 \u0432\u0438\u0433\u043b\u044f\u0434 \u0437 \u043f\u043e\u0432\u043d\u043e\u044e \u043f\u0456\u0434\u0442\u0440\u0438\u043c\u043a\u043e\u044e \u0442\u0435\u043c\u043d\u043e\u0433\u043e \u0440\u0435\u0436\u0438\u043c\u0443 \u0442\u0430 \u0432\u043b\u0430\u0441\u043d\u0438\u0445 \u043a\u043e\u043b\u044c\u043e\u0440\u0456\u0432.",
+            f6_title: "\u0420\u0435\u0437\u0435\u0440\u0432\u043d\u0435 \u043a\u043e\u043f\u0456\u044e\u0432\u0430\u043d\u043d\u044f \u0442\u0430 \u0435\u043a\u0441\u043f\u043e\u0440\u0442",
+            f6_desc: "\u0415\u043a\u0441\u043f\u043e\u0440\u0442\u0443\u0439\u0442\u0435 \u0442\u0430 \u0456\u043c\u043f\u043e\u0440\u0442\u0443\u0439\u0442\u0435 \u0441\u043f\u0438\u0441\u043a\u0438. \u0412\u0430\u0448\u0456 \u0434\u0430\u043d\u0456 \u0437\u0430\u0432\u0436\u0434\u0438 \u0432 \u0431\u0435\u0437\u043f\u0435\u0446\u0456.",
+            download_title: "\u0417\u0430\u0432\u0430\u043d\u0442\u0430\u0436\u0438\u0442\u0438",
+            download_subtitle: "\u0414\u043e\u0441\u0442\u0443\u043f\u043d\u043e \u0434\u043b\u044f iOS \u0442\u0430 Android",
+            download_get: "\u0417\u0430\u0432\u0430\u043d\u0442\u0430\u0436\u0438\u0442\u0438 \u0437",
+            download_get2: "\u0417\u0430\u0432\u0430\u043d\u0442\u0430\u0436\u0438\u0442\u0438 \u0437",
+            privacy_title: "\u041a\u043e\u043d\u0444\u0456\u0434\u0435\u043d\u0446\u0456\u0439\u043d\u0456\u0441\u0442\u044c",
+            contact_title: "\u041a\u043e\u043d\u0442\u0430\u043a\u0442\u0438",
+            contact_text: "\u042f\u043a\u0449\u043e \u0443 \u0432\u0430\u0441 \u0454 \u043f\u0438\u0442\u0430\u043d\u043d\u044f \u0430\u0431\u043e \u043f\u043e\u0442\u0440\u0456\u0431\u043d\u0430 \u0434\u043e\u043f\u043e\u043c\u043e\u0433\u0430, \u0437\u0432'\u044f\u0436\u0456\u0442\u044c\u0441\u044f \u0437 \u043d\u0430\u043c\u0438:",
+            footer: "\u00a9 2026 Robert Matray \u2014 Realise s.r.o.",
+            footer_privacy: "\u041a\u043e\u043d\u0444\u0456\u0434\u0435\u043d\u0446\u0456\u0439\u043d\u0456\u0441\u0442\u044c",
+            footer_terms: "\u0423\u043c\u043e\u0432\u0438 \u0432\u0438\u043a\u043e\u0440\u0438\u0441\u0442\u0430\u043d\u043d\u044f",
+            howto_title: "\u042f\u043a \u043a\u043e\u0440\u0438\u0441\u0442\u0443\u0432\u0430\u0442\u0438\u0441\u044f",
+            howto_intro: "\u041a\u043e\u0436\u0435\u043d \u0440\u044f\u0434\u043e\u043a \u0435\u043b\u0435\u043c\u0435\u043d\u0442\u0430 \u043f\u043e\u0434\u0456\u043b\u0435\u043d\u043e \u043d\u0430 \u043b\u0456\u0432\u0443 \u0442\u0430 \u043f\u0440\u0430\u0432\u0443 \u043f\u043e\u043b\u043e\u0432\u0438\u043d\u0438. \u041a\u043e\u0436\u043d\u0430 \u043f\u043e\u043b\u043e\u0432\u0438\u043d\u0430 \u0440\u0435\u0430\u0433\u0443\u0454 \u043d\u0430 \u0440\u0456\u0437\u043d\u0456 \u0436\u0435\u0441\u0442\u0438.",
+            howto_zone_left: "\u041b\u0456\u0432\u0430 \u0441\u0442\u043e\u0440\u043e\u043d\u0430",
+            howto_zone_right: "\u041f\u0440\u0430\u0432\u0430 \u0441\u0442\u043e\u0440\u043e\u043d\u0430",
+            howto_zone_any: "\u0411\u0443\u0434\u044c-\u0434\u0435",
+            howto_zone_drag: "\u0406\u043a\u043e\u043d\u043a\u0430 \u2630",
+            howto_g1_title: "\u0421\u0432\u0430\u0439\u043f \u043b\u0456\u0432\u043e\u0440\u0443\u0447 \u2014 \u0412\u0438\u0434\u0430\u043b\u0438\u0442\u0438",
+            howto_g1_desc: "\u041f\u0440\u043e\u0432\u0435\u0434\u0456\u0442\u044c \u043b\u0456\u0432\u043e\u0440\u0443\u0447 \u043f\u043e \u043b\u0456\u0432\u0456\u0439 \u0441\u0442\u043e\u0440\u043e\u043d\u0456 \u0434\u043b\u044f \u0432\u0438\u0434\u0430\u043b\u0435\u043d\u043d\u044f \u0435\u043b\u0435\u043c\u0435\u043d\u0442\u0430.",
+            howto_g2_title: "\u0421\u0432\u0430\u0439\u043f \u043f\u0440\u0430\u0432\u043e\u0440\u0443\u0447 \u2014 \u0420\u0435\u0434\u0430\u0433\u0443\u0432\u0430\u0442\u0438",
+            howto_g2_desc: "\u041f\u0440\u043e\u0432\u0435\u0434\u0456\u0442\u044c \u043f\u0440\u0430\u0432\u043e\u0440\u0443\u0447 \u043f\u043e \u043b\u0456\u0432\u0456\u0439 \u0441\u0442\u043e\u0440\u043e\u043d\u0456 \u0434\u043b\u044f \u0440\u0435\u0434\u0430\u0433\u0443\u0432\u0430\u043d\u043d\u044f \u043d\u0430\u0437\u0432\u0438.",
+            howto_g3_title: "\u0421\u0432\u0430\u0439\u043f \u043f\u0440\u0430\u0432\u043e\u0440\u0443\u0447 \u2014 +1 \u043a\u0456\u043b\u044c\u043a\u0456\u0441\u0442\u044c",
+            howto_g3_desc: "\u041f\u0440\u043e\u0432\u0435\u0434\u0456\u0442\u044c \u043f\u0440\u0430\u0432\u043e\u0440\u0443\u0447 \u043f\u043e \u043f\u0440\u0430\u0432\u0456\u0439 \u0441\u0442\u043e\u0440\u043e\u043d\u0456 \u0434\u043b\u044f \u0437\u0431\u0456\u043b\u044c\u0448\u0435\u043d\u043d\u044f \u043a\u0456\u043b\u044c\u043a\u043e\u0441\u0442\u0456 \u043d\u0430 1.",
+            howto_g4_title: "\u0421\u0432\u0430\u0439\u043f \u043b\u0456\u0432\u043e\u0440\u0443\u0447 \u2014 -1 \u043a\u0456\u043b\u044c\u043a\u0456\u0441\u0442\u044c",
+            howto_g4_desc: "\u041f\u0440\u043e\u0432\u0435\u0434\u0456\u0442\u044c \u043b\u0456\u0432\u043e\u0440\u0443\u0447 \u043f\u043e \u043f\u0440\u0430\u0432\u0456\u0439 \u0441\u0442\u043e\u0440\u043e\u043d\u0456 \u0434\u043b\u044f \u0437\u043c\u0435\u043d\u0448\u0435\u043d\u043d\u044f \u043a\u0456\u043b\u044c\u043a\u043e\u0441\u0442\u0456. \u042f\u043a\u0449\u043e \u043a\u0456\u043b\u044c\u043a\u0456\u0441\u0442\u044c 1, \u0435\u043b\u0435\u043c\u0435\u043d\u0442 \u0432\u0438\u0434\u0430\u043b\u044f\u0454\u0442\u044c\u0441\u044f.",
+            howto_g5_title: "\u0422\u043e\u0440\u043a\u0430\u043d\u043d\u044f \u2014 \u041a\u0443\u043f\u043b\u0435\u043d\u043e / \u041d\u0435 \u043a\u0443\u043f\u043b\u0435\u043d\u043e",
+            howto_g5_desc: "\u0422\u043e\u0440\u043a\u043d\u0456\u0442\u044c\u0441\u044f \u0435\u043b\u0435\u043c\u0435\u043d\u0442\u0430 \u0434\u043b\u044f \u043f\u043e\u0437\u043d\u0430\u0447\u0435\u043d\u043d\u044f \u044f\u043a \u043a\u0443\u043f\u043b\u0435\u043d\u0438\u0439 \u0430\u0431\u043e \u043d\u0435 \u043a\u0443\u043f\u043b\u0435\u043d\u0438\u0439.",
+            howto_g6_title: "\u0414\u043e\u0432\u0433\u0435 \u043d\u0430\u0442\u0438\u0441\u043a\u0430\u043d\u043d\u044f \u2014 \u0420\u0435\u0434\u0430\u0433\u0443\u0432\u0430\u0442\u0438 \u043d\u0430\u0437\u0432\u0443",
+            howto_g6_desc: "\u0423\u0442\u0440\u0438\u043c\u0443\u0439\u0442\u0435 \u0435\u043b\u0435\u043c\u0435\u043d\u0442 500\u043c\u0441 \u0434\u043b\u044f \u0448\u0432\u0438\u0434\u043a\u043e\u0433\u043e \u0440\u0435\u0434\u0430\u0433\u0443\u0432\u0430\u043d\u043d\u044f \u043d\u0430\u0437\u0432\u0438.",
+            howto_g7_title: "\u0423\u0442\u0440\u0438\u043c\u0443\u0439\u0442\u0435 \u0456 \u043f\u0435\u0440\u0435\u0442\u044f\u0433\u043d\u0456\u0442\u044c \u2014 \u0417\u043c\u0456\u043d\u0430 \u043f\u043e\u0440\u044f\u0434\u043a\u0443",
+            howto_g7_desc: "\u0423\u0442\u0440\u0438\u043c\u0443\u0439\u0442\u0435 \u0456\u043a\u043e\u043d\u043a\u0443 \u2630 \u0456 \u043f\u0435\u0440\u0435\u0442\u044f\u0433\u043d\u0456\u0442\u044c \u0432\u0433\u043e\u0440\u0443 \u0430\u0431\u043e \u0432\u043d\u0438\u0437 \u0434\u043b\u044f \u0437\u043c\u0456\u043d\u0438 \u043f\u043e\u0440\u044f\u0434\u043a\u0443 \u0435\u043b\u0435\u043c\u0435\u043d\u0442\u0456\u0432.",
+            whatsnew_title: "\u041d\u043e\u0432\u0438\u043d\u043a\u0438",
+            whatsnew_subtitle: "\u041f\u043e\u0442\u043e\u0447\u043d\u0430 \u0432\u0435\u0440\u0441\u0456\u044f \u043c\u0456\u0441\u0442\u0438\u0442\u044c \u0446\u0456 \u0444\u0443\u043d\u043a\u0446\u0456\u0457:",
+            wn_f1: "\u041a\u0456\u043b\u044c\u043a\u0430 \u0441\u043f\u0438\u0441\u043a\u0456\u0432 \u043f\u043e\u043a\u0443\u043f\u043e\u043a",
+            wn_f2: "\u0421\u043f\u0456\u043b\u044c\u043d\u0438\u0439 \u0434\u043e\u0441\u0442\u0443\u043f \u0434\u043e \u0441\u043f\u0438\u0441\u043a\u0456\u0432 \u0437 \u0440\u043e\u0434\u0438\u043d\u043e\u044e \u0442\u0430 \u0434\u0440\u0443\u0437\u044f\u043c\u0438 \u0432 \u0440\u0435\u0430\u043b\u044c\u043d\u043e\u043c\u0443 \u0447\u0430\u0441\u0456",
+            wn_f3: "\u0410\u043a\u0442\u0438\u0432\u043d\u0438\u0439 \u0440\u0435\u0436\u0438\u043c \u043f\u043e\u043a\u0443\u043f\u043e\u043a",
+            wn_f4: "\u0406\u0441\u0442\u043e\u0440\u0456\u044f \u043f\u043e\u043a\u0443\u043f\u043e\u043a \u0442\u0430 \u0441\u0442\u0430\u0442\u0438\u0441\u0442\u0438\u043a\u0430",
+            wn_f5: "\u041a\u0435\u0440\u0443\u0432\u0430\u043d\u043d\u044f \u0436\u0435\u0441\u0442\u0430\u043c\u0438 (swipe, tap, drag)",
+            wn_f6: "12 \u043c\u043e\u0432",
+            wn_f7: "\u0422\u0435\u043c\u043d\u0430 / \u0441\u0432\u0456\u0442\u043b\u0430 \u0442\u0435\u043c\u0430",
+            wn_f8: "\u041d\u0430\u043b\u0430\u0448\u0442\u0443\u0432\u0430\u043d\u043d\u044f \u0432\u043b\u0430\u0441\u043d\u0438\u0445 \u043a\u043e\u043b\u044c\u043e\u0440\u0456\u0432 \u0442\u0430 \u0430\u043a\u0446\u0435\u043d\u0442\u0456\u0432",
+            wn_f9: "\u0420\u0435\u0437\u0435\u0440\u0432\u043d\u0435 \u043a\u043e\u043f\u0456\u044e\u0432\u0430\u043d\u043d\u044f \u0442\u0430 \u0435\u043a\u0441\u043f\u043e\u0440\u0442 \u0441\u043f\u0438\u0441\u043a\u0456\u0432",
+            wn_f10: "\u0406\u043c\u043f\u043e\u0440\u0442 \u0437 \u0431\u0443\u0444\u0435\u0440\u0430 \u043e\u0431\u043c\u0456\u043d\u0443 (Apple Notes, Google Sheets...)",
+            privacy_html: '<h3>\u041f\u043e\u043b\u0456\u0442\u0438\u043a\u0430 \u043a\u043e\u043d\u0444\u0456\u0434\u0435\u043d\u0446\u0456\u0439\u043d\u043e\u0441\u0442\u0456 \u2014 1GoShop</h3><p>\u0414\u043e\u0434\u0430\u0442\u043e\u043a 1GoShop \u043f\u043e\u0432\u0430\u0436\u0430\u0454 \u0432\u0430\u0448\u0443 \u043a\u043e\u043d\u0444\u0456\u0434\u0435\u043d\u0446\u0456\u0439\u043d\u0456\u0441\u0442\u044c. \u0426\u044f \u0441\u0442\u043e\u0440\u0456\u043d\u043a\u0430 \u043e\u043f\u0438\u0441\u0443\u0454, \u044f\u043a\u0456 \u0434\u0430\u043d\u0456 \u043e\u0431\u0440\u043e\u0431\u043b\u044f\u0454 \u0434\u043e\u0434\u0430\u0442\u043e\u043a \u0456 \u044f\u043a \u0437 \u043d\u0438\u043c\u0438 \u043f\u043e\u0432\u043e\u0434\u0438\u0442\u044c\u0441\u044f.</p><h3>\u041b\u043e\u043a\u0430\u043b\u044c\u043d\u043e \u0437\u0431\u0435\u0440\u0435\u0436\u0435\u043d\u0456 \u0434\u0430\u043d\u0456</h3><p>\u0423\u0441\u0456 \u0434\u0430\u043d\u0456 \u0441\u043f\u0438\u0441\u043a\u0456\u0432 \u043f\u043e\u043a\u0443\u043f\u043e\u043a \u0437\u0431\u0435\u0440\u0456\u0433\u0430\u044e\u0442\u044c\u0441\u044f \u043f\u0435\u0440\u0435\u0432\u0430\u0436\u043d\u043e \u043b\u043e\u043a\u0430\u043b\u044c\u043d\u043e \u043d\u0430 \u0432\u0430\u0448\u043e\u043c\u0443 \u043f\u0440\u0438\u0441\u0442\u0440\u043e\u0457. \u0414\u043e\u0434\u0430\u0442\u043e\u043a \u043d\u0435 \u043f\u043e\u0442\u0440\u0435\u0431\u0443\u0454 \u0440\u0435\u0454\u0441\u0442\u0440\u0430\u0446\u0456\u0457 \u0430\u0431\u043e \u0432\u0445\u043e\u0434\u0443.</p><h3>\u041e\u0431\u043c\u0456\u043d \u0434\u0430\u043d\u0438\u043c\u0438 \u0447\u0435\u0440\u0435\u0437 Firebase</h3><p>\u042f\u043a\u0449\u043e \u0432\u0438 \u0432\u0438\u043a\u043e\u0440\u0438\u0441\u0442\u043e\u0432\u0443\u0454\u0442\u0435 \u0444\u0443\u043d\u043a\u0446\u0456\u044e \u043e\u0431\u043c\u0456\u043d\u0443 \u0441\u043f\u0438\u0441\u043a\u0430\u043c\u0438, \u0434\u0430\u043d\u0456 \u043f\u0435\u0440\u0435\u0434\u0430\u044e\u0442\u044c\u0441\u044f \u0434\u043e Firebase Realtime Database (\u0441\u0435\u0440\u0432\u0435\u0440\u0438 Google). \u041e\u0431\u043c\u0456\u043d \u0432\u0438\u043a\u043e\u0440\u0438\u0441\u0442\u043e\u0432\u0443\u0454 \u0430\u043d\u043e\u043d\u0456\u043c\u043d\u0443 \u0430\u0432\u0442\u0435\u043d\u0442\u0438\u0444\u0456\u043a\u0430\u0446\u0456\u044e \u2014 \u043e\u0441\u043e\u0431\u0438\u0441\u0442\u0456 \u0434\u0430\u043d\u0456 \u043d\u0435 \u0437\u0431\u0438\u0440\u0430\u044e\u0442\u044c\u0441\u044f.</p><p>\u0421\u043f\u0456\u043b\u044c\u043d\u0456 \u0434\u0430\u043d\u0456 \u0432\u043a\u043b\u044e\u0447\u0430\u044e\u0442\u044c:</p><ul><li>\u0415\u043b\u0435\u043c\u0435\u043d\u0442\u0438 \u0441\u043f\u0438\u0441\u043a\u0443 \u043f\u043e\u043a\u0443\u043f\u043e\u043a \u0442\u0430 \u043a\u0456\u043b\u044c\u043a\u043e\u0441\u0442\u0456</li><li>\u0406\u0441\u0442\u043e\u0440\u0456\u044f \u0441\u0435\u0441\u0456\u0439 \u043f\u043e\u043a\u0443\u043f\u043e\u043a</li></ul><p>\u0412\u0438 \u043c\u043e\u0436\u0435\u0442\u0435 \u0437\u0443\u043f\u0438\u043d\u0438\u0442\u0438 \u043e\u0431\u043c\u0456\u043d \u0443 \u0431\u0443\u0434\u044c-\u044f\u043a\u0438\u0439 \u0447\u0430\u0441, \u0449\u043e \u0432\u0438\u0434\u0430\u043b\u0438\u0442\u044c \u0432\u0430\u0448\u0456 \u0434\u0430\u043d\u0456 \u0437\u0456 \u0441\u043f\u0456\u043b\u044c\u043d\u043e\u0433\u043e \u0441\u0445\u043e\u0432\u0438\u0449\u0430.</p><h3>\u0410\u043d\u0430\u043b\u0456\u0442\u0438\u043a\u0430 \u0442\u0430 \u0432\u0456\u0434\u0441\u0442\u0435\u0436\u0435\u043d\u043d\u044f</h3><p>\u0414\u043e\u0434\u0430\u0442\u043e\u043a \u043d\u0435 \u0432\u0438\u043a\u043e\u0440\u0438\u0441\u0442\u043e\u0432\u0443\u0454 \u0430\u043d\u0430\u043b\u0456\u0442\u0438\u043a\u0443, \u0432\u0456\u0434\u0441\u0442\u0435\u0436\u0435\u043d\u043d\u044f \u043a\u043e\u0440\u0438\u0441\u0442\u0443\u0432\u0430\u0447\u0456\u0432 \u0430\u0431\u043e \u0440\u0435\u043a\u043b\u0430\u043c\u0443.</p><h3>\u0415\u043a\u0441\u043f\u043e\u0440\u0442 \u0434\u0430\u043d\u0438\u0445</h3><p>\u0412\u0438 \u043c\u043e\u0436\u0435\u0442\u0435 \u0435\u043a\u0441\u043f\u043e\u0440\u0442\u0443\u0432\u0430\u0442\u0438 \u0434\u0430\u043d\u0456 \u0443 \u0431\u0443\u0434\u044c-\u044f\u043a\u0438\u0439 \u0447\u0430\u0441 \u0434\u043b\u044f \u043e\u0441\u043e\u0431\u0438\u0441\u0442\u043e\u0433\u043e \u0440\u0435\u0437\u0435\u0440\u0432\u043d\u043e\u0433\u043e \u043a\u043e\u043f\u0456\u044e\u0432\u0430\u043d\u043d\u044f.</p><h3>\u041a\u043e\u043d\u0442\u0430\u043a\u0442\u0438</h3><p>\u0417 \u043f\u0438\u0442\u0430\u043d\u044c \u043a\u043e\u043d\u0444\u0456\u0434\u0435\u043d\u0446\u0456\u0439\u043d\u043e\u0441\u0442\u0456 \u0437\u0432\'\u044f\u0436\u0456\u0442\u044c\u0441\u044f \u0437 \u043d\u0430\u043c\u0438: <a href="mailto:matray@realise.sk">matray@realise.sk</a></p><p class="privacy-updated">\u041e\u0441\u0442\u0430\u043d\u043d\u0454 \u043e\u043d\u043e\u0432\u043b\u0435\u043d\u043d\u044f: 27 \u043b\u044e\u0442\u043e\u0433\u043e 2026</p>'
+        },
+        zh: {
+            nav_features: "\u529f\u80fd",
+            nav_howto: "\u4f7f\u7528\u6307\u5357",
+            nav_whatsnew: "\u65b0\u529f\u80fd",
+            nav_download: "\u4e0b\u8f7d",
+            nav_privacy: "\u9690\u79c1",
+            nav_contact: "\u8054\u7cfb",
+            hero_subtitle: "\u7b80\u5355\u5feb\u901f\u7684\u8d2d\u7269\u6e05\u5355",
+            hero_description: "\u8f7b\u677e\u7ba1\u7406\u60a8\u7684\u8d2d\u7269\u6e05\u5355\u3002\u4e0e\u5bb6\u4eba\u5206\u4eab\uff0c\u8ddf\u8e2a\u8d2d\u7269\u5386\u53f2\uff0c\u9ad8\u6548\u8d2d\u7269\u3002",
+            features_title: "\u529f\u80fd",
+            f1_title: "\u591a\u4e2a\u6e05\u5355",
+            f1_desc: "\u4e3a\u4e0d\u540c\u5546\u5e97\u521b\u5efa\u6e05\u5355 \u2014 Lidl\u3001Tesco\u3001Billa\u7b49\u3002",
+            f2_title: "\u5b9e\u65f6\u5171\u4eab",
+            f2_desc: "\u4e0e\u5bb6\u4eba\u6216\u670b\u53cb\u5171\u4eab\u6e05\u5355\u3002\u66f4\u6539\u5373\u65f6\u540c\u6b65\u3002",
+            f3_title: "\u6d3b\u8dc3\u8d2d\u7269",
+            f3_desc: "\u8d2d\u7269\u6a21\u5f0f\u5e26\u5386\u53f2\u8bb0\u5f55 \u2014 \u8ddf\u8e2a\u60a8\u8d2d\u4e70\u4e86\u4ec0\u4e48\u4ee5\u53ca\u4f55\u65f6\u8d2d\u4e70\u3002",
+            f4_title: "12\u79cd\u8bed\u8a00",
+            f4_desc: "\u652f\u6301\u65af\u6d1b\u4f10\u514b\u8bed\u3001\u82f1\u8bed\u3001\u5fb7\u8bed\u3001\u5308\u7259\u5229\u8bed\u53ca\u5176\u4ed6 8 \u79cd\u8bed\u8a00\u3002",
+            f5_title: "\u6df1\u8272\u6a21\u5f0f",
+            f5_desc: "\u81ea\u5b9a\u4e49\u5916\u89c2\uff0c\u5b8c\u5168\u652f\u6301\u6df1\u8272\u6a21\u5f0f\u548c\u81ea\u5b9a\u4e49\u989c\u8272\u3002",
+            f6_title: "\u5907\u4efd\u548c\u5bfc\u51fa",
+            f6_desc: "\u5bfc\u51fa\u548c\u5bfc\u5165\u6e05\u5355\u3002\u60a8\u7684\u6570\u636e\u59cb\u7ec8\u5b89\u5168\u3002",
+            download_title: "\u4e0b\u8f7d",
+            download_subtitle: "\u9002\u7528\u4e8eiOS\u548cAndroid",
+            download_get: "\u4e0b\u8f7d\u81ea",
+            download_get2: "\u4e0b\u8f7d\u81ea",
+            privacy_title: "\u9690\u79c1\u653f\u7b56",
+            contact_title: "\u8054\u7cfb\u6211\u4eec",
+            contact_text: "\u5982\u679c\u60a8\u6709\u95ee\u9898\u6216\u9700\u8981\u5e2e\u52a9\uff0c\u8bf7\u8054\u7cfb\u6211\u4eec\uff1a",
+            footer: "\u00a9 2026 Robert Matray \u2014 Realise s.r.o.",
+            footer_privacy: "\u9690\u79c1\u653f\u7b56",
+            footer_terms: "\u670d\u52a1\u6761\u6b3e",
+            howto_title: "\u5982\u4f55\u4f7f\u7528",
+            howto_intro: "\u6bcf\u4e2a\u9879\u76ee\u884c\u5206\u4e3a\u5de6\u534a\u90e8\u5206\u548c\u53f3\u534a\u90e8\u5206\u3002\u6bcf\u4e2a\u534a\u90e8\u5206\u54cd\u5e94\u4e0d\u540c\u7684\u624b\u52bf\u3002",
+            howto_zone_left: "\u5de6\u4fa7",
+            howto_zone_right: "\u53f3\u4fa7",
+            howto_zone_any: "\u4efb\u610f\u4f4d\u7f6e",
+            howto_zone_drag: "\u2630 \u56fe\u6807",
+            howto_g1_title: "\u5de6\u6ed1 \u2014 \u5220\u9664",
+            howto_g1_desc: "\u5728\u5de6\u4fa7\u5411\u5de6\u6ed1\u52a8\u4ee5\u5220\u9664\u8be5\u9879\u76ee\u3002",
+            howto_g2_title: "\u53f3\u6ed1 \u2014 \u7f16\u8f91",
+            howto_g2_desc: "\u5728\u5de6\u4fa7\u5411\u53f3\u6ed1\u52a8\u4ee5\u7f16\u8f91\u9879\u76ee\u540d\u79f0\u3002",
+            howto_g3_title: "\u53f3\u6ed1 \u2014 +1 \u6570\u91cf",
+            howto_g3_desc: "\u5728\u53f3\u4fa7\u5411\u53f3\u6ed1\u52a8\u4ee5\u589e\u52a01\u4e2a\u6570\u91cf\u3002",
+            howto_g4_title: "\u5de6\u6ed1 \u2014 -1 \u6570\u91cf",
+            howto_g4_desc: "\u5728\u53f3\u4fa7\u5411\u5de6\u6ed1\u52a8\u4ee5\u51cf\u5c11\u6570\u91cf\u3002\u5982\u679c\u6570\u91cf\u4e3a1\uff0c\u5219\u5220\u9664\u8be5\u9879\u76ee\u3002",
+            howto_g5_title: "\u70b9\u51fb \u2014 \u5df2\u4e70 / \u672a\u4e70",
+            howto_g5_desc: "\u70b9\u51fb\u9879\u76ee\u4ee5\u6807\u8bb0\u4e3a\u5df2\u8d2d\u4e70\u6216\u672a\u8d2d\u4e70\u3002",
+            howto_g6_title: "\u957f\u6309 \u2014 \u7f16\u8f91\u540d\u79f0",
+            howto_g6_desc: "\u957f\u6309\u9879\u76ee500\u6beb\u79d2\u4ee5\u5feb\u901f\u7f16\u8f91\u540d\u79f0\u3002",
+            howto_g7_title: "\u957f\u6309\u5e76\u62d6\u52a8 \u2014 \u91cd\u65b0\u6392\u5e8f",
+            howto_g7_desc: "\u957f\u6309\u2630\u56fe\u6807\u5e76\u4e0a\u4e0b\u62d6\u52a8\u4ee5\u91cd\u65b0\u6392\u5e8f\u9879\u76ee\u3002",
+            whatsnew_title: "\u65b0\u529f\u80fd",
+            whatsnew_subtitle: "\u5f53\u524d\u7248\u672c\u5305\u542b\u4ee5\u4e0b\u529f\u80fd\uff1a",
+            wn_f1: "\u591a\u4e2a\u8d2d\u7269\u6e05\u5355",
+            wn_f2: "\u4e0e\u5bb6\u4eba\u548c\u670b\u53cb\u5b9e\u65f6\u5171\u4eab\u8d2d\u7269\u6e05\u5355",
+            wn_f3: "\u6d3b\u8dc3\u8d2d\u7269\u6a21\u5f0f",
+            wn_f4: "\u8d2d\u7269\u5386\u53f2\u548c\u7edf\u8ba1",
+            wn_f5: "\u624b\u52bf\u63a7\u5236\uff08\u6ed1\u52a8\u3001\u70b9\u51fb\u3001\u62d6\u52a8\uff09",
+            wn_f6: "12\u79cd\u8bed\u8a00",
+            wn_f7: "\u6df1\u8272 / \u6d45\u8272\u6a21\u5f0f",
+            wn_f8: "\u81ea\u5b9a\u4e49\u989c\u8272\u548c\u5f3a\u8c03\u8272\u8bbe\u7f6e",
+            wn_f9: "\u5907\u4efd\u548c\u5bfc\u51fa\u8d2d\u7269\u6e05\u5355",
+            wn_f10: "\u4ece\u526a\u8d34\u677f\u5bfc\u5165 (Apple Notes, Google Sheets...)",
+            privacy_html: '<h3>\u9690\u79c1\u653f\u7b56 \u2014 1GoShop</h3><p>1GoShop\u5e94\u7528\u7a0b\u5e8f\u5c0a\u91cd\u60a8\u7684\u9690\u79c1\u3002\u672c\u9875\u9762\u63cf\u8ff0\u4e86\u5e94\u7528\u7a0b\u5e8f\u5904\u7406\u54ea\u4e9b\u6570\u636e\u4ee5\u53ca\u5982\u4f55\u5904\u7406\u8fd9\u4e9b\u6570\u636e\u3002</p><h3>\u672c\u5730\u5b58\u50a8\u7684\u6570\u636e</h3><p>\u6240\u6709\u8d2d\u7269\u6e05\u5355\u6570\u636e\u4e3b\u8981\u5b58\u50a8\u5728\u60a8\u7684\u8bbe\u5907\u672c\u5730\u3002\u5e94\u7528\u7a0b\u5e8f\u4e0d\u9700\u8981\u6ce8\u518c\u6216\u767b\u5f55\u3002</p><h3>\u901a\u8fc7Firebase\u5171\u4eab\u6570\u636e</h3><p>\u5f53\u60a8\u4f7f\u7528\u5217\u8868\u5171\u4eab\u529f\u80fd\u65f6\uff0c\u6570\u636e\u4f1a\u4f20\u8f93\u5230Firebase Realtime Database\uff08Google\u670d\u52a1\u5668\uff09\u3002\u5171\u4eab\u4f7f\u7528\u533f\u540d\u8eab\u4efd\u9a8c\u8bc1 \u2014 \u4e0d\u6536\u96c6\u4e2a\u4eba\u6570\u636e\u3002</p><p>\u5171\u4eab\u6570\u636e\u5305\u62ec\uff1a</p><ul><li>\u8d2d\u7269\u6e05\u5355\u9879\u76ee\u548c\u6570\u91cf</li><li>\u8d2d\u7269\u4f1a\u8bdd\u5386\u53f2</li></ul><p>\u60a8\u53ef\u4ee5\u968f\u65f6\u505c\u6b62\u5171\u4eab\uff0c\u8fd9\u5c06\u4ece\u5171\u4eab\u5b58\u50a8\u4e2d\u5220\u9664\u60a8\u7684\u6570\u636e\u3002</p><h3>\u5206\u6790\u548c\u8ddf\u8e2a</h3><p>\u5e94\u7528\u7a0b\u5e8f\u4e0d\u4f7f\u7528\u4efb\u4f55\u5206\u6790\u3001\u7528\u6237\u8ddf\u8e2a\u6216\u5e7f\u544a\u3002</p><h3>\u6570\u636e\u5bfc\u51fa</h3><p>\u60a8\u53ef\u4ee5\u968f\u65f6\u5bfc\u51fa\u6570\u636e\u8fdb\u884c\u4e2a\u4eba\u5907\u4efd\u3002</p><h3>\u8054\u7cfb\u65b9\u5f0f</h3><p>\u6709\u5173\u9690\u79c1\u95ee\u9898\uff0c\u8bf7\u8054\u7cfb\u6211\u4eec\uff1a<a href="mailto:matray@realise.sk">matray@realise.sk</a></p><p class="privacy-updated">\u6700\u540e\u66f4\u65b0\uff1a2026\u5e742\u670827\u65e5</p>'
+        },
+        fr: {
+            nav_features: "Fonctionnalit\u00e9s",
+            nav_howto: "Guide",
+            nav_whatsnew: "Nouveaut\u00e9s",
+            nav_download: "T\u00e9l\u00e9charger",
+            nav_privacy: "Confidentialit\u00e9",
+            nav_contact: "Contact",
+            hero_subtitle: "Liste de courses simple et rapide",
+            hero_description: "G\u00e9rez vos listes de courses facilement. Partagez avec la famille, suivez l'historique des achats et faites vos courses efficacement.",
+            features_title: "Fonctionnalit\u00e9s",
+            f1_title: "Listes multiples",
+            f1_desc: "Cr\u00e9ez des listes pour diff\u00e9rents magasins \u2014 Lidl, Tesco, Billa et plus.",
+            f2_title: "Partage en temps r\u00e9el",
+            f2_desc: "Partagez des listes avec la famille ou les amis. Les modifications se synchronisent instantan\u00e9ment.",
+            f3_title: "Achats actifs",
+            f3_desc: "Mode d'achat avec historique \u2014 suivez ce que vous avez achet\u00e9 et quand.",
+            f4_title: "12 langues",
+            f4_desc: "Disponible en slovaque, anglais, allemand, hongrois et 8 autres langues.",
+            f5_title: "Mode sombre",
+            f5_desc: "Personnalisez l'apparence avec le support complet du mode sombre et des couleurs personnalis\u00e9es.",
+            f6_title: "Sauvegarde et export",
+            f6_desc: "Exportez et importez des listes. Vos donn\u00e9es sont toujours en s\u00e9curit\u00e9.",
+            download_title: "T\u00e9l\u00e9charger",
+            download_subtitle: "Disponible pour iOS et Android",
+            download_get: "T\u00e9l\u00e9charger sur",
+            download_get2: "Disponible sur",
+            privacy_title: "Politique de confidentialit\u00e9",
+            contact_title: "Contact",
+            contact_text: "Si vous avez des questions ou besoin d'aide, contactez-nous :",
+            footer: "\u00a9 2026 Robert Matray \u2014 Realise s.r.o.",
+            footer_privacy: "Politique de confidentialit\u00e9",
+            footer_terms: "Conditions d'utilisation",
+            howto_title: "Comment utiliser",
+            howto_intro: "Chaque ligne d'article est divis\u00e9e en une moiti\u00e9 gauche et une moiti\u00e9 droite. Chaque moiti\u00e9 r\u00e9pond \u00e0 des gestes diff\u00e9rents.",
+            howto_zone_left: "C\u00f4t\u00e9 gauche",
+            howto_zone_right: "C\u00f4t\u00e9 droit",
+            howto_zone_any: "N'importe o\u00f9",
+            howto_zone_drag: "Ic\u00f4ne \u2630",
+            howto_g1_title: "Glisser \u00e0 gauche \u2014 Supprimer",
+            howto_g1_desc: "Glissez un article vers la gauche sur le c\u00f4t\u00e9 gauche pour le supprimer.",
+            howto_g2_title: "Glisser \u00e0 droite \u2014 Modifier",
+            howto_g2_desc: "Glissez un article vers la droite sur le c\u00f4t\u00e9 gauche pour modifier son nom.",
+            howto_g3_title: "Glisser \u00e0 droite \u2014 +1 quantit\u00e9",
+            howto_g3_desc: "Glissez vers la droite sur le c\u00f4t\u00e9 droit pour augmenter la quantit\u00e9 de 1.",
+            howto_g4_title: "Glisser \u00e0 gauche \u2014 -1 quantit\u00e9",
+            howto_g4_desc: "Glissez vers la gauche sur le c\u00f4t\u00e9 droit pour diminuer la quantit\u00e9. Si la quantit\u00e9 est 1, l'article est supprim\u00e9.",
+            howto_g5_title: "Appuyer \u2014 Achet\u00e9 / Non achet\u00e9",
+            howto_g5_desc: "Appuyez sur un article pour le marquer comme achet\u00e9 ou non achet\u00e9.",
+            howto_g6_title: "Appui long \u2014 Modifier le nom",
+            howto_g6_desc: "Maintenez un article pendant 500ms pour modifier rapidement son nom.",
+            howto_g7_title: "Maintenir et glisser \u2014 R\u00e9organiser",
+            howto_g7_desc: "Maintenez l'ic\u00f4ne \u2630 et faites glisser vers le haut ou le bas pour r\u00e9organiser.",
+            whatsnew_title: "Nouveaut\u00e9s",
+            whatsnew_subtitle: "La version actuelle comprend ces fonctionnalit\u00e9s :",
+            wn_f1: "Plusieurs listes de courses",
+            wn_f2: "Partager des listes avec la famille et les amis en temps r\u00e9el",
+            wn_f3: "Mode d'achat actif",
+            wn_f4: "Historique d'achats et statistiques",
+            wn_f5: "Contr\u00f4le gestuel (glisser, appuyer, d\u00e9placer)",
+            wn_f6: "12 langues",
+            wn_f7: "Mode sombre / clair",
+            wn_f8: "Personnalisation des couleurs et accents",
+            wn_f9: "Sauvegarde et exportation des listes",
+            wn_f10: "Import depuis le presse-papiers (Apple Notes, Google Sheets...)",
+            privacy_html: '<h3>Politique de confidentialit\u00e9 \u2014 1GoShop</h3><p>L\'application 1GoShop respecte votre vie priv\u00e9e. Cette page d\u00e9crit quelles donn\u00e9es l\'application traite et comment elle les g\u00e8re.</p><h3>Donn\u00e9es stock\u00e9es localement</h3><p>Toutes les donn\u00e9es des listes de courses sont principalement stock\u00e9es localement sur votre appareil. L\'application ne n\u00e9cessite pas d\'inscription ou de connexion.</p><h3>Partage de donn\u00e9es via Firebase</h3><p>Lorsque vous utilisez la fonction de partage de listes, les donn\u00e9es sont transmises \u00e0 Firebase Realtime Database (serveurs Google). Le partage utilise l\'authentification anonyme \u2014 aucune donn\u00e9e personnelle n\'est collect\u00e9e.</p><p>Les donn\u00e9es partag\u00e9es comprennent :</p><ul><li>Articles de la liste de courses et quantit\u00e9s</li><li>Historique des sessions d\'achats</li></ul><p>Vous pouvez arr\u00eater le partage \u00e0 tout moment, ce qui supprime vos donn\u00e9es du stockage partag\u00e9.</p><h3>Analytique et suivi</h3><p>L\'application n\'utilise aucune analytique, suivi des utilisateurs ou publicit\u00e9.</p><h3>Export des donn\u00e9es</h3><p>Vous pouvez exporter vos donn\u00e9es \u00e0 tout moment pour une sauvegarde personnelle.</p><h3>Contact</h3><p>Pour les questions relatives \u00e0 la confidentialit\u00e9, contactez-nous : <a href="mailto:matray@realise.sk">matray@realise.sk</a></p><p class="privacy-updated">Derni\u00e8re mise \u00e0 jour : 27 f\u00e9vrier 2026</p>'
+        },
+        es: {
+            nav_features: "Caracter\u00edsticas",
+            nav_howto: "Gu\u00eda",
+            nav_whatsnew: "Novedades",
+            nav_download: "Descargar",
+            nav_privacy: "Privacidad",
+            nav_contact: "Contacto",
+            hero_subtitle: "Lista de compras simple y r\u00e1pida",
+            hero_description: "Gestione sus listas de compras f\u00e1cilmente. Comparta con la familia, rastree el historial de compras y compre eficientemente.",
+            features_title: "Caracter\u00edsticas",
+            f1_title: "M\u00faltiples listas",
+            f1_desc: "Cree listas para diferentes tiendas \u2014 Lidl, Tesco, Billa y m\u00e1s.",
+            f2_title: "Compartir en tiempo real",
+            f2_desc: "Comparta listas con familia o amigos. Los cambios se sincronizan al instante.",
+            f3_title: "Compras activas",
+            f3_desc: "Modo de compra con historial \u2014 rastree qu\u00e9 compr\u00f3 y cu\u00e1ndo.",
+            f4_title: "12 idiomas",
+            f4_desc: "Disponible en eslovaco, ingl\u00e9s, alem\u00e1n, h\u00fangaro y 8 idiomas m\u00e1s.",
+            f5_title: "Modo oscuro",
+            f5_desc: "Personalice la apariencia con soporte completo de modo oscuro y colores personalizados.",
+            f6_title: "Copia de seguridad y exportaci\u00f3n",
+            f6_desc: "Exporte e importe listas. Sus datos siempre est\u00e1n seguros.",
+            download_title: "Descargar",
+            download_subtitle: "Disponible para iOS y Android",
+            download_get: "Descargar en",
+            download_get2: "Disponible en",
+            privacy_title: "Pol\u00edtica de privacidad",
+            contact_title: "Contacto",
+            contact_text: "Si tiene preguntas o necesita ayuda, cont\u00e1ctenos:",
+            footer: "\u00a9 2026 Robert Matray \u2014 Realise s.r.o.",
+            footer_privacy: "Pol\u00edtica de privacidad",
+            footer_terms: "T\u00e9rminos de servicio",
+            howto_title: "C\u00f3mo usar",
+            howto_intro: "Cada fila de art\u00edculo se divide en una mitad izquierda y una mitad derecha. Cada mitad responde a gestos diferentes.",
+            howto_zone_left: "Lado izquierdo",
+            howto_zone_right: "Lado derecho",
+            howto_zone_any: "Cualquier lugar",
+            howto_zone_drag: "Icono \u2630",
+            howto_g1_title: "Deslizar a la izquierda \u2014 Eliminar",
+            howto_g1_desc: "Deslice un art\u00edculo a la izquierda en el lado izquierdo para eliminarlo.",
+            howto_g2_title: "Deslizar a la derecha \u2014 Editar",
+            howto_g2_desc: "Deslice un art\u00edculo a la derecha en el lado izquierdo para editar su nombre.",
+            howto_g3_title: "Deslizar a la derecha \u2014 +1 cantidad",
+            howto_g3_desc: "Deslice a la derecha en el lado derecho para aumentar la cantidad en 1.",
+            howto_g4_title: "Deslizar a la izquierda \u2014 -1 cantidad",
+            howto_g4_desc: "Deslice a la izquierda en el lado derecho para disminuir la cantidad. Si la cantidad es 1, el art\u00edculo se elimina.",
+            howto_g5_title: "Tocar \u2014 Comprado / No comprado",
+            howto_g5_desc: "Toque un art\u00edculo para marcarlo como comprado o no comprado.",
+            howto_g6_title: "Pulsaci\u00f3n larga \u2014 Editar nombre",
+            howto_g6_desc: "Mantenga pulsado un art\u00edculo durante 500ms para editar r\u00e1pidamente su nombre.",
+            howto_g7_title: "Mantener y arrastrar \u2014 Reordenar",
+            howto_g7_desc: "Mantenga el icono \u2630 y arrastre arriba o abajo para reordenar los art\u00edculos.",
+            whatsnew_title: "Novedades",
+            whatsnew_subtitle: "La versi\u00f3n actual incluye estas funciones:",
+            wn_f1: "M\u00faltiples listas de compras",
+            wn_f2: "Compartir listas con familia y amigos en tiempo real",
+            wn_f3: "Modo de compra activo",
+            wn_f4: "Historial de compras y estad\u00edsticas",
+            wn_f5: "Control por gestos (deslizar, tocar, arrastrar)",
+            wn_f6: "12 idiomas",
+            wn_f7: "Modo oscuro / claro",
+            wn_f8: "Configuraci\u00f3n de colores y acentos personalizados",
+            wn_f9: "Copia de seguridad y exportaci\u00f3n de listas",
+            wn_f10: "Importar desde el portapapeles (Apple Notes, Google Sheets...)",
+            privacy_html: '<h3>Pol\u00edtica de privacidad \u2014 1GoShop</h3><p>La aplicaci\u00f3n 1GoShop respeta su privacidad. Esta p\u00e1gina describe qu\u00e9 datos procesa la aplicaci\u00f3n y c\u00f3mo los maneja.</p><h3>Datos almacenados localmente</h3><p>Todos los datos de las listas de compras se almacenan principalmente de forma local en su dispositivo. La aplicaci\u00f3n no requiere registro ni inicio de sesi\u00f3n.</p><h3>Compartir datos a trav\u00e9s de Firebase</h3><p>Cuando utiliza la funci\u00f3n de compartir listas, los datos se transmiten a Firebase Realtime Database (servidores de Google). El uso compartido utiliza autenticaci\u00f3n an\u00f3nima \u2014 no se recopilan datos personales.</p><p>Los datos compartidos incluyen:</p><ul><li>Art\u00edculos de la lista de compras y cantidades</li><li>Historial de sesiones de compras</li></ul><p>Puede dejar de compartir en cualquier momento, lo que elimina sus datos del almacenamiento compartido.</p><h3>An\u00e1lisis y seguimiento</h3><p>La aplicaci\u00f3n no utiliza ning\u00fan tipo de an\u00e1lisis, seguimiento de usuarios ni publicidad.</p><h3>Exportaci\u00f3n de datos</h3><p>Puede exportar sus datos en cualquier momento para una copia de seguridad personal.</p><h3>Contacto</h3><p>Para consultas sobre privacidad, cont\u00e1ctenos: <a href="mailto:matray@realise.sk">matray@realise.sk</a></p><p class="privacy-updated">\u00daltima actualizaci\u00f3n: 27 de febrero de 2026</p>'
+        },
+        it: {
+            nav_features: "Funzionalit\u00e0",
+            nav_howto: "Guida",
+            nav_whatsnew: "Novit\u00e0",
+            nav_download: "Scarica",
+            nav_privacy: "Privacy",
+            nav_contact: "Contatti",
+            hero_subtitle: "Lista della spesa semplice e veloce",
+            hero_description: "Gestisci le tue liste della spesa con facilit\u00e0. Condividi con la famiglia, monitora la cronologia degli acquisti e fai la spesa in modo efficiente.",
+            features_title: "Funzionalit\u00e0",
+            f1_title: "Liste multiple",
+            f1_desc: "Crea liste per diversi negozi \u2014 Lidl, Tesco, Billa e altro.",
+            f2_title: "Condivisione in tempo reale",
+            f2_desc: "Condividi le liste con famiglia o amici. Le modifiche si sincronizzano istantaneamente.",
+            f3_title: "Spesa attiva",
+            f3_desc: "Modalit\u00e0 spesa con cronologia \u2014 monitora cosa hai comprato e quando.",
+            f4_title: "12 lingue",
+            f4_desc: "Disponibile in slovacco, inglese, tedesco, ungherese e altre 8 lingue.",
+            f5_title: "Modalit\u00e0 scura",
+            f5_desc: "Personalizza l'aspetto con supporto completo alla modalit\u00e0 scura e colori personalizzati.",
+            f6_title: "Backup ed esportazione",
+            f6_desc: "Esporta e importa le liste. I tuoi dati sono sempre al sicuro.",
+            download_title: "Scarica",
+            download_subtitle: "Disponibile per iOS e Android",
+            download_get: "Scarica su",
+            download_get2: "Disponibile su",
+            privacy_title: "Privacy",
+            contact_title: "Contatti",
+            contact_text: "Se hai domande o hai bisogno di aiuto, contattaci:",
+            footer: "\u00a9 2026 Robert Matray \u2014 Realise s.r.o.",
+            footer_privacy: "Privacy",
+            footer_terms: "Termini di servizio",
+            howto_title: "Come usare",
+            howto_intro: "Ogni riga di articolo \u00e8 divisa in met\u00e0 sinistra e met\u00e0 destra. Ogni met\u00e0 risponde a gesti diversi.",
+            howto_zone_left: "Lato sinistro",
+            howto_zone_right: "Lato destro",
+            howto_zone_any: "Ovunque",
+            howto_zone_drag: "Icona \u2630",
+            howto_g1_title: "Scorri a sinistra \u2014 Elimina",
+            howto_g1_desc: "Scorri un articolo a sinistra sul lato sinistro per eliminarlo.",
+            howto_g2_title: "Scorri a destra \u2014 Modifica",
+            howto_g2_desc: "Scorri un articolo a destra sul lato sinistro per modificare il nome.",
+            howto_g3_title: "Scorri a destra \u2014 +1 quantit\u00e0",
+            howto_g3_desc: "Scorri a destra sul lato destro per aumentare la quantit\u00e0 di 1.",
+            howto_g4_title: "Scorri a sinistra \u2014 -1 quantit\u00e0",
+            howto_g4_desc: "Scorri a sinistra sul lato destro per diminuire la quantit\u00e0. Se la quantit\u00e0 \u00e8 1, l'articolo viene eliminato.",
+            howto_g5_title: "Tocca \u2014 Comprato / Non comprato",
+            howto_g5_desc: "Tocca un articolo per contrassegnarlo come comprato o non comprato.",
+            howto_g6_title: "Pressione lunga \u2014 Modifica nome",
+            howto_g6_desc: "Tieni premuto un articolo per 500ms per modificare rapidamente il nome.",
+            howto_g7_title: "Tieni e trascina \u2014 Riordina",
+            howto_g7_desc: "Tieni premuta l'icona \u2630 e trascina su o gi\u00f9 per riordinare gli articoli.",
+            whatsnew_title: "Novit\u00e0",
+            whatsnew_subtitle: "La versione attuale include queste funzionalit\u00e0:",
+            wn_f1: "Liste della spesa multiple",
+            wn_f2: "Condividi liste con famiglia e amici in tempo reale",
+            wn_f3: "Modalit\u00e0 spesa attiva",
+            wn_f4: "Cronologia acquisti e statistiche",
+            wn_f5: "Controllo gestuale (scorri, tocca, trascina)",
+            wn_f6: "12 lingue",
+            wn_f7: "Modalit\u00e0 scura / chiara",
+            wn_f8: "Impostazioni colori e accenti personalizzati",
+            wn_f9: "Backup ed esportazione delle liste",
+            wn_f10: "Importa dagli appunti (Apple Notes, Google Sheets...)",
+            privacy_html: '<h3>Informativa sulla privacy \u2014 1GoShop</h3><p>L\'app 1GoShop rispetta la tua privacy. Questa pagina descrive quali dati l\'app elabora e come li gestisce.</p><h3>Dati memorizzati localmente</h3><p>Tutti i dati delle liste della spesa sono memorizzati principalmente in locale sul tuo dispositivo. L\'app non richiede registrazione o accesso.</p><h3>Condivisione dati tramite Firebase</h3><p>Quando utilizzi la funzione di condivisione delle liste, i dati vengono trasmessi a Firebase Realtime Database (server Google). La condivisione utilizza l\'autenticazione anonima \u2014 non vengono raccolti dati personali.</p><p>I dati condivisi includono:</p><ul><li>Articoli della lista della spesa e quantit\u00e0</li><li>Cronologia delle sessioni di acquisto</li></ul><p>Puoi interrompere la condivisione in qualsiasi momento, il che rimuove i tuoi dati dall\'archivio condiviso.</p><h3>Analisi e tracciamento</h3><p>L\'app non utilizza alcuna analisi, tracciamento degli utenti o pubblicit\u00e0.</p><h3>Esportazione dati</h3><p>Puoi esportare i tuoi dati in qualsiasi momento per un backup personale.</p><h3>Contatti</h3><p>Per domande sulla privacy, contattaci: <a href="mailto:matray@realise.sk">matray@realise.sk</a></p><p class="privacy-updated">Ultimo aggiornamento: 27 febbraio 2026</p>'
+        },
+        pl: {
+            nav_features: "Funkcje",
+            nav_howto: "Instrukcja",
+            nav_whatsnew: "Nowo\u015bci",
+            nav_download: "Pobierz",
+            nav_privacy: "Prywatno\u015b\u0107",
+            nav_contact: "Kontakt",
+            hero_subtitle: "Prosta i szybka lista zakup\u00f3w",
+            hero_description: "Zarz\u0105dzaj listami zakup\u00f3w z \u0142atwo\u015bci\u0105. Udost\u0119pniaj rodzinie, \u015bled\u017a histori\u0119 zakup\u00f3w i r\u00f3b zakupy efektywnie.",
+            features_title: "Funkcje",
+            f1_title: "Wiele list",
+            f1_desc: "Tw\u00f3rz listy dla r\u00f3\u017cnych sklep\u00f3w \u2014 Lidl, Tesco, Billa i wi\u0119cej.",
+            f2_title: "Udost\u0119pnianie w czasie rzeczywistym",
+            f2_desc: "Udost\u0119pniaj listy rodzinie lub znajomym. Zmiany synchronizuj\u0105 si\u0119 natychmiast.",
+            f3_title: "Aktywne zakupy",
+            f3_desc: "Tryb zakup\u00f3w z histori\u0105 \u2014 \u015bled\u017a, co kupi\u0142e\u015b i kiedy.",
+            f4_title: "12 j\u0119zyk\u00f3w",
+            f4_desc: "Dost\u0119pna po s\u0142owacku, angielsku, niemiecku, w\u0119giersku i w 8 innych j\u0119zykach.",
+            f5_title: "Tryb ciemny",
+            f5_desc: "Dostosuj wygl\u0105d z pe\u0142nym wsparciem trybu ciemnego i niestandardowych kolor\u00f3w.",
+            f6_title: "Kopia zapasowa i eksport",
+            f6_desc: "Eksportuj i importuj listy. Twoje dane s\u0105 zawsze bezpieczne.",
+            download_title: "Pobierz",
+            download_subtitle: "Dost\u0119pna na iOS i Android",
+            download_get: "Pobierz z",
+            download_get2: "Pobierz z",
+            privacy_title: "Polityka prywatno\u015bci",
+            contact_title: "Kontakt",
+            contact_text: "Je\u015bli masz pytania lub potrzebujesz pomocy, skontaktuj si\u0119 z nami:",
+            footer: "\u00a9 2026 Robert Matray \u2014 Realise s.r.o.",
+            footer_privacy: "Polityka prywatno\u015bci",
+            footer_terms: "Warunki korzystania",
+            howto_title: "Jak u\u017cywa\u0107",
+            howto_intro: "Ka\u017cdy wiersz elementu jest podzielony na lew\u0105 i praw\u0105 po\u0142ow\u0119. Ka\u017cda po\u0142owa reaguje na inne gesty.",
+            howto_zone_left: "Lewa strona",
+            howto_zone_right: "Prawa strona",
+            howto_zone_any: "Gdziekolwiek",
+            howto_zone_drag: "Ikona \u2630",
+            howto_g1_title: "Przesu\u0144 w lewo \u2014 Usu\u0144",
+            howto_g1_desc: "Przesu\u0144 element w lewo po lewej stronie, aby go usun\u0105\u0107.",
+            howto_g2_title: "Przesu\u0144 w prawo \u2014 Edytuj",
+            howto_g2_desc: "Przesu\u0144 element w prawo po lewej stronie, aby edytowa\u0107 nazw\u0119.",
+            howto_g3_title: "Przesu\u0144 w prawo \u2014 +1 ilo\u015b\u0107",
+            howto_g3_desc: "Przesu\u0144 w prawo po prawej stronie, aby zwi\u0119kszy\u0107 ilo\u015b\u0107 o 1.",
+            howto_g4_title: "Przesu\u0144 w lewo \u2014 -1 ilo\u015b\u0107",
+            howto_g4_desc: "Przesu\u0144 w lewo po prawej stronie, aby zmniejszy\u0107 ilo\u015b\u0107. Je\u015bli ilo\u015b\u0107 wynosi 1, element zostanie usuni\u0119ty.",
+            howto_g5_title: "Dotknij \u2014 Kupione / Niekupione",
+            howto_g5_desc: "Dotknij elementu, aby oznaczy\u0107 go jako kupiony lub niekupiony.",
+            howto_g6_title: "D\u0142ugie naci\u015bni\u0119cie \u2014 Edytuj nazw\u0119",
+            howto_g6_desc: "Przytrzymaj element przez 500ms, aby szybko edytowa\u0107 nazw\u0119.",
+            howto_g7_title: "Przytrzymaj i przeci\u0105gnij \u2014 Zmie\u0144 kolejno\u015b\u0107",
+            howto_g7_desc: "Przytrzymaj ikon\u0119 \u2630 i przeci\u0105gnij w g\u00f3r\u0119 lub w d\u00f3\u0142, aby zmieni\u0107 kolejno\u015b\u0107.",
+            whatsnew_title: "Nowo\u015bci",
+            whatsnew_subtitle: "Obecna wersja zawiera te funkcje:",
+            wn_f1: "Wiele list zakup\u00f3w",
+            wn_f2: "Udost\u0119pnianie list w czasie rzeczywistym rodzinie i znajomym",
+            wn_f3: "Aktywny tryb zakup\u00f3w",
+            wn_f4: "Historia zakup\u00f3w i statystyki",
+            wn_f5: "Sterowanie gestami (przesuwanie, dotykanie, przeci\u0105ganie)",
+            wn_f6: "12 j\u0119zyk\u00f3w",
+            wn_f7: "Tryb ciemny / jasny",
+            wn_f8: "Ustawienia w\u0142asnych kolor\u00f3w i akcent\u00f3w",
+            wn_f9: "Kopia zapasowa i eksport list",
+            wn_f10: "Import ze schowka (Apple Notes, Google Sheets...)",
+            privacy_html: '<h3>Polityka prywatno\u015bci \u2014 1GoShop</h3><p>Aplikacja 1GoShop szanuje Twoj\u0105 prywatno\u015b\u0107. Ta strona opisuje, jakie dane aplikacja przetwarza i jak je obs\u0142uguje.</p><h3>Dane przechowywane lokalnie</h3><p>Wszystkie dane list zakup\u00f3w s\u0105 przechowywane g\u0142\u00f3wnie lokalnie na Twoim urz\u0105dzeniu. Aplikacja nie wymaga rejestracji ani logowania.</p><h3>Udost\u0119pnianie danych przez Firebase</h3><p>Gdy korzystasz z funkcji udost\u0119pniania list, dane s\u0105 przesy\u0142ane do Firebase Realtime Database (serwery Google). Udost\u0119pnianie wykorzystuje anonimowe uwierzytelnianie \u2014 nie s\u0105 zbierane dane osobowe.</p><p>Udost\u0119pniane dane obejmuj\u0105:</p><ul><li>Pozycje listy zakup\u00f3w i ilo\u015bci</li><li>Historia sesji zakupowych</li></ul><p>Mo\u017cesz zatrzyma\u0107 udost\u0119pnianie w dowolnym momencie, co usunie Twoje dane ze wsp\u00f3\u0142dzielonego magazynu.</p><h3>Analityka i \u015bledzenie</h3><p>Aplikacja nie korzysta z \u017cadnej analityki, \u015bledzenia u\u017cytkownik\u00f3w ani reklam.</p><h3>Eksport danych</h3><p>Mo\u017cesz wyeksportowa\u0107 swoje dane w dowolnym momencie w celu osobistej kopii zapasowej.</p><h3>Kontakt</h3><p>W sprawach dotycz\u0105cych prywatno\u015bci skontaktuj si\u0119 z nami: <a href="mailto:matray@realise.sk">matray@realise.sk</a></p><p class="privacy-updated">Ostatnia aktualizacja: 27 lutego 2026</p>'
+        },
+        pt: {
+            nav_features: "Funcionalidades",
+            nav_howto: "Como usar",
+            nav_whatsnew: "Novidades",
+            nav_download: "Descarregar",
+            nav_privacy: "Privacidade",
+            nav_contact: "Contacto",
+            hero_subtitle: "Lista de compras simples e r\u00e1pida",
+            hero_description: "Gerencie suas listas de compras com facilidade. Compartilhe com a fam\u00edlia, acompanhe o hist\u00f3rico de compras e compre de forma eficiente.",
+            features_title: "Funcionalidades",
+            f1_title: "M\u00faltiplas listas",
+            f1_desc: "Crie listas para diferentes lojas \u2014 Lidl, Tesco, Billa e mais.",
+            f2_title: "Partilha em tempo real",
+            f2_desc: "Partilhe listas com fam\u00edlia ou amigos. As altera\u00e7\u00f5es sincronizam instantaneamente.",
+            f3_title: "Compras ativas",
+            f3_desc: "Modo de compras com hist\u00f3rico \u2014 acompanhe o que comprou e quando.",
+            f4_title: "12 idiomas",
+            f4_desc: "Dispon\u00edvel em eslovaco, ingl\u00eas, alem\u00e3o, h\u00fangaro e mais 8 idiomas.",
+            f5_title: "Modo escuro",
+            f5_desc: "Personalize a apar\u00eancia com suporte total ao modo escuro e cores personalizadas.",
+            f6_title: "Backup e exporta\u00e7\u00e3o",
+            f6_desc: "Exporte e importe listas. Os seus dados est\u00e3o sempre seguros.",
+            download_title: "Descarregar",
+            download_subtitle: "Dispon\u00edvel para iOS e Android",
+            download_get: "Descarregar no",
+            download_get2: "Dispon\u00edvel no",
+            privacy_title: "Pol\u00edtica de privacidade",
+            contact_title: "Contacto",
+            contact_text: "Se tem perguntas ou precisa de ajuda, contacte-nos:",
+            footer: "\u00a9 2026 Robert Matray \u2014 Realise s.r.o.",
+            footer_privacy: "Pol\u00edtica de privacidade",
+            footer_terms: "Termos de servi\u00e7o",
+            howto_title: "Como usar",
+            howto_intro: "Cada linha de artigo \u00e9 dividida em metade esquerda e metade direita. Cada metade responde a gestos diferentes.",
+            howto_zone_left: "Lado esquerdo",
+            howto_zone_right: "Lado direito",
+            howto_zone_any: "Qualquer lugar",
+            howto_zone_drag: "\u00cdcone \u2630",
+            howto_g1_title: "Deslizar para a esquerda \u2014 Eliminar",
+            howto_g1_desc: "Deslize um artigo para a esquerda no lado esquerdo para o eliminar.",
+            howto_g2_title: "Deslizar para a direita \u2014 Editar",
+            howto_g2_desc: "Deslize um artigo para a direita no lado esquerdo para editar o nome.",
+            howto_g3_title: "Deslizar para a direita \u2014 +1 quantidade",
+            howto_g3_desc: "Deslize para a direita no lado direito para aumentar a quantidade em 1.",
+            howto_g4_title: "Deslizar para a esquerda \u2014 -1 quantidade",
+            howto_g4_desc: "Deslize para a esquerda no lado direito para diminuir a quantidade. Se a quantidade for 1, o artigo \u00e9 eliminado.",
+            howto_g5_title: "Tocar \u2014 Comprado / N\u00e3o comprado",
+            howto_g5_desc: "Toque num artigo para o marcar como comprado ou n\u00e3o comprado.",
+            howto_g6_title: "Press\u00e3o longa \u2014 Editar nome",
+            howto_g6_desc: "Mantenha premido um artigo durante 500ms para editar rapidamente o nome.",
+            howto_g7_title: "Manter e arrastar \u2014 Reordenar",
+            howto_g7_desc: "Mantenha o \u00edcone \u2630 e arraste para cima ou para baixo para reordenar os artigos.",
+            whatsnew_title: "Novidades",
+            whatsnew_subtitle: "A vers\u00e3o atual inclui estas funcionalidades:",
+            wn_f1: "M\u00faltiplas listas de compras",
+            wn_f2: "Partilhar listas com fam\u00edlia e amigos em tempo real",
+            wn_f3: "Modo de compras ativo",
+            wn_f4: "Hist\u00f3rico de compras e estat\u00edsticas",
+            wn_f5: "Controlo por gestos (deslizar, tocar, arrastar)",
+            wn_f6: "12 idiomas",
+            wn_f7: "Modo escuro / claro",
+            wn_f8: "Configura\u00e7\u00e3o de cores e acentos personalizados",
+            wn_f9: "Backup e exporta\u00e7\u00e3o de listas",
+            wn_f10: "Importar da \u00e1rea de transfer\u00eancia (Apple Notes, Google Sheets...)",
+            privacy_html: '<h3>Pol\u00edtica de privacidade \u2014 1GoShop</h3><p>A aplica\u00e7\u00e3o 1GoShop respeita a sua privacidade. Esta p\u00e1gina descreve que dados a aplica\u00e7\u00e3o processa e como os trata.</p><h3>Dados armazenados localmente</h3><p>Todos os dados das listas de compras s\u00e3o armazenados principalmente localmente no seu dispositivo. A aplica\u00e7\u00e3o n\u00e3o requer registo ou login.</p><h3>Partilha de dados atrav\u00e9s do Firebase</h3><p>Quando utiliza a fun\u00e7\u00e3o de partilha de listas, os dados s\u00e3o transmitidos para o Firebase Realtime Database (servidores Google). A partilha utiliza autentica\u00e7\u00e3o an\u00f3nima \u2014 n\u00e3o s\u00e3o recolhidos dados pessoais.</p><p>Os dados partilhados incluem:</p><ul><li>Itens da lista de compras e quantidades</li><li>Hist\u00f3rico de sess\u00f5es de compras</li></ul><p>Pode parar de partilhar a qualquer momento, o que remove os seus dados do armazenamento partilhado.</p><h3>An\u00e1lise e rastreamento</h3><p>A aplica\u00e7\u00e3o n\u00e3o utiliza qualquer an\u00e1lise, rastreamento de utilizadores ou publicidade.</p><h3>Exporta\u00e7\u00e3o de dados</h3><p>Pode exportar os seus dados a qualquer momento para backup pessoal.</p><h3>Contacto</h3><p>Para quest\u00f5es sobre privacidade, contacte-nos: <a href="mailto:matray@realise.sk">matray@realise.sk</a></p><p class="privacy-updated">\u00daltima atualiza\u00e7\u00e3o: 27 de fevereiro de 2026</p>'
+        }
+    };
+
+    /* ===== Language Switcher ===== */
+    function setLanguage(lang) {
+        if (!T[lang]) return;
+        var strings = T[lang];
+        var elements = document.querySelectorAll('[data-i18n]');
+        for (var i = 0; i < elements.length; i++) {
+            var key = elements[i].getAttribute('data-i18n');
+            if (strings[key]) {
+                elements[i].textContent = strings[key];
+            }
+        }
+        var pc = document.getElementById('privacyContent');
+        if (pc && strings.privacy_html) {
+            pc.innerHTML = strings.privacy_html;
+        }
+        document.documentElement.lang = lang;
+        localStorage.setItem('1goshop-lang', lang);
+    }
+
+    /* ===== Theme Toggle ===== */
+    function getSystemTheme() {
+        return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+
+    function setTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('1goshop-theme', theme);
+        var btn = document.getElementById('themeToggle');
+        if (btn) btn.textContent = theme === 'dark' ? '\u2600' : '\u263E';
+    }
+
+    /* ===== Mobile Menu ===== */
+    function setupMenu() {
+        var toggle = document.getElementById('menuToggle');
+        var nav = document.getElementById('navMenu');
+        if (!toggle || !nav) return;
+        toggle.addEventListener('click', function() {
+            nav.classList.toggle('open');
+        });
+        var links = nav.querySelectorAll('a');
+        for (var i = 0; i < links.length; i++) {
+            links[i].addEventListener('click', function() {
+                nav.classList.remove('open');
+            });
+        }
+    }
+
+    /* ===== Init ===== */
+    (function() {
+        var savedTheme = localStorage.getItem('1goshop-theme');
+        if (savedTheme) {
+            setTheme(savedTheme);
+        } else {
+            setTheme(getSystemTheme());
+        }
+
+        var savedLang = localStorage.getItem('1goshop-lang') || 'sk';
+        var select = document.getElementById('langSelect');
+        if (select) {
+            select.value = savedLang;
+            select.addEventListener('change', function() {
+                setLanguage(this.value);
+            });
+        }
+        setLanguage(savedLang);
+
+        var themeBtn = document.getElementById('themeToggle');
+        if (themeBtn) {
+            themeBtn.addEventListener('click', function() {
+                var current = document.documentElement.getAttribute('data-theme') || getSystemTheme();
+                setTheme(current === 'dark' ? 'light' : 'dark');
+            });
+        }
+
+        setupMenu();
+    })();
+    </script>
+</body>
+</html>

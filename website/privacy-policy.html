@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1GoShop — Privacy Policy</title>
+    <meta name="description" content="Privacy Policy for 1GoShop shopping list app.">
+    <meta name="theme-color" content="#4CAF50">
+    <link rel="icon" type="image/png" href="./assets/icon.png">
+    <style>
+        :root {
+            --green-primary: #4CAF50;
+            --green-dark: #388E3C;
+            --green-bg: #E8F5E9;
+            --bg: #ffffff;
+            --bg-alt: #f5f5f5;
+            --text: #212121;
+            --text-secondary: #616161;
+            --card-bg: #ffffff;
+            --border: #e0e0e0;
+            --header-bg: rgba(255,255,255,0.95);
+            --radius: 12px;
+            --max-width: 800px;
+        }
+
+        [data-theme="dark"] {
+            --bg: #121212;
+            --bg-alt: #1e1e1e;
+            --text: #e0e0e0;
+            --text-secondary: #aaaaaa;
+            --card-bg: #1e1e1e;
+            --border: #333333;
+            --header-bg: rgba(18,18,18,0.95);
+            --green-bg: #1b2e1c;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) {
+                --bg: #121212;
+                --bg-alt: #1e1e1e;
+                --text: #e0e0e0;
+                --text-secondary: #aaaaaa;
+                --card-bg: #1e1e1e;
+                --border: #333333;
+                --header-bg: rgba(18,18,18,0.95);
+                --green-bg: #1b2e1c;
+            }
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: var(--header-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            height: 64px;
+        }
+
+        .header-inner {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            padding: 0 24px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        .header-logo img {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text);
+            transition: background 0.2s;
+        }
+
+        .theme-toggle:hover {
+            background: var(--bg-alt);
+        }
+
+        .lang-select {
+            background: var(--card-bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .lang-select:focus {
+            border-color: var(--green-primary);
+        }
+
+        .main {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            padding: 100px 24px 60px;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--green-primary);
+        }
+
+        .page-app {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+        }
+
+        .privacy-content h3 {
+            font-size: 1.2rem;
+            margin: 32px 0 12px;
+            color: var(--text);
+        }
+
+        .privacy-content h3:first-child {
+            margin-top: 0;
+        }
+
+        .privacy-content p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+
+        .privacy-content ul {
+            margin: 0 0 16px 24px;
+            color: var(--text-secondary);
+        }
+
+        .privacy-content li {
+            margin-bottom: 6px;
+        }
+
+        .privacy-content a {
+            color: var(--green-primary);
+        }
+
+        .privacy-updated {
+            font-style: italic;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 24px;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 40px;
+            color: var(--green-primary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            padding: 10px 20px;
+            border: 1px solid var(--green-primary);
+            border-radius: 8px;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .back-link:hover {
+            background: var(--green-primary);
+            color: #ffffff;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 32px 24px;
+            border-top: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 600px) {
+            .main { padding: 88px 20px 40px; }
+            .page-title { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-inner">
+            <a href="./index.html" class="header-logo">
+                <img src="./assets/icon.png" alt="1GoShop">
+                <span>1GoShop</span>
+            </a>
+            <div class="header-controls">
+                <select class="lang-select" id="langSelect" aria-label="Language">
+                    <option value="sk">&#127480;&#127472; Slovencina</option>
+                    <option value="en">&#127468;&#127463; English</option>
+                    <option value="de">&#127465;&#127466; Deutsch</option>
+                    <option value="hu">&#127469;&#127482; Magyar</option>
+                    <option value="cs">&#127464;&#127487; Cestina</option>
+                    <option value="uk">&#127482;&#127462; Ukrainska</option>
+                    <option value="zh">&#127464;&#127475; Zhongwen</option>
+                    <option value="fr">&#127467;&#127479; Francais</option>
+                    <option value="es">&#127466;&#127480; Espanol</option>
+                    <option value="it">&#127470;&#127481; Italiano</option>
+                    <option value="pl">&#127477;&#127473; Polski</option>
+                    <option value="pt">&#127477;&#127481; Portugues</option>
+                </select>
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">&#9790;</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <h1 class="page-title" data-i18n="privacy_title">Ochrana sukromia</h1>
+        <p class="page-app">1GoShop</p>
+        <div class="privacy-content" id="privacyContent"></div>
+        <a href="./index.html" class="back-link" data-i18n="back_home">&larr; Spat na hlavnu stranku</a>
+    </main>
+
+    <footer class="footer" data-i18n="footer">&copy; 2026 Robert Matray &mdash; Realise s.r.o.</footer>
+
+    <script>
+    var T = {
+        sk: {
+            privacy_title: "Ochrana s\u00fakromia",
+            back_home: "\u2190 Sp\u00e4\u0165 na hlavn\u00fa str\u00e1nku",
+            footer: "\u00a9 2026 Robert Matray \u2014 Realise s.r.o.",
+            privacy_html: '<h3>Ochrana s\u00fakromia \u2014 1GoShop</h3><p>Aplik\u00e1cia 1GoShop re\u0161pektuje va\u0161e s\u00fakromie. T\u00e1to str\u00e1nka popisuje, ak\u00e9 \u00fadaje aplik\u00e1cia sprac\u00fava a ako s nimi naklad\u00e1.</p><h3>Lok\u00e1lne ulo\u017een\u00e9 d\u00e1ta</h3><p>V\u0161etky \u00fadaje o n\u00e1kupn\u00fdch zoznamoch s\u00fa prim\u00e1rne ulo\u017een\u00e9 lok\u00e1lne na va\u0161om zariaden\u00ed. Aplik\u00e1cia nepotrebuje registr\u00e1ciu ani prihl\u00e1senie.</p><h3>Zdie\u013eanie d\u00e1t cez Firebase</h3><p>Ak pou\u017eijete funkciu zdie\u013eania zoznamov, d\u00e1ta sa pren\u00e1\u0161aj\u00fa do Firebase Realtime Database (servery spolo\u010dnosti Google). Pri zdie\u013ean\u00ed sa pou\u017e\u00edva anonymn\u00e1 autentifik\u00e1cia \u2014 nezhroma\u017e\u010fuj\u00fa sa \u017eiadne osobn\u00e9 \u00fadaje.</p><p>Zdie\u013ean\u00e9 \u00fadaje zah\u0155\u0148aj\u00fa:</p><ul><li>Polo\u017eky n\u00e1kupn\u00e9ho zoznamu a mno\u017estv\u00e1</li><li>Hist\u00f3ria n\u00e1kupn\u00fdch rel\u00e1ci\u00ed</li></ul><p>Zdie\u013eanie m\u00f4\u017eete kedyko\u013evek zastavi\u0165, \u010d\u00edm sa va\u0161e d\u00e1ta odstr\u00e1nia zo zdie\u013ean\u00e9ho \u00falo\u017eiska.</p><h3>Analytika a sledovanie</h3><p>Aplik\u00e1cia nepou\u017e\u00edva \u017eiadnu analytiku, sledovanie pou\u017e\u00edvate\u013eov ani reklamy.</p><h3>Export d\u00e1t</h3><p>D\u00e1ta m\u00f4\u017eete kedyko\u013evek exportova\u0165 pre osobn\u00fa z\u00e1lohu.</p><h3>Kontakt</h3><p>V pr\u00edpade ot\u00e1zok oh\u013eadom ochrany s\u00fakromia n\u00e1s kontaktujte: <a href="mailto:matray@realise.sk">matray@realise.sk</a></p><p class="privacy-updated">Posledn\u00e1 aktualiz\u00e1cia: 27. febru\u00e1ra 2026</p>'
+        },
+        en: {
+            privacy_title: "Privacy Policy",
+            back_home: "\u2190 Back to homepage",
+            footer: "\u00a9 2026 Robert Matray \u2014 Realise s.r.o.",
+            privacy_html: '<h3>Privacy Policy \u2014 1GoShop</h3><p>The 1GoShop app respects your privacy. This page describes what data the app processes and how it handles it.</p><h3>Locally Stored Data</h3><p>All shopping list data is primarily stored locally on your device. The app does not require registration or login.</p><h3>Data Sharing via Firebase</h3><p>When you use the list sharing feature, data is transmitted to Firebase Realtime Database (Google servers). Sharing uses anonymous authentication \u2014 no personal data is collected.</p><p>Shared data includes:</p><ul><li>Shopping list items and quantities</li><li>Shopping session history</li></ul><p>You can stop sharing at any time, which removes your data from shared storage.</p><h3>Analytics and Tracking</h3><p>The app does not use any analytics, user tracking, or advertisements.</p><h3>Data Export</h3><p>You can export your data at any time for personal backup.</p><h3>Contact</h3><p>For privacy-related questions, contact us at: <a href="mailto:matray@realise.sk">matray@realise.sk</a></p><p class="privacy-updated">Last updated: February 27, 2026</p>'
+        },
+        de: {
+            privacy_title: "Datenschutz",
+            back_home: "\u2190 Zur\u00fcck zur Startseite",
+            footer: "\u00a9 2026 Robert Matray \u2014 Realise s.r.o.",
+            privacy_html: '<h3>Datenschutzrichtlinie \u2014 1GoShop</h3><p>Die App 1GoShop respektiert Ihre Privatsph\u00e4re. Diese Seite beschreibt, welche Daten die App verarbeitet und wie sie damit umgeht.</p><h3>Lokal gespeicherte Daten</h3><p>Alle Einkaufslistendaten werden prim\u00e4r lokal auf Ihrem Ger\u00e4t gespeichert. Die App erfordert keine Registrierung oder Anmeldung.</p><h3>Datenfreigabe \u00fcber Firebase</h3><p>Wenn Sie die Listenfreigabefunktion nutzen, werden Daten an die Firebase Realtime Database (Google-Server) \u00fcbertragen. Die Freigabe verwendet anonyme Authentifizierung \u2014 es werden keine pers\u00f6nlichen Daten erhoben.</p><p>Geteilte Daten umfassen:</p><ul><li>Einkaufslisteneintr\u00e4ge und Mengen</li><li>Einkaufssitzungsverlauf</li></ul><p>Sie k\u00f6nnen die Freigabe jederzeit beenden, wodurch Ihre Daten aus dem geteilten Speicher entfernt werden.</p><h3>Analytik und Tracking</h3><p>Die App verwendet keine Analytik, kein Benutzer-Tracking und keine Werbung.</p><h3>Datenexport</h3><p>Sie k\u00f6nnen Ihre Daten jederzeit f\u00fcr eine pers\u00f6nliche Sicherung exportieren.</p><h3>Kontakt</h3><p>Bei Fragen zum Datenschutz kontaktieren Sie uns: <a href="mailto:matray@realise.sk">matray@realise.sk</a></p><p class="privacy-updated">Letzte Aktualisierung: 27. Februar 2026</p>'
+        },
+        hu: {
+            privacy_title: "Adatv\u00e9delem",
+            back_home: "\u2190 Vissza a f\u0151oldalra",
+            footer: "\u00a9 2026 Robert Matray \u2014 Realise s.r.o.",
+            privacy_html: '<h3>Adatv\u00e9delmi szab\u00e1lyzat \u2014 1GoShop</h3><p>Az 1GoShop alkalmaz\u00e1s tiszteletben tartja az \u00d6n mag\u00e1n\u00e9let\u00e9t. Ez az oldal le\u00edrja, milyen adatokat kezel az alkalmaz\u00e1s \u00e9s hogyan b\u00e1nik vel\u00fck.</p><h3>Helyben t\u00e1rolt adatok</h3><p>Minden bev\u00e1s\u00e1rl\u00f3lista-adat els\u0151sorban helyben, az \u00d6n eszk\u00f6z\u00e9n ker\u00fcl t\u00e1rol\u00e1sra. Az alkalmaz\u00e1s nem ig\u00e9nyel regisztr\u00e1ci\u00f3t vagy bejelentkez\u00e9st.</p><h3>Adatmegoszt\u00e1s Firebase-en kereszt\u00fcl</h3><p>Ha haszn\u00e1lja a listamegoszt\u00e1si funkci\u00f3t, az adatok a Firebase Realtime Database-be (Google szerverek) ker\u00fclnek \u00e1tvitelre. A megoszt\u00e1s anonim hiteles\u00edt\u00e9st haszn\u00e1l \u2014 szem\u00e9lyes adatokat nem gy\u0171jt\u00fcnk.</p><p>A megosztott adatok tartalmazz\u00e1k:</p><ul><li>Bev\u00e1s\u00e1rl\u00f3lista t\u00e9telek \u00e9s mennyis\u00e9gek</li><li>V\u00e1s\u00e1rl\u00e1si munkamenet el\u0151zm\u00e9nyek</li></ul><p>A megoszt\u00e1st b\u00e1rmikor le\u00e1ll\u00edthatja, ami elt\u00e1vol\u00edtja adatait a megosztott t\u00e1rol\u00f3b\u00f3l.</p><h3>Analitika \u00e9s k\u00f6vet\u00e9s</h3><p>Az alkalmaz\u00e1s nem haszn\u00e1l semmilyen analitik\u00e1t, felhaszn\u00e1l\u00f3k\u00f6vet\u00e9st vagy hirdet\u00e9seket.</p><h3>Adatexport</h3><p>Adatait b\u00e1rmikor export\u00e1lhatja szem\u00e9lyes biztons\u00e1gi ment\u00e9s c\u00e9lj\u00e1b\u00f3l.</p><h3>Kapcsolat</h3><p>Adatv\u00e9delmi k\u00e9rd\u00e9sek eset\u00e9n l\u00e9pjen kapcsolatba vel\u00fcnk: <a href="mailto:matray@realise.sk">matray@realise.sk</a></p><p class="privacy-updated">Utols\u00f3 friss\u00edt\u00e9s: 2026. febru\u00e1r 27.</p>'
+        },
+        cs: {
+            privacy_title: "Ochrana soukrom\u00ed",
+            back_home: "\u2190 Zp\u011bt na hlavn\u00ed str\u00e1nku",
+            footer: "\u00a9 2026 Robert Matray \u2014 Realise s.r.o.",
+            privacy_html: '<h3>Ochrana soukrom\u00ed \u2014 1GoShop</h3><p>Aplikace 1GoShop respektuje va\u0161e soukrom\u00ed. Tato str\u00e1nka popisuje, jak\u00e9 \u00fadaje aplikace zpracov\u00e1v\u00e1 a jak s nimi nakl\u00e1d\u00e1.</p><h3>Lok\u00e1ln\u011b ulo\u017een\u00e1 data</h3><p>V\u0161echna data o n\u00e1kupn\u00edch seznamech jsou prim\u00e1rn\u011b ulo\u017eena lok\u00e1ln\u011b na va\u0161em za\u0159\u00edzen\u00ed. Aplikace nevy\u017eaduje registraci ani p\u0159ihl\u00e1\u0161en\u00ed.</p><h3>Sd\u00edlen\u00ed dat p\u0159es Firebase</h3><p>Pokud pou\u017eijete funkci sd\u00edlen\u00ed seznam\u016f, data se p\u0159en\u00e1\u0161ej\u00ed do Firebase Realtime Database (servery spole\u010dnosti Google). P\u0159i sd\u00edlen\u00ed se pou\u017e\u00edv\u00e1 anonymn\u00ed autentizace \u2014 neshroma\u017e\u010fuj\u00ed se \u017e\u00e1dn\u00e9 osobn\u00ed \u00fadaje.</p><p>Sd\u00edlen\u00e1 data zahrnuj\u00ed:</p><ul><li>Polo\u017eky n\u00e1kupn\u00edho seznamu a mno\u017estv\u00ed</li><li>Historie n\u00e1kupn\u00edch relac\u00ed</li></ul><p>Sd\u00edlen\u00ed m\u016f\u017eete kdykoli zastavit, \u010d\u00edm\u017e se va\u0161e data odstran\u00ed ze sd\u00edlen\u00e9ho \u00falo\u017ei\u0161t\u011b.</p><h3>Analytika a sledov\u00e1n\u00ed</h3><p>Aplikace nepou\u017e\u00edv\u00e1 \u017e\u00e1dnou analytiku, sledov\u00e1n\u00ed u\u017eivatel\u016f ani reklamy.</p><h3>Export dat</h3><p>Data m\u016f\u017eete kdykoli exportovat pro osobn\u00ed z\u00e1lohu.</p><h3>Kontakt</h3><p>V p\u0159\u00edpad\u011b dotaz\u016f ohledn\u011b ochrany soukrom\u00ed n\u00e1s kontaktujte: <a href="mailto:matray@realise.sk">matray@realise.sk</a></p><p class="privacy-updated">Posledn\u00ed aktualizace: 27. \u00fanora 2026</p>'
+        },
+        uk: {
+            privacy_title: "\u041a\u043e\u043d\u0444\u0456\u0434\u0435\u043d\u0446\u0456\u0439\u043d\u0456\u0441\u0442\u044c",
+            back_home: "\u2190 \u041d\u0430\u0437\u0430\u0434 \u043d\u0430 \u0433\u043e\u043b\u043e\u0432\u043d\u0443 \u0441\u0442\u043e\u0440\u0456\u043d\u043a\u0443",
+            footer: "\u00a9 2026 Robert Matray \u2014 Realise s.r.o.",
+            privacy_html: '<h3>\u041f\u043e\u043b\u0456\u0442\u0438\u043a\u0430 \u043a\u043e\u043d\u0444\u0456\u0434\u0435\u043d\u0446\u0456\u0439\u043d\u043e\u0441\u0442\u0456 \u2014 1GoShop</h3><p>\u0414\u043e\u0434\u0430\u0442\u043e\u043a 1GoShop \u043f\u043e\u0432\u0430\u0436\u0430\u0454 \u0432\u0430\u0448\u0443 \u043a\u043e\u043d\u0444\u0456\u0434\u0435\u043d\u0446\u0456\u0439\u043d\u0456\u0441\u0442\u044c. \u0426\u044f \u0441\u0442\u043e\u0440\u0456\u043d\u043a\u0430 \u043e\u043f\u0438\u0441\u0443\u0454, \u044f\u043a\u0456 \u0434\u0430\u043d\u0456 \u043e\u0431\u0440\u043e\u0431\u043b\u044f\u0454 \u0434\u043e\u0434\u0430\u0442\u043e\u043a \u0456 \u044f\u043a \u0437 \u043d\u0438\u043c\u0438 \u043f\u043e\u0432\u043e\u0434\u0438\u0442\u044c\u0441\u044f.</p><h3>\u041b\u043e\u043a\u0430\u043b\u044c\u043d\u043e \u0437\u0431\u0435\u0440\u0435\u0436\u0435\u043d\u0456 \u0434\u0430\u043d\u0456</h3><p>\u0423\u0441\u0456 \u0434\u0430\u043d\u0456 \u0441\u043f\u0438\u0441\u043a\u0456\u0432 \u043f\u043e\u043a\u0443\u043f\u043e\u043a \u0437\u0431\u0435\u0440\u0456\u0433\u0430\u044e\u0442\u044c\u0441\u044f \u043f\u0435\u0440\u0435\u0432\u0430\u0436\u043d\u043e \u043b\u043e\u043a\u0430\u043b\u044c\u043d\u043e \u043d\u0430 \u0432\u0430\u0448\u043e\u043c\u0443 \u043f\u0440\u0438\u0441\u0442\u0440\u043e\u0457. \u0414\u043e\u0434\u0430\u0442\u043e\u043a \u043d\u0435 \u043f\u043e\u0442\u0440\u0435\u0431\u0443\u0454 \u0440\u0435\u0454\u0441\u0442\u0440\u0430\u0446\u0456\u0457 \u0430\u0431\u043e \u0432\u0445\u043e\u0434\u0443.</p><h3>\u041e\u0431\u043c\u0456\u043d \u0434\u0430\u043d\u0438\u043c\u0438 \u0447\u0435\u0440\u0435\u0437 Firebase</h3><p>\u042f\u043a\u0449\u043e \u0432\u0438 \u0432\u0438\u043a\u043e\u0440\u0438\u0441\u0442\u043e\u0432\u0443\u0454\u0442\u0435 \u0444\u0443\u043d\u043a\u0446\u0456\u044e \u043e\u0431\u043c\u0456\u043d\u0443 \u0441\u043f\u0438\u0441\u043a\u0430\u043c\u0438, \u0434\u0430\u043d\u0456 \u043f\u0435\u0440\u0435\u0434\u0430\u044e\u0442\u044c\u0441\u044f \u0434\u043e Firebase Realtime Database (\u0441\u0435\u0440\u0432\u0435\u0440\u0438 Google). \u041e\u0431\u043c\u0456\u043d \u0432\u0438\u043a\u043e\u0440\u0438\u0441\u0442\u043e\u0432\u0443\u0454 \u0430\u043d\u043e\u043d\u0456\u043c\u043d\u0443 \u0430\u0432\u0442\u0435\u043d\u0442\u0438\u0444\u0456\u043a\u0430\u0446\u0456\u044e \u2014 \u043e\u0441\u043e\u0431\u0438\u0441\u0442\u0456 \u0434\u0430\u043d\u0456 \u043d\u0435 \u0437\u0431\u0438\u0440\u0430\u044e\u0442\u044c\u0441\u044f.</p><p>\u0421\u043f\u0456\u043b\u044c\u043d\u0456 \u0434\u0430\u043d\u0456 \u0432\u043a\u043b\u044e\u0447\u0430\u044e\u0442\u044c:</p><ul><li>\u0415\u043b\u0435\u043c\u0435\u043d\u0442\u0438 \u0441\u043f\u0438\u0441\u043a\u0443 \u043f\u043e\u043a\u0443\u043f\u043e\u043a \u0442\u0430 \u043a\u0456\u043b\u044c\u043a\u043e\u0441\u0442\u0456</li><li>\u0406\u0441\u0442\u043e\u0440\u0456\u044f \u0441\u0435\u0441\u0456\u0439 \u043f\u043e\u043a\u0443\u043f\u043e\u043a</li></ul><p>\u0412\u0438 \u043c\u043e\u0436\u0435\u0442\u0435 \u0437\u0443\u043f\u0438\u043d\u0438\u0442\u0438 \u043e\u0431\u043c\u0456\u043d \u0443 \u0431\u0443\u0434\u044c-\u044f\u043a\u0438\u0439 \u0447\u0430\u0441, \u0449\u043e \u0432\u0438\u0434\u0430\u043b\u0438\u0442\u044c \u0432\u0430\u0448\u0456 \u0434\u0430\u043d\u0456 \u0437\u0456 \u0441\u043f\u0456\u043b\u044c\u043d\u043e\u0433\u043e \u0441\u0445\u043e\u0432\u0438\u0449\u0430.</p><h3>\u0410\u043d\u0430\u043b\u0456\u0442\u0438\u043a\u0430 \u0442\u0430 \u0432\u0456\u0434\u0441\u0442\u0435\u0436\u0435\u043d\u043d\u044f</h3><p>\u0414\u043e\u0434\u0430\u0442\u043e\u043a \u043d\u0435 \u0432\u0438\u043a\u043e\u0440\u0438\u0441\u0442\u043e\u0432\u0443\u0454 \u0430\u043d\u0430\u043b\u0456\u0442\u0438\u043a\u0443, \u0432\u0456\u0434\u0441\u0442\u0435\u0436\u0435\u043d\u043d\u044f \u043a\u043e\u0440\u0438\u0441\u0442\u0443\u0432\u0430\u0447\u0456\u0432 \u0430\u0431\u043e \u0440\u0435\u043a\u043b\u0430\u043c\u0443.</p><h3>\u0415\u043a\u0441\u043f\u043e\u0440\u0442 \u0434\u0430\u043d\u0438\u0445</h3><p>\u0412\u0438 \u043c\u043e\u0436\u0435\u0442\u0435 \u0435\u043a\u0441\u043f\u043e\u0440\u0442\u0443\u0432\u0430\u0442\u0438 \u0434\u0430\u043d\u0456 \u0443 \u0431\u0443\u0434\u044c-\u044f\u043a\u0438\u0439 \u0447\u0430\u0441 \u0434\u043b\u044f \u043e\u0441\u043e\u0431\u0438\u0441\u0442\u043e\u0433\u043e \u0440\u0435\u0437\u0435\u0440\u0432\u043d\u043e\u0433\u043e \u043a\u043e\u043f\u0456\u044e\u0432\u0430\u043d\u043d\u044f.</p><h3>\u041a\u043e\u043d\u0442\u0430\u043a\u0442\u0438</h3><p>\u0417 \u043f\u0438\u0442\u0430\u043d\u044c \u043a\u043e\u043d\u0444\u0456\u0434\u0435\u043d\u0446\u0456\u0439\u043d\u043e\u0441\u0442\u0456 \u0437\u0432\'\u044f\u0436\u0456\u0442\u044c\u0441\u044f \u0437 \u043d\u0430\u043c\u0438: <a href="mailto:matray@realise.sk">matray@realise.sk</a></p><p class="privacy-updated">\u041e\u0441\u0442\u0430\u043d\u043d\u0454 \u043e\u043d\u043e\u0432\u043b\u0435\u043d\u043d\u044f: 27 \u043b\u044e\u0442\u043e\u0433\u043e 2026</p>'
+        },
+        zh: {
+            privacy_title: "\u9690\u79c1\u653f\u7b56",
+            back_home: "\u2190 \u8fd4\u56de\u9996\u9875",
+            footer: "\u00a9 2026 Robert Matray \u2014 Realise s.r.o.",
+            privacy_html: '<h3>\u9690\u79c1\u653f\u7b56 \u2014 1GoShop</h3><p>1GoShop\u5e94\u7528\u7a0b\u5e8f\u5c0a\u91cd\u60a8\u7684\u9690\u79c1\u3002\u672c\u9875\u9762\u63cf\u8ff0\u4e86\u5e94\u7528\u7a0b\u5e8f\u5904\u7406\u54ea\u4e9b\u6570\u636e\u4ee5\u53ca\u5982\u4f55\u5904\u7406\u8fd9\u4e9b\u6570\u636e\u3002</p><h3>\u672c\u5730\u5b58\u50a8\u7684\u6570\u636e</h3><p>\u6240\u6709\u8d2d\u7269\u6e05\u5355\u6570\u636e\u4e3b\u8981\u5b58\u50a8\u5728\u60a8\u7684\u8bbe\u5907\u672c\u5730\u3002\u5e94\u7528\u7a0b\u5e8f\u4e0d\u9700\u8981\u6ce8\u518c\u6216\u767b\u5f55\u3002</p><h3>\u901a\u8fc7Firebase\u5171\u4eab\u6570\u636e</h3><p>\u5f53\u60a8\u4f7f\u7528\u5217\u8868\u5171\u4eab\u529f\u80fd\u65f6\uff0c\u6570\u636e\u4f1a\u4f20\u8f93\u5230Firebase Realtime Database\uff08Google\u670d\u52a1\u5668\uff09\u3002\u5171\u4eab\u4f7f\u7528\u533f\u540d\u8eab\u4efd\u9a8c\u8bc1 \u2014 \u4e0d\u6536\u96c6\u4e2a\u4eba\u6570\u636e\u3002</p><p>\u5171\u4eab\u6570\u636e\u5305\u62ec\uff1a</p><ul><li>\u8d2d\u7269\u6e05\u5355\u9879\u76ee\u548c\u6570\u91cf</li><li>\u8d2d\u7269\u4f1a\u8bdd\u5386\u53f2</li></ul><p>\u60a8\u53ef\u4ee5\u968f\u65f6\u505c\u6b62\u5171\u4eab\uff0c\u8fd9\u5c06\u4ece\u5171\u4eab\u5b58\u50a8\u4e2d\u5220\u9664\u60a8\u7684\u6570\u636e\u3002</p><h3>\u5206\u6790\u548c\u8ddf\u8e2a</h3><p>\u5e94\u7528\u7a0b\u5e8f\u4e0d\u4f7f\u7528\u4efb\u4f55\u5206\u6790\u3001\u7528\u6237\u8ddf\u8e2a\u6216\u5e7f\u544a\u3002</p><h3>\u6570\u636e\u5bfc\u51fa</h3><p>\u60a8\u53ef\u4ee5\u968f\u65f6\u5bfc\u51fa\u6570\u636e\u8fdb\u884c\u4e2a\u4eba\u5907\u4efd\u3002</p><h3>\u8054\u7cfb\u65b9\u5f0f</h3><p>\u6709\u5173\u9690\u79c1\u95ee\u9898\uff0c\u8bf7\u8054\u7cfb\u6211\u4eec\uff1a<a href="mailto:matray@realise.sk">matray@realise.sk</a></p><p class="privacy-updated">\u6700\u540e\u66f4\u65b0\uff1a2026\u5e742\u670827\u65e5</p>'
+        },
+        fr: {
+            privacy_title: "Politique de confidentialit\u00e9",
+            back_home: "\u2190 Retour \u00e0 l'accueil",
+            footer: "\u00a9 2026 Robert Matray \u2014 Realise s.r.o.",
+            privacy_html: '<h3>Politique de confidentialit\u00e9 \u2014 1GoShop</h3><p>L\'application 1GoShop respecte votre vie priv\u00e9e. Cette page d\u00e9crit quelles donn\u00e9es l\'application traite et comment elle les g\u00e8re.</p><h3>Donn\u00e9es stock\u00e9es localement</h3><p>Toutes les donn\u00e9es des listes de courses sont principalement stock\u00e9es localement sur votre appareil. L\'application ne n\u00e9cessite pas d\'inscription ou de connexion.</p><h3>Partage de donn\u00e9es via Firebase</h3><p>Lorsque vous utilisez la fonction de partage de listes, les donn\u00e9es sont transmises \u00e0 Firebase Realtime Database (serveurs Google). Le partage utilise l\'authentification anonyme \u2014 aucune donn\u00e9e personnelle n\'est collect\u00e9e.</p><p>Les donn\u00e9es partag\u00e9es comprennent :</p><ul><li>Articles de la liste de courses et quantit\u00e9s</li><li>Historique des sessions d\'achats</li></ul><p>Vous pouvez arr\u00eater le partage \u00e0 tout moment, ce qui supprime vos donn\u00e9es du stockage partag\u00e9.</p><h3>Analytique et suivi</h3><p>L\'application n\'utilise aucune analytique, suivi des utilisateurs ou publicit\u00e9.</p><h3>Export des donn\u00e9es</h3><p>Vous pouvez exporter vos donn\u00e9es \u00e0 tout moment pour une sauvegarde personnelle.</p><h3>Contact</h3><p>Pour les questions relatives \u00e0 la confidentialit\u00e9, contactez-nous : <a href="mailto:matray@realise.sk">matray@realise.sk</a></p><p class="privacy-updated">Derni\u00e8re mise \u00e0 jour : 27 f\u00e9vrier 2026</p>'
+        },
+        es: {
+            privacy_title: "Pol\u00edtica de privacidad",
+            back_home: "\u2190 Volver a la p\u00e1gina principal",
+            footer: "\u00a9 2026 Robert Matray \u2014 Realise s.r.o.",
+            privacy_html: '<h3>Pol\u00edtica de privacidad \u2014 1GoShop</h3><p>La aplicaci\u00f3n 1GoShop respeta su privacidad. Esta p\u00e1gina describe qu\u00e9 datos procesa la aplicaci\u00f3n y c\u00f3mo los maneja.</p><h3>Datos almacenados localmente</h3><p>Todos los datos de las listas de compras se almacenan principalmente de forma local en su dispositivo. La aplicaci\u00f3n no requiere registro ni inicio de sesi\u00f3n.</p><h3>Compartir datos a trav\u00e9s de Firebase</h3><p>Cuando utiliza la funci\u00f3n de compartir listas, los datos se transmiten a Firebase Realtime Database (servidores de Google). El uso compartido utiliza autenticaci\u00f3n an\u00f3nima \u2014 no se recopilan datos personales.</p><p>Los datos compartidos incluyen:</p><ul><li>Art\u00edculos de la lista de compras y cantidades</li><li>Historial de sesiones de compras</li></ul><p>Puede dejar de compartir en cualquier momento, lo que elimina sus datos del almacenamiento compartido.</p><h3>An\u00e1lisis y seguimiento</h3><p>La aplicaci\u00f3n no utiliza ning\u00fan tipo de an\u00e1lisis, seguimiento de usuarios ni publicidad.</p><h3>Exportaci\u00f3n de datos</h3><p>Puede exportar sus datos en cualquier momento para una copia de seguridad personal.</p><h3>Contacto</h3><p>Para consultas sobre privacidad, cont\u00e1ctenos: <a href="mailto:matray@realise.sk">matray@realise.sk</a></p><p class="privacy-updated">\u00daltima actualizaci\u00f3n: 27 de febrero de 2026</p>'
+        },
+        it: {
+            privacy_title: "Privacy",
+            back_home: "\u2190 Torna alla homepage",
+            footer: "\u00a9 2026 Robert Matray \u2014 Realise s.r.o.",
+            privacy_html: '<h3>Informativa sulla privacy \u2014 1GoShop</h3><p>L\'app 1GoShop rispetta la tua privacy. Questa pagina descrive quali dati l\'app elabora e come li gestisce.</p><h3>Dati memorizzati localmente</h3><p>Tutti i dati delle liste della spesa sono memorizzati principalmente in locale sul tuo dispositivo. L\'app non richiede registrazione o accesso.</p><h3>Condivisione dati tramite Firebase</h3><p>Quando utilizzi la funzione di condivisione delle liste, i dati vengono trasmessi a Firebase Realtime Database (server Google). La condivisione utilizza l\'autenticazione anonima \u2014 non vengono raccolti dati personali.</p><p>I dati condivisi includono:</p><ul><li>Articoli della lista della spesa e quantit\u00e0</li><li>Cronologia delle sessioni di acquisto</li></ul><p>Puoi interrompere la condivisione in qualsiasi momento, il che rimuove i tuoi dati dall\'archivio condiviso.</p><h3>Analisi e tracciamento</h3><p>L\'app non utilizza alcuna analisi, tracciamento degli utenti o pubblicit\u00e0.</p><h3>Esportazione dati</h3><p>Puoi esportare i tuoi dati in qualsiasi momento per un backup personale.</p><h3>Contatti</h3><p>Per domande sulla privacy, contattaci: <a href="mailto:matray@realise.sk">matray@realise.sk</a></p><p class="privacy-updated">Ultimo aggiornamento: 27 febbraio 2026</p>'
+        },
+        pl: {
+            privacy_title: "Polityka prywatno\u015bci",
+            back_home: "\u2190 Powr\u00f3t na stron\u0119 g\u0142\u00f3wn\u0105",
+            footer: "\u00a9 2026 Robert Matray \u2014 Realise s.r.o.",
+            privacy_html: '<h3>Polityka prywatno\u015bci \u2014 1GoShop</h3><p>Aplikacja 1GoShop szanuje Twoj\u0105 prywatno\u015b\u0107. Ta strona opisuje, jakie dane aplikacja przetwarza i jak je obs\u0142uguje.</p><h3>Dane przechowywane lokalnie</h3><p>Wszystkie dane list zakup\u00f3w s\u0105 przechowywane g\u0142\u00f3wnie lokalnie na Twoim urz\u0105dzeniu. Aplikacja nie wymaga rejestracji ani logowania.</p><h3>Udost\u0119pnianie danych przez Firebase</h3><p>Gdy korzystasz z funkcji udost\u0119pniania list, dane s\u0105 przesy\u0142ane do Firebase Realtime Database (serwery Google). Udost\u0119pnianie wykorzystuje anonimowe uwierzytelnianie \u2014 nie s\u0105 zbierane dane osobowe.</p><p>Udost\u0119pniane dane obejmuj\u0105:</p><ul><li>Pozycje listy zakup\u00f3w i ilo\u015bci</li><li>Historia sesji zakupowych</li></ul><p>Mo\u017cesz zatrzyma\u0107 udost\u0119pnianie w dowolnym momencie, co usunie Twoje dane ze wsp\u00f3\u0142dzielonego magazynu.</p><h3>Analityka i \u015bledzenie</h3><p>Aplikacja nie korzysta z \u017cadnej analityki, \u015bledzenia u\u017cytkownik\u00f3w ani reklam.</p><h3>Eksport danych</h3><p>Mo\u017cesz wyeksportowa\u0107 swoje dane w dowolnym momencie w celu osobistej kopii zapasowej.</p><h3>Kontakt</h3><p>W sprawach dotycz\u0105cych prywatno\u015bci skontaktuj si\u0119 z nami: <a href="mailto:matray@realise.sk">matray@realise.sk</a></p><p class="privacy-updated">Ostatnia aktualizacja: 27 lutego 2026</p>'
+        },
+        pt: {
+            privacy_title: "Pol\u00edtica de privacidade",
+            back_home: "\u2190 Voltar \u00e0 p\u00e1gina inicial",
+            footer: "\u00a9 2026 Robert Matray \u2014 Realise s.r.o.",
+            privacy_html: '<h3>Pol\u00edtica de privacidade \u2014 1GoShop</h3><p>A aplica\u00e7\u00e3o 1GoShop respeita a sua privacidade. Esta p\u00e1gina descreve que dados a aplica\u00e7\u00e3o processa e como os trata.</p><h3>Dados armazenados localmente</h3><p>Todos os dados das listas de compras s\u00e3o armazenados principalmente localmente no seu dispositivo. A aplica\u00e7\u00e3o n\u00e3o requer registo ou login.</p><h3>Partilha de dados atrav\u00e9s do Firebase</h3><p>Quando utiliza a fun\u00e7\u00e3o de partilha de listas, os dados s\u00e3o transmitidos para o Firebase Realtime Database (servidores Google). A partilha utiliza autentica\u00e7\u00e3o an\u00f3nima \u2014 n\u00e3o s\u00e3o recolhidos dados pessoais.</p><p>Os dados partilhados incluem:</p><ul><li>Itens da lista de compras e quantidades</li><li>Hist\u00f3rico de sess\u00f5es de compras</li></ul><p>Pode parar de partilhar a qualquer momento, o que remove os seus dados do armazenamento partilhado.</p><h3>An\u00e1lise e rastreamento</h3><p>A aplica\u00e7\u00e3o n\u00e3o utiliza qualquer an\u00e1lise, rastreamento de utilizadores ou publicidade.</p><h3>Exporta\u00e7\u00e3o de dados</h3><p>Pode exportar os seus dados a qualquer momento para backup pessoal.</p><h3>Contacto</h3><p>Para quest\u00f5es sobre privacidade, contacte-nos: <a href="mailto:matray@realise.sk">matray@realise.sk</a></p><p class="privacy-updated">\u00daltima atualiza\u00e7\u00e3o: 27 de fevereiro de 2026</p>'
+        }
+    };
+
+    function setLanguage(lang) {
+        if (!T[lang]) return;
+        var strings = T[lang];
+        var elements = document.querySelectorAll('[data-i18n]');
+        for (var i = 0; i < elements.length; i++) {
+            var key = elements[i].getAttribute('data-i18n');
+            if (strings[key]) {
+                elements[i].textContent = strings[key];
+            }
+        }
+        var pc = document.getElementById('privacyContent');
+        if (pc && strings.privacy_html) {
+            pc.innerHTML = strings.privacy_html;
+        }
+        document.documentElement.lang = lang;
+        localStorage.setItem('1goshop-lang', lang);
+    }
+
+    function getSystemTheme() {
+        return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+
+    function setTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('1goshop-theme', theme);
+        var btn = document.getElementById('themeToggle');
+        if (btn) btn.textContent = theme === 'dark' ? '\u2600' : '\u263E';
+    }
+
+    (function() {
+        var savedTheme = localStorage.getItem('1goshop-theme');
+        if (savedTheme) {
+            setTheme(savedTheme);
+        } else {
+            setTheme(getSystemTheme());
+        }
+
+        var savedLang = localStorage.getItem('1goshop-lang') || 'sk';
+        var select = document.getElementById('langSelect');
+        if (select) {
+            select.value = savedLang;
+            select.addEventListener('change', function() {
+                setLanguage(this.value);
+            });
+        }
+        setLanguage(savedLang);
+
+        var themeBtn = document.getElementById('themeToggle');
+        if (themeBtn) {
+            themeBtn.addEventListener('click', function() {
+                var current = document.documentElement.getAttribute('data-theme') || getSystemTheme();
+                setTheme(current === 'dark' ? 'light' : 'dark');
+            });
+        }
+    })();
+    </script>
+</body>
+</html>

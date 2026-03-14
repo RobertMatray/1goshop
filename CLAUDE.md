@@ -262,28 +262,24 @@ The item row is divided into **left half** and **right half**. The gesture actio
 - **Auth**: Git Credential Manager (stored in Windows credential store)
 - **To get GitHub token programmatically**: `printf "protocol=https\nhost=github.com\n\n" | git credential fill`
 
-### Full Build + Deploy Workflow (PROVEN WORKING)
+### Full Build + Deploy Workflow (PROVEN WORKING - v1.3.0)
 
 ```bash
-# 1. Build iOS IPA (non-interactive, uses remote credentials)
-EXPO_ASC_API_KEY_PATH="./internals/appstore-api/AuthKey_79PJWGG49Z.p8" \
-EXPO_ASC_KEY_ID="79PJWGG49Z" \
-EXPO_ASC_ISSUER_ID="69a6de87-7e92-47e3-e053-5b8c7c11a4d1" \
-EXPO_APPLE_TEAM_ID="U5Q2UN4QKJ" \
-EXPO_APPLE_TEAM_TYPE="INDIVIDUAL" \
+# iOS: Build + Submit to App Store Review
 npx eas-cli build --platform ios --profile production --non-interactive
+npx eas-cli submit --platform ios --latest --non-interactive
+node scripts/submit-appstore.mjs 1.3.0  # Automates: version, build, category, pricing, age rating, whatsNew, submit for review
 
-# 2. Submit to TestFlight via Expo GraphQL API
-node scripts/submit-via-api.mjs
-
-# 3. Check submission status
-node scripts/check-submission.mjs
-
-# 4. Build Android APK for preview (no credentials needed)
-npx eas-cli build --platform android --profile preview
+# Android: Build + Submit to Google Play Production
+npx eas-cli build --platform android --profile production --non-interactive
+npx eas-cli submit --platform android --latest --non-interactive
 ```
 
-**Note**: `npx eas-cli submit --platform ios --latest --non-interactive` now works (tested Build 40). Alternative: `scripts/submit-via-api.mjs` calls Expo's GraphQL API directly.
+**Notes**:
+- `submit-appstore.mjs` is fully automated — no hardcoded IDs, discovers everything dynamically via App Store Connect API
+- Android submit track configured in `eas.json` → `submit.production.android.track` (currently: `production`)
+- `.easignore` must include `/android` and `/ios` to force EAS cloud prebuild
+- `appVersionSource: "remote"` + `autoIncrement: true` — EAS manages version numbers
 
 ### EAS Configuration (eas.json)
 - `appVersionSource: "remote"` - versions managed by EAS
@@ -335,7 +331,7 @@ curl -s -X POST https://api.github.com/user/repos \
   - GitHub: https://github.com/robertmatray/superapp-ai-poc
   - Same Apple Developer account, same EAS credentials pattern
 
-## Current Status (v1.2.1 - February 26, 2026)
+## Current Status (v1.3.0 - March 14, 2026)
 
 ### Implemented (all working on TestFlight)
 - Shopping list CRUD (add, remove, edit, toggle checked, quantity +1/-1, reorder)
@@ -367,6 +363,15 @@ curl -s -X POST https://api.github.com/user/repos \
 - Search/filter in shopping list (filter text in AddItemInput component)
 - Bold text for checked items on main list
 
+**v1.3.0 production release features (March 14, 2026):**
+- Offline conflict resolution for shared lists (snapshot-based, conflict dialog)
+- Firebase single-source-of-truth refactor (blocking unlink/delete, listener-echo)
+- Automated App Store submission script (`scripts/submit-appstore.mjs`)
+- Website: Terms of Service page (12 languages)
+- Website: Store download links (App Store + Google Play)
+- `.easignore` for proper EAS cloud builds (forces prebuild)
+- Unified version 1.3.0 across iOS and Android
+
 **v1.2.1 multi-list + Firebase features (Build #75-#80):**
 - Multiple shopping lists (create, rename, delete, switch via header dropdown)
 - Firebase Realtime Database sharing with anonymous auth
@@ -387,11 +392,10 @@ curl -s -X POST https://api.github.com/user/repos \
 **Provisioning Profile**: f649b342-4c71-4d84-98c3-cc22a77085ba (ACTIVE, expires 2026-12-12)
 **Distribution Certificate**: 28T88DA5Q5 (shared with moja4ka-zdravie)
 
-**Latest successful iOS build**: Build #80 (v1.2.1) - all sharing edge cases fixed
-- Git tag: `v1.2.1-b80`
+**Latest iOS build**: Build #104 (v1.3.0) - submitted for App Review (March 14, 2026)
+- Git tag: `v1.3.0`
 
-**Latest successful Android build**: Build (v1.2.0, versionCode 6)
-- AAB: `internals/google-play/app.aab` (not in git, 58MB)
+**Latest Android build**: v1.3.0 (versionCode 30) - submitted to Google Play Production (March 14, 2026)
 
 **App Store Connect**:
 - **ascAppId**: `6759269751`
@@ -540,20 +544,25 @@ Interactive animated tutorial showing all gestures with pulsing touch indicator:
 10. Share list (tap share icon, show code)
 11. Join shared list (enter code, connect)
 
-### App Store Submission (February 18, 2026)
+### App Store Submission History
 
-- **Status**: SUBMITTED FOR REVIEW (Build #47)
-- **Version**: 1.0 (build 47)
-- **Category**: Shopping
-- **Price**: Free
-- **Localizations**: Slovak (SK) + English (EN-US)
-- **Screenshots**: iPhone 6.7" + 6.5" + iPad 12.9" (SK + EN, 4 each = 24 total)
+**v1.3.0 (March 14, 2026)** - Build #104
+- Submitted for App Review via automated `scripts/submit-appstore.mjs`
+- Includes offline conflict resolution, Firebase SOT refactor
+- WhatsNew text set automatically in SK + EN
+
+**v1.0 (February 18, 2026)** - Build #47
+- First App Store submission
+- Category: Shopping, Price: Free
+- Localizations: Slovak (SK) + English (EN-US)
+- Screenshots: iPhone 6.7" + 6.5" + iPad 12.9" (SK + EN, 4 each = 24 total)
+
+**Common**:
 - **Privacy Policy**: https://1goshop.realise.sk/privacy-policy.html
+- **Terms of Service**: https://1goshop.realise.sk/terms.html
 - **Support URL**: https://1goshop.realise.sk/
-- **GitHub Pages**: `docs/` folder (privacy-policy.html, index.html)
 - **App Privacy**: No data collected
 - **App Store screenshots source**: `appstore-screenshots/` (originals + upscaled)
-- **Git tag**: `v1.0.1`
 
 ### Google Play Store (Android)
 
@@ -570,14 +579,16 @@ Interactive animated tutorial showing all gestures with pulsing touch indicator:
 - **Data Safety**: No data collected
 - **Target Audience**: 13+
 - **Countries**: 176 countries + rest of world
-- **Production Status**: v1.2.0 (versionCode 6) submitted for Google review (February 23, 2026)
-- **Git tag**: `v1.2.0`
+- **Production Status**: v1.3.0 (versionCode 30) submitted to production (March 14, 2026)
+- **Google Play URL**: https://play.google.com/store/apps/details?id=com.realise.onegoshop
+- **Git tag**: `v1.3.0`
 
 ### App Store (iOS)
 
 - **App Store Connect**: https://appstoreconnect.apple.com/apps/6759269751
-- **Status**: v1.1.0 on App Store, v1.2.1 on TestFlight (Build #80)
-- **Git tag**: `v1.2.1-b80`
+- **Status**: v1.3.0 submitted for App Review (Build #104, March 14, 2026)
+- **App Store URL**: https://apps.apple.com/app/1goshop/id6759269751
+- **Git tag**: `v1.3.0`
 
 ### Future Ideas (implement when user base grows)
 
@@ -734,6 +745,8 @@ Interactive animated tutorial showing all gestures with pulsing touch indicator:
 - **Website URL**: https://1goshop.realise.sk
 - **SSL**: Let's Encrypt (auto-renewal via Webglobe)
 - **Files deployed**:
-  - `_sub/1goshop/index.html` — Main landing page (12 languages)
+  - `_sub/1goshop/index.html` — Main landing page (12 languages, App Store + Google Play links)
   - `_sub/1goshop/privacy-policy.html` — Privacy policy (12 languages)
+  - `_sub/1goshop/terms.html` — Terms of Service (12 languages)
   - `_sub/1goshop/assets/icon.png` — App icon
+- **Local source**: `website/` directory in repo
