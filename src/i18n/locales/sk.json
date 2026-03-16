@@ -185,5 +185,9 @@
     "conflictMessage": "Zoznam bol zmenený iným zariadením kým si bol offline. Ktorú verziu chceš použiť?",
     "conflictKeepLocal": "Moja verzia",
     "conflictTakeFirebase": "Verzia z cloudu"
+  },
+  "ErrorBoundary": {
+    "title": "Niečo sa pokazilo",
+    "retry": "Skúsiť znova"
   }
 }

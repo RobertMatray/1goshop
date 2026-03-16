@@ -183,5 +183,9 @@
     "conflictMessage": "The list was changed by another device while you were offline. Which version do you want to keep?",
     "conflictKeepLocal": "My version",
     "conflictTakeFirebase": "Cloud version"
+  },
+  "ErrorBoundary": {
+    "title": "Something went wrong",
+    "retry": "Try again"
   }
 }

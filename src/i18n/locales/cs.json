@@ -185,5 +185,9 @@
     "conflictMessage": "Seznam byl změněn jiným zařízením, když jsi byl offline. Kterou verzi chceš použít?",
     "conflictKeepLocal": "Moje verze",
     "conflictTakeFirebase": "Verze z cloudu"
+  },
+  "ErrorBoundary": {
+    "title": "Něco se pokazilo",
+    "retry": "Zkusit znovu"
   }
 }

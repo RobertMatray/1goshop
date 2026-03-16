@@ -1,5 +1,6 @@
 import React from 'react'
 import { View, Text, Pressable, StyleSheet } from 'react-native'
+import i18n from '../i18n/i18n'
 
 interface Props {
   children: React.ReactNode
@@ -28,13 +29,13 @@ export class ErrorBoundary extends React.Component<Props, State> {
     if (this.state.hasError) {
       return (
         <View style={errorStyles.container}>
-          <Text style={errorStyles.title}>Nieco sa pokazilo</Text>
+          <Text style={errorStyles.title}>{i18n.t('ErrorBoundary.title')}</Text>
           <Text style={errorStyles.message}>{this.state.error?.message}</Text>
           <Pressable
             onPress={() => this.setState({ hasError: false, error: null })}
             style={errorStyles.button}
           >
-            <Text style={errorStyles.buttonText}>Skusit znova</Text>
+            <Text style={errorStyles.buttonText}>{i18n.t('ErrorBoundary.retry')}</Text>
           </Pressable>
         </View>
       )

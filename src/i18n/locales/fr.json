@@ -183,5 +183,9 @@
     "conflictMessage": "La liste a été modifiée par un autre appareil pendant que vous étiez hors ligne. Quelle version souhaitez-vous conserver ?",
     "conflictKeepLocal": "Ma version",
     "conflictTakeFirebase": "Version du cloud"
+  },
+  "ErrorBoundary": {
+    "title": "Une erreur s'est produite",
+    "retry": "Réessayer"
   }
 }

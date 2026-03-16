@@ -181,5 +181,9 @@
     "conflictMessage": "您离线时，列表已被另一台设备修改。您想保留哪个版本？",
     "conflictKeepLocal": "我的版本",
     "conflictTakeFirebase": "云端版本"
+  },
+  "ErrorBoundary": {
+    "title": "出了点问题",
+    "retry": "重试"
   }
 }

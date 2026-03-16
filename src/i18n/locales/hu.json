@@ -183,5 +183,9 @@
     "conflictMessage": "A listát egy másik eszköz módosította, miközben offline voltál. Melyik verziót szeretnéd megtartani?",
     "conflictKeepLocal": "Az én verzióm",
     "conflictTakeFirebase": "Felhő verzió"
+  },
+  "ErrorBoundary": {
+    "title": "Valami hiba történt",
+    "retry": "Újrapróbálás"
   }
 }

@@ -183,5 +183,9 @@
     "conflictMessage": "A lista foi alterada por outro dispositivo enquanto você estava offline. Qual versão deseja manter?",
     "conflictKeepLocal": "Minha versão",
     "conflictTakeFirebase": "Versão da nuvem"
+  },
+  "ErrorBoundary": {
+    "title": "Algo correu mal",
+    "retry": "Tentar novamente"
   }
 }
