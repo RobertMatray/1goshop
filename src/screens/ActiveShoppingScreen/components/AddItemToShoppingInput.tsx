@@ -107,6 +107,10 @@ export function AddItemToShoppingInput({ filterText, onFilterTextChange, onClear
   }
 
   function handleAddExisting(item: ShoppingItem): void {
+    // Mark as checked in shopping list (syncs to Firebase for shared lists)
+    if (!item.isChecked) {
+      useShoppingListStore.getState().toggleChecked(item.id)
+    }
     useActiveShoppingStore.getState().addItemToSession(item, item.order)
     onClearFilter()
     inputRef.current?.focus()
