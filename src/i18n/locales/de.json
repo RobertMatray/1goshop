@@ -36,7 +36,8 @@
     "finishTitle": "Einkauf beenden?",
     "finishMessage": "Die Einkaufssitzung wird gespeichert.",
     "finish": "Beenden",
-    "cancel": "Abbrechen"
+    "cancel": "Abbrechen",
+    "addPlaceholder": "Artikel zum Einkauf hinzufügen..."
   },
   "History": {
     "title": "Einkaufshistorie",

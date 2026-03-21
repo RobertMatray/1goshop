@@ -36,7 +36,8 @@
     "finishTitle": "Bevásárlás befejezése?",
     "finishMessage": "A bevásárlás mentésre kerül.",
     "finish": "Befejez",
-    "cancel": "Mégse"
+    "cancel": "Mégse",
+    "addPlaceholder": "Tétel hozzáadása a bevásárláshoz..."
   },
   "History": {
     "title": "Bevásárlási előzmény",

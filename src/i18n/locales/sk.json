@@ -38,7 +38,8 @@
     "finishTitle": "Ukončiť nákup?",
     "finishMessage": "Nákup bude uložený.",
     "finish": "Ukončiť",
-    "cancel": "Zrušiť"
+    "cancel": "Zrušiť",
+    "addPlaceholder": "Pridať položku do nákupu..."
   },
   "History": {
     "title": "História nákupov",

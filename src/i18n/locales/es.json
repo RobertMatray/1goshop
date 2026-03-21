@@ -36,7 +36,8 @@
     "finishTitle": "¿Finalizar compras?",
     "finishMessage": "La sesión de compras se guardará.",
     "finish": "Finalizar",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "addPlaceholder": "Añadir artículo a la compra..."
   },
   "History": {
     "title": "Historial de compras",

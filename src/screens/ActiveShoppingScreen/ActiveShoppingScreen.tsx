@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback } from 'react'
+import React, { useState, useMemo, useCallback } from 'react'
 import { View, Text, Pressable, FlatList, Alert } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { StyleSheet } from 'react-native-unistyles'
@@ -9,6 +9,7 @@ import type { RootStackParamList } from '../../navigation/AppNavigator'
 import { useActiveShoppingStore } from '../../stores/ActiveShoppingStore'
 import { useShoppingListStore } from '../../stores/ShoppingListStore'
 import { ActiveShoppingItem } from './components/ActiveShoppingItem'
+import { AddItemToShoppingInput } from './components/AddItemToShoppingInput'
 import type { ActiveShoppingItem as ActiveShoppingItemType } from '../../types/shopping'
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'ActiveShoppingScreen'>
@@ -24,6 +25,7 @@ export function ActiveShoppingScreen(): React.ReactElement {
   const toggleShowBought = useActiveShoppingStore((s) => s.toggleShowBought)
   const finishShopping = useActiveShoppingStore((s) => s.finishShopping)
   const uncheckBoughtItems = useShoppingListStore((s) => s.uncheckItems)
+  const [addItemText, setAddItemText] = useState('')
 
   const allItems = useMemo(() => {
     if (!session) return []
@@ -51,6 +53,11 @@ export function ActiveShoppingScreen(): React.ReactElement {
 
   return (
     <View style={styles.container}>
+      <AddItemToShoppingInput
+        filterText={addItemText}
+        onFilterTextChange={setAddItemText}
+        onClearFilter={() => setAddItemText('')}
+      />
       <View style={styles.listWrapper}>
         {visibleItems.length === 0 ? (
           <View style={styles.emptyContainer}>

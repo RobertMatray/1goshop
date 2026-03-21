@@ -36,7 +36,8 @@
     "finishTitle": "Terminare la spesa?",
     "finishMessage": "La sessione di spesa sarà salvata.",
     "finish": "Termina",
-    "cancel": "Annulla"
+    "cancel": "Annulla",
+    "addPlaceholder": "Aggiungi articolo alla spesa..."
   },
   "History": {
     "title": "Cronologia spese",

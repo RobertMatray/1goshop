@@ -36,7 +36,8 @@
     "finishTitle": "Finish shopping?",
     "finishMessage": "Shopping session will be saved.",
     "finish": "Finish",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "addPlaceholder": "Add item to shopping..."
   },
   "History": {
     "title": "Shopping History",
