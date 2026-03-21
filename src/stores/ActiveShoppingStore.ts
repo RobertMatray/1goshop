@@ -30,6 +30,7 @@ export interface ActiveShoppingStoreState {
   finishShopping: () => Promise<void>
   removeSession: (id: string) => Promise<void>
   clearHistory: () => Promise<void>
+  addItemToSession: (shoppingItem: ShoppingItem, insertAtOrder: number | null) => void
   setSessionFromFirebase: (session: ShoppingSession | null) => void
   setHistoryFromFirebase: (sessions: ShoppingSession[]) => void
 }
@@ -151,6 +152,42 @@ export const useActiveShoppingStore = create<ActiveShoppingStoreState>((set, get
 
     set({ session, showBought: true })
     persistSession(session, get().currentListId)
+  },
+
+  addItemToSession: (shoppingItem: ShoppingItem, insertAtOrder: number | null) => {
+    const { session } = get()
+    if (!session) return
+
+    // Don't add duplicates
+    if (session.items.some((i) => i.id === shoppingItem.id)) return
+
+    const newActiveItem: ActiveShoppingItem = {
+      id: shoppingItem.id,
+      name: shoppingItem.name,
+      quantity: shoppingItem.quantity,
+      isBought: false,
+      order: 0,
+      purchasedAt: null,
+      toggledAt: null,
+    }
+
+    let updatedItems: ActiveShoppingItem[]
+    if (insertAtOrder !== null) {
+      // Insert at the correct position based on shopping list order
+      const insertIndex = session.items.filter((i) => i.order < insertAtOrder).length
+      updatedItems = [...session.items]
+      updatedItems.splice(insertIndex, 0, newActiveItem)
+    } else {
+      // Append to end
+      updatedItems = [...session.items, newActiveItem]
+    }
+
+    // Reindex orders
+    updatedItems = updatedItems.map((item, index) => ({ ...item, order: index }))
+
+    const updatedSession = { ...session, items: updatedItems }
+    set({ session: updatedSession })
+    persistSession(updatedSession, get().currentListId)
   },
 
   toggleBought: (id: string) => {

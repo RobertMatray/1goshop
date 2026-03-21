@@ -36,7 +36,8 @@
     "finishTitle": "Terminer les courses ?",
     "finishMessage": "La session de courses sera enregistrée.",
     "finish": "Terminer",
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "addPlaceholder": "Ajouter un article aux courses..."
   },
   "History": {
     "title": "Historique des courses",

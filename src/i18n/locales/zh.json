@@ -34,7 +34,8 @@
     "finishTitle": "结束购物？",
     "finishMessage": "购物记录将被保存。",
     "finish": "结束",
-    "cancel": "取消"
+    "cancel": "取消",
+    "addPlaceholder": "添加商品到购物..."
   },
   "History": {
     "title": "购物历史",

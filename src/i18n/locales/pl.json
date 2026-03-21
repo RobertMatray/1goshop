@@ -38,7 +38,8 @@
     "finishTitle": "Zakończyć zakupy?",
     "finishMessage": "Sesja zakupów zostanie zapisana.",
     "finish": "Zakończ",
-    "cancel": "Anuluj"
+    "cancel": "Anuluj",
+    "addPlaceholder": "Dodaj pozycję do zakupów..."
   },
   "History": {
     "title": "Historia zakupów",
