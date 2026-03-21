@@ -331,7 +331,7 @@ curl -s -X POST https://api.github.com/user/repos \
   - GitHub: https://github.com/robertmatray/superapp-ai-poc
   - Same Apple Developer account, same EAS credentials pattern
 
-## Current Status (v1.3.0 - March 14, 2026)
+## Current Status (v1.3.1 - March 21, 2026)
 
 ### Implemented (all working on TestFlight)
 - Shopping list CRUD (add, remove, edit, toggle checked, quantity +1/-1, reorder)
@@ -363,6 +363,15 @@ curl -s -X POST https://api.github.com/user/repos \
 - Search/filter in shopping list (filter text in AddItemInput component)
 - Bold text for checked items on main list
 
+**v1.3.1 features (March 21, 2026):**
+- Add items during active shopping — input field with search in shopping list
+- Suggestions show existing list items not yet in active session
+- Existing items inserted at correct position (by shopping list order)
+- New items added to both shopping list and active session
+- Existing items auto-marked as checked (isChecked) when added to session
+- Firebase sync works for both new and existing items in shared lists
+- Translations for all 12 languages
+
 **v1.3.0 production release features (March 14, 2026):**
 - Offline conflict resolution for shared lists (snapshot-based, conflict dialog)
 - Firebase single-source-of-truth refactor (blocking unlink/delete, listener-echo)
@@ -392,10 +401,10 @@ curl -s -X POST https://api.github.com/user/repos \
 **Provisioning Profile**: f649b342-4c71-4d84-98c3-cc22a77085ba (ACTIVE, expires 2026-12-12)
 **Distribution Certificate**: 28T88DA5Q5 (shared with moja4ka-zdravie)
 
-**Latest iOS build**: Build #104 (v1.3.0) - submitted for App Review (March 14, 2026)
-- Git tag: `v1.3.0`
+**Latest iOS build**: v1.3.1 - submitted to App Store (March 21, 2026)
+- Git tag: `v1.3.1`
 
-**Latest Android build**: v1.3.0 (versionCode 30) - submitted to Google Play Production (March 14, 2026)
+**Latest Android build**: v1.3.1 - submitted to Google Play Production (March 21, 2026)
 
 **App Store Connect**:
 - **ascAppId**: `6759269751`
@@ -545,6 +554,10 @@ Interactive animated tutorial showing all gestures with pulsing touch indicator:
 11. Join shared list (enter code, connect)
 
 ### App Store Submission History
+
+**v1.3.1 (March 21, 2026)**
+- Add items during active shopping (search + suggestions from shopping list)
+- Deployed to App Store + Google Play Production
 
 **v1.3.0 (March 14, 2026)** - Build #104
 - Submitted for App Review via automated `scripts/submit-appstore.mjs`
