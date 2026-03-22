@@ -1,5 +1,6 @@
 import React from 'react'
 import { View, Text, Pressable, Alert, ScrollView, Linking } from 'react-native'
+import Constants from 'expo-constants'
 import { StyleSheet } from 'react-native-unistyles'
 import { useTranslation } from 'react-i18next'
 import { useNavigation } from '@react-navigation/native'
@@ -112,7 +113,7 @@ export function SettingsScreen(): React.ReactElement {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>{t('Settings.about')}</Text>
-        <Text style={styles.aboutText}>1GoShop v1.2.1</Text>
+        <Text style={styles.aboutText}>1GoShop v{Constants.expoConfig?.version ?? '?'}</Text>
         <Text style={styles.hintText}>{t('ShoppingList.swipeRightHint')}</Text>
         <Text style={styles.hintText}>{t('ShoppingList.swipeLeftHint')}</Text>
         <Text style={styles.hintText}>{t('ShoppingList.longPressHint')}</Text>
